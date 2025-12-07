@@ -1,10 +1,11 @@
 // api/webhook.js (Vercel)
-require('dotenv').config();
-const axios = require('axios');
-const { fetchHistorical } = require('../src/utils/goapi');
-const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
-const { analyzeWithGemini } = require('../src/utils/gemini');
-const { marked } = require("marked");
+import axios from "axios";
+import { fetchHistorical } from "../src/utils/goapi.js";
+import { computeIndicators, formatIndicatorsForPrompt } from "../src/utils/indicators.js";
+import { analyzeWithGemini } from "../src/utils/gemini.js";
+import { marked } from "marked";
+
+const DEFAULT_CANDLES = 200; // FIX: nilai ini hilang pada filemu sebelumnya
 
 // ===== Allowed groups =====
 const ALLOWED_GROUPS = process.env.ALLOWED_GROUP_IDS
@@ -63,11 +64,15 @@ function markdownToTelegramHTML(md) {
 // ===== Telegram Sender =====
 async function sendTelegramMessage(chatId, text, opts = {}) {
   const url = `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`;
-  await axios.post(url, { chat_id: chatId, text, ...opts });
+  try {
+    await axios.post(url, { chat_id: chatId, text, ...opts });
+  } catch (err) {
+    console.error("SendMessage Error:", err.response?.data || err.message);
+  }
 }
 
-// ===== Webhook handler =====
-module.exports = async (req, res) => {
+// ===== Webhook Handler for Vercel =====
+export default async function handler(req, res) {
   try {
     const update = req.body;
 
@@ -76,18 +81,19 @@ module.exports = async (req, res) => {
     }
 
     const chatId = update.message.chat.id.toString();
+    const text = update.message.text.trim();
 
-    // Restrict groups
+    // Restrict use to allowed groups
     if (!isAllowed(chatId)) {
       await sendTelegramMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
       return res.status(200).send("BLOCKED");
     }
 
-    const text = update.message.text.trim();
+    // ===== COMMAND: /analisa SYMBOL =====
+    const match = text.match(/^\/analisa\s+(.+)/i);
 
-    // ===== ANALISA COMMAND =====
-    if (/^\/analisa\s+(.+)/i.test(text)) {
-      const symbol = text.match(/^\/analisa\s+(.+)/i)[1].trim().toUpperCase();
+    if (match) {
+      const symbol = match[1].trim().toUpperCase();
 
       await sendTelegramMessage(
         chatId,
@@ -95,6 +101,7 @@ module.exports = async (req, res) => {
         { parse_mode: "HTML" }
       );
 
+      // Ambil data candle
       const candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
 
       if (!candles || candles.length === 0) {
@@ -102,15 +109,19 @@ module.exports = async (req, res) => {
         return res.status(200).send("OK");
       }
 
+      // Hitung indikator
       const indicators = computeIndicators(candles);
       const prompt = formatIndicatorsForPrompt(symbol, indicators);
 
+      // Analisa via AI
       const aiResponse = await analyzeWithGemini(prompt);
+
       const cleanHtml = markdownToTelegramHTML(aiResponse);
 
       const reply = `📊 <b>Analisa ${symbol}</b>\n\n${cleanHtml}`;
 
       await sendLongMessage(chatId, reply, { parse_mode: "HTML" });
+
       return res.status(200).send("OK");
     }
 
@@ -120,4 +131,4 @@ module.exports = async (req, res) => {
     console.error("Webhook Error:", err.response?.data || err.message);
     return res.status(500).send("error");
   }
-};
+}
