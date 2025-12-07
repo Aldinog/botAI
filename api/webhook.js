@@ -1,4 +1,4 @@
-// api/webhook.js (Vercel - CommonJS Compatible)
+// api/webhook.js (Vercel - CommonJS Friendly)
 require("dotenv").config();
 const axios = require("axios");
 const { fetchHistorical } = require("../src/utils/goapi");
@@ -7,7 +7,7 @@ const { analyzeWithGemini } = require("../src/utils/gemini");
 
 const DEFAULT_CANDLES = 200;
 
-// Load marked dynamically (karena ESM)
+// ===== Dynamic import "marked" (ESM) =====
 let marked;
 async function loadMarked() {
   if (!marked) {
@@ -28,7 +28,7 @@ function isAllowed(chatId) {
   return ALLOWED_GROUPS.includes(chatId.toString());
 }
 
-// ===== Split message =====
+// ===== Split Long Message =====
 function splitMessage(text, maxLength = 4000) {
   const parts = [];
   for (let i = 0; i < text.length; i += maxLength) {
@@ -43,7 +43,7 @@ async function sendLongMessage(chatId, text, opts = {}) {
   }
 }
 
-// ===== Markdown → HTML Telegram =====
+// ===== Markdown → Telegram HTML =====
 async function markdownToTelegramHTML(md) {
   const markedFn = await loadMarked();
   let html = markedFn(md);
@@ -80,8 +80,13 @@ async function sendTelegramMessage(chatId, text, opts = {}) {
   }
 }
 
-// ===== Webhook Handler (CommonJS for Vercel) =====
+// ===================================================================
+//  MAIN WEBHOOK HANDLER — FIXED VERSION (ANTI LOOPING & ANTI SPAM)
+// ===================================================================
+
 module.exports = async (req, res) => {
+
+  // ALWAYS return 200 no matter what → prevent Vercel retry loops
   try {
     const update = req.body;
 
@@ -95,32 +100,62 @@ module.exports = async (req, res) => {
     // Restrict to allowed groups
     if (!isAllowed(chatId)) {
       await sendTelegramMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
-      return res.status(200).send("BLOCKED");
+      return res.status(200).send("OK");
     }
 
-    // ===== Command: /analisa SYMBOL =====
+    // =========== Handle /analisa ===========
     const match = text.match(/^\/analisa\s+(.+)/i);
 
     if (match) {
       const symbol = match[1].trim().toUpperCase();
 
+      // Kirim 1x pesan "Wait"
       await sendTelegramMessage(
         chatId,
         `🔎 Wait sedang menganalisa untuk <b>${symbol}</b>...`,
         { parse_mode: "HTML" }
       );
 
-      const candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
+      // ============ Cegah SPAM: Jika GoAPI error → STOP ============
+      let candles;
+      try {
+        candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
+      } catch (err) {
+        console.error("GoAPI Error:", err.message);
 
-      if (!candles || candles.length === 0) {
-        await sendTelegramMessage(chatId, `❌ Gagal mengambil data untuk ${symbol}.`);
+        await sendTelegramMessage(
+          chatId,
+          "❌ Gagal mengambil data dari API (limit harian habis / server error). Silakan coba lagi nanti."
+        );
+
+        // PENTING → return 200 agar tidak looping
         return res.status(200).send("OK");
       }
 
+      if (!candles || candles.length === 0) {
+        await sendTelegramMessage(chatId, `❌ Data ${symbol} tidak tersedia.`);
+        return res.status(200).send("OK");
+      }
+
+      // Compute indikator
       const indicators = computeIndicators(candles);
       const prompt = formatIndicatorsForPrompt(symbol, indicators);
-      const aiResponse = await analyzeWithGemini(prompt);
 
+      let aiResponse;
+      try {
+        aiResponse = await analyzeWithGemini(prompt);
+      } catch (err) {
+        console.error("Gemini Error:", err.message);
+
+        await sendTelegramMessage(
+          chatId,
+          "❌ Analisa AI gagal diproses. Silakan coba beberapa menit lagi."
+        );
+
+        return res.status(200).send("OK");
+      }
+
+      // Convert AI Markdown → Telegram HTML
       const cleanHtml = await markdownToTelegramHTML(aiResponse);
 
       const reply = `📊 <b>Analisa ${symbol}</b>\n\n${cleanHtml}`;
@@ -133,7 +168,8 @@ module.exports = async (req, res) => {
     return res.status(200).send("OK");
 
   } catch (err) {
-    console.error("Webhook Error:", err.response?.data || err.message);
-    return res.status(500).send("error");
+    console.error("Webhook Error Fatal:", err.message);
+    // return 200 agar Vercel tidak retry
+    return res.status(200).send("OK");
   }
 };
