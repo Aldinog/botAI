@@ -1,11 +1,20 @@
-// api/webhook.js (Vercel)
-import axios from "axios";
-import { fetchHistorical } from "../src/utils/goapi.js";
-import { computeIndicators, formatIndicatorsForPrompt } from "../src/utils/indicators.js";
-import { analyzeWithGemini } from "../src/utils/gemini.js";
-import { marked } from "marked";
+// api/webhook.js (Vercel - CommonJS Compatible)
+require("dotenv").config();
+const axios = require("axios");
+const { fetchHistorical } = require("../src/utils/goapi");
+const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
+const { analyzeWithGemini } = require("../src/utils/gemini");
 
-const DEFAULT_CANDLES = 200; // FIX: nilai ini hilang pada filemu sebelumnya
+const DEFAULT_CANDLES = 200;
+
+// Load marked dynamically (karena ESM)
+let marked;
+async function loadMarked() {
+  if (!marked) {
+    marked = (await import("marked")).marked;
+  }
+  return marked;
+}
 
 // ===== Allowed groups =====
 const ALLOWED_GROUPS = process.env.ALLOWED_GROUP_IDS
@@ -19,7 +28,7 @@ function isAllowed(chatId) {
   return ALLOWED_GROUPS.includes(chatId.toString());
 }
 
-// ===== Message splitter =====
+// ===== Split message =====
 function splitMessage(text, maxLength = 4000) {
   const parts = [];
   for (let i = 0; i < text.length; i += maxLength) {
@@ -29,15 +38,15 @@ function splitMessage(text, maxLength = 4000) {
 }
 
 async function sendLongMessage(chatId, text, opts = {}) {
-  const parts = splitMessage(text);
-  for (const part of parts) {
+  for (const part of splitMessage(text)) {
     await sendTelegramMessage(chatId, part, opts);
   }
 }
 
-// ===== Markdown → Telegram HTML =====
-function markdownToTelegramHTML(md) {
-  let html = marked(md);
+// ===== Markdown → HTML Telegram =====
+async function markdownToTelegramHTML(md) {
+  const markedFn = await loadMarked();
+  let html = markedFn(md);
 
   html = html
     .replace(/<h[1-6]>/g, "<b>")
@@ -63,16 +72,16 @@ function markdownToTelegramHTML(md) {
 
 // ===== Telegram Sender =====
 async function sendTelegramMessage(chatId, text, opts = {}) {
-  const url = `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`;
   try {
+    const url = `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`;
     await axios.post(url, { chat_id: chatId, text, ...opts });
   } catch (err) {
     console.error("SendMessage Error:", err.response?.data || err.message);
   }
 }
 
-// ===== Webhook Handler for Vercel =====
-export default async function handler(req, res) {
+// ===== Webhook Handler (CommonJS for Vercel) =====
+module.exports = async (req, res) => {
   try {
     const update = req.body;
 
@@ -83,13 +92,13 @@ export default async function handler(req, res) {
     const chatId = update.message.chat.id.toString();
     const text = update.message.text.trim();
 
-    // Restrict use to allowed groups
+    // Restrict to allowed groups
     if (!isAllowed(chatId)) {
       await sendTelegramMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
       return res.status(200).send("BLOCKED");
     }
 
-    // ===== COMMAND: /analisa SYMBOL =====
+    // ===== Command: /analisa SYMBOL =====
     const match = text.match(/^\/analisa\s+(.+)/i);
 
     if (match) {
@@ -101,7 +110,6 @@ export default async function handler(req, res) {
         { parse_mode: "HTML" }
       );
 
-      // Ambil data candle
       const candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
 
       if (!candles || candles.length === 0) {
@@ -109,14 +117,11 @@ export default async function handler(req, res) {
         return res.status(200).send("OK");
       }
 
-      // Hitung indikator
       const indicators = computeIndicators(candles);
       const prompt = formatIndicatorsForPrompt(symbol, indicators);
-
-      // Analisa via AI
       const aiResponse = await analyzeWithGemini(prompt);
 
-      const cleanHtml = markdownToTelegramHTML(aiResponse);
+      const cleanHtml = await markdownToTelegramHTML(aiResponse);
 
       const reply = `📊 <b>Analisa ${symbol}</b>\n\n${cleanHtml}`;
 
@@ -131,4 +136,4 @@ export default async function handler(req, res) {
     console.error("Webhook Error:", err.response?.data || err.message);
     return res.status(500).send("error");
   }
-}
+};
