@@ -106,7 +106,7 @@ module.exports = async (req, res) => {
 
       await sendTelegramMessage(
         chatId,
-        `🔎 Menerima permintaan analisa untuk <b>${symbol}</b>...`,
+        `🔎 Wait sedang menganalisa untuk <b>${symbol}</b>...`,
         { parse_mode: "HTML" }
       );
 
