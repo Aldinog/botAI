@@ -5,7 +5,7 @@ const { fetchHistorical } = require("../src/utils/goapi");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 
-const DEFAULT_CANDLES = 200;
+const DEFAULT_CANDLES = 50;
 
 // ===== Dynamic import "marked" (ESM) =====
 let marked;
