@@ -99,7 +99,7 @@ async function fetchBrokerSummaryWithFallback(symbol) {
   return {
     success: false,
     message: `
-    )}) tidak ada data broksum untuk ${symbol}.`
+     tidak ada data broksum untuk ${symbol}.`
   };
 }
 
