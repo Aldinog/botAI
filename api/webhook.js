@@ -8,7 +8,7 @@ const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
 
 const DEFAULT_CANDLES = 50;
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 
 // =========================
 // Dynamic import "marked"
