@@ -148,7 +148,7 @@ async function analyzeStock(symbol) {
 
     // Format message (gunakan fmt helper)
     const output = `
-📊 *Analisa ${symbol} (Intraday)*
+📊 *Indikator ${symbol} (Intraday)*
 
 💹 *Harga terakhir:* ${fmt(lastClose)}
 
