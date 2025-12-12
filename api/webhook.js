@@ -194,7 +194,7 @@ bot.command("harga", async (ctx) => {
   await ctx.reply("⏳ Wait...")
   const msg = await fetchHarga(symbol);
 
-  if (result.error) return ctx.reply(`❌ ${msg.error}`);
+  if (msg.error) return ctx.reply(`❌ ${msg.error}`);
 
   try {
     return ctx.reply(msg.text, { parse_mode: "Markdown" });
