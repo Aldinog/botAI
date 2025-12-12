@@ -98,8 +98,7 @@ async function fetchBrokerSummaryWithFallback(symbol) {
   // Jika sampai sini → fallback 3x gagal
   return {
     success: false,
-    message: `
-     tidak ada data broksum untuk ${symbol}.`
+    message: `tidak ada data broksum untuk ${symbol}, alternatif gunakan fitur proxy.`
   };
 }
 
