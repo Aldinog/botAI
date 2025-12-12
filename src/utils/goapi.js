@@ -67,7 +67,7 @@ async function fetchBrokerSummaryWithFallback(symbol) {
   let attempts = 0;
   let lastCheckedDates = [];
 
-  while (attempts < 3) {
+  while (attempts < 9) {
     const date = current.toISOString().split("T")[0];
     lastCheckedDates.push(date);
 
