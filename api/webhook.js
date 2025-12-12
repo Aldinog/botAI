@@ -1,11 +1,14 @@
 // api/webhook.js (Vercel - CommonJS Friendly)
-const { Telegraf } = require('telegraf');
+const { Telegraf } = require("telegraf");
 require("dotenv").config();
 const axios = require("axios");
+
 const { fetchHistorical } = require("../src/utils/goapi");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
+const { isAllowedGroup } = require("../src/utils/groupControl");
+const { fetchHarga } = require('../src/utils/harga');
 
 const DEFAULT_CANDLES = 50;
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -15,24 +18,8 @@ const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
 // =========================
 let marked;
 async function loadMarked() {
-  if (!marked) {
-    marked = (await import("marked")).marked;
-  }
+  if (!marked) marked = (await import("marked")).marked;
   return marked;
-}
-
-// =========================
-// Allowed Groups
-// =========================
-const ALLOWED_GROUPS = process.env.ALLOWED_GROUP_IDS
-  ? process.env.ALLOWED_GROUP_IDS.split(",").map(id => id.trim())
-  : process.env.ALLOWED_GROUP_ID
-    ? [process.env.ALLOWED_GROUP_ID.trim()]
-    : [];
-
-function isAllowed(chatId) {
-  if (ALLOWED_GROUPS.length === 0) return true;
-  return ALLOWED_GROUPS.includes(chatId.toString());
 }
 
 // =========================
@@ -54,25 +41,22 @@ function splitMessageSafe(text, maxLength = 3500) {
   return parts;
 }
 
-async function sendLongMessage(chatId, text, opts = {}) {
-  const parts = splitMessageSafe(text);
+async function sendLongMessage(ctx, html) {
+  const parts = splitMessageSafe(html);
   for (const part of parts) {
-    await sendTelegramMessage(chatId, part, opts);
+    await ctx.reply(part, { parse_mode: "HTML" });
   }
 }
 
 // =========================
 // Sanitize Telegram HTML
-// (Whitelist only <b>, <i>, <code>, <pre>)
 // =========================
 function sanitizeTelegramHTML(html) {
-  // Escape everything first
   let safe = html
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Restore allowed tags only
   const allow = {
     "&lt;b&gt;": "<b>",
     "&lt;/b&gt;": "</b>",
@@ -84,24 +68,22 @@ function sanitizeTelegramHTML(html) {
     "&lt;/pre&gt;": "</pre>"
   };
 
-  Object.entries(allow).forEach(([from, to]) => {
+  for (const [from, to] of Object.entries(allow)) {
     safe = safe.replace(new RegExp(from, "g"), to);
-  });
+  }
 
   return safe;
 }
 
 // =========================
-// Markdown → Telegram HTML (Refactor Safety)
+// Markdown → Telegram HTML
 // =========================
 async function markdownToTelegramHTML(md) {
   const markedFn = await loadMarked();
   let html = markedFn(md);
 
-  // Remove unsupported HTML tags from Gemini
   html = html.replace(/<\/?(div|span|blockquote|a|img|h[1-6]|table|tr|td|th)[^>]*>/g, "");
 
-  // Convert basic Markdown to telegram-friendly HTML
   html = html
     .replace(/<strong>/g, "<b>")
     .replace(/<\/strong>/g, "</b>")
@@ -120,133 +102,137 @@ async function markdownToTelegramHTML(md) {
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  // Escape unexpected HTML
   return sanitizeTelegramHTML(html);
 }
 
 // =========================
-// Telegram Sender
+// VALIDASI GROUP
 // =========================
-async function sendTelegramMessage(chatId, text, opts = {}) {
-  try {
-    const url = `https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/sendMessage`;
-    await axios.post(url, { chat_id: chatId, text, ...opts });
-  } catch (err) {
-    console.error("SendMessage Error:", err.response?.data || err.message);
+bot.use((ctx, next) => {
+  const chatId = ctx.chat.id;
+
+  if (!isAllowedGroup(chatId)) {
+    console.log(`❌ Grup tidak diizinkan: ${chatId}`);
+    return ctx.reply("🚫 Grup ini tidak diizinkan menggunakan bot ini.");
   }
-}
+
+  return next();
+});
 
 // =========================
-// MAIN WEBHOOK HANDLER
+// COMMAND BASICS
 // =========================
-module.exports = async (req, res) => {
-  try {
-    const update = req.body;
+bot.start((ctx) => ctx.reply("🤖 Bot aktif"));
+bot.help((ctx) =>
+  ctx.reply(
+    "📌 List command:\n" +
+      " /start\n" +
+      " /help\n" +
+      " /harga <EMITEN>\n" +
+      " /indikator <EMITEN>\n" +
+      " /analisa <EMITEN>"
+  )
+);
 
-    if (!update?.message?.text) {
-      return res.status(200).send("OK");
-    }
-
-    const chatId = update.message.chat.id.toString();
-    const text = update.message.text.trim();
-
-    // Restrict group
-    if (!isAllowed(chatId)) {
-      await sendTelegramMessage(chatId, "❌ Bot ini hanya untuk grup resmi.");
-      return res.status(200).send("OK");
-    }
-
-    // Handle /analisa
-    const match = text.match(/^\/analisa\s+(.+)/i);
-
-    if (match) {
-      const symbol = match[1].trim().toUpperCase();
-
-      await sendTelegramMessage(
-        chatId,
-        `🔎 Wait sedang menganalisa untuk <b>${symbol}</b>...`,
-        { parse_mode: "HTML" }
-      );
-
-      // Fetch data
-      let candles;
-      try {
-        candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
-      } catch (err) {
-        console.error("GoAPI Error:", err.message);
-        await sendTelegramMessage(chatId, "❌ Gagal mengambil data API. Coba lagi nanti.");
-        return res.status(200).send("OK");
-      }
-
-      if (!candles || candles.length === 0) {
-        await sendTelegramMessage(chatId, `❌ Data ${symbol} tidak tersedia.`);
-        return res.status(200).send("OK");
-      }
-
-      // Compute
-      const indicators = computeIndicators(candles);
-      const prompt = formatIndicatorsForPrompt(symbol, indicators);
-
-      let aiResponse;
-      try {
-        aiResponse = await analyzeWithGemini(prompt);
-      } catch (err) {
-        console.error("Gemini Error:", err.message);
-        await sendTelegramMessage(chatId, "❌ Analisa AI gagal. Coba lagi nanti.");
-        return res.status(200).send("OK");
-      }
-
-      // Convert markdown to safe Telegram HTML
-      const content = await markdownToTelegramHTML(aiResponse);
-      const reply = `📊 <b>Analisa ${symbol}</b>\n\n${content}`;
-
-      await sendLongMessage(chatId, reply, { parse_mode: "HTML" });
-
-      return res.status(200).send("OK");
-    }
-
-    return res.status(200).send("OK");
-
-  } catch (err) {
-    console.error("Webhook Fatal:", err.message);
-    return res.status(200).send("OK");
-  }
-};
-
+// =========================
+// COMMAND: INDIKATOR
+// =========================
 bot.command("indikator", async (ctx) => {
+  const symbol = ctx.message.text.split(" ")[1]?.toUpperCase();
+
+  if (!symbol) {
+    return ctx.reply("⚠ Cara pakai:\n/indikator <SYMBOL>");
+  }
+
+  await ctx.reply("⏳ Wait...");
+
+  const result = await analyzeStock(symbol);
+
+  if (result.error) return ctx.reply(`❌ ${result.error}`);
+
+  try {
+    return ctx.reply(result.text, { parse_mode: "Markdown" });
+  } catch {
+    return ctx.reply(result.text.replace(/[*_]/g, ""));
+  }
+});
+
+// ============================
+// COMMAND: HARGA
+// ============================
+bot.command("harga", async (ctx) => {
+  const symbol = ctx.message.text.split(" ")[1]?.toUpperCase();
+
+  if (!symbol) {
+    return ctx.reply("⚠ Format salah.\nGunakan: /harga BBCA");
+  }
+
+  try {
+    const msg = await fetchHarga(symbol);
+    return ctx.reply(msg, { parse_mode: "HTML" });
+  } catch (err) {
+    console.error(err);
+    return ctx.reply(`❌ Gagal mengambil harga ${symbol}.`);
+  }
+});
+
+// ============================
+// COMMAND: ANALISA
+// ============================
+bot.command("analisa", async (ctx) => {
   const text = ctx.message.text.split(" ");
   const symbol = text[1]?.toUpperCase();
 
   if (!symbol) {
-    return ctx.reply("⚠ Cara pakai:\n/indikator <SYMBOL>\n\nContoh: /indikator BBCA");
+    return ctx.reply("⚠ Format salah.\nGunakan: /analisa BBCA");
   }
 
-  await ctx.reply("⏳ Wait..");
+  await ctx.reply(`🔎 Wait sedang menganalisa untuk <b>${symbol}</b>...`, {
+    parse_mode: "HTML",
+  });
 
-  const result = await analyzeStock(symbol);
-
-  if (result.error) {
-    return ctx.reply(`❌ ${result.error}`);
-  }
-
+  let candles;
   try {
-    await ctx.reply(result.text, { parse_mode: "Markdown" });
-  } catch (e) {
-    await ctx.reply(result.text.replace(/[*_]/g, ""), { parse_mode: "Markdown" });
+    candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
+  } catch (err) {
+    console.error("GoAPI Error:", err.message);
+    return ctx.reply("❌ Gagal mengambil data API.");
   }
+
+  if (!candles || candles.length === 0) {
+    return ctx.reply(`❌ Data ${symbol} tidak tersedia.`);
+  }
+
+  const indicators = computeIndicators(candles);
+  const prompt = formatIndicatorsForPrompt(symbol, indicators);
+
+  let aiResponse;
+  try {
+    aiResponse = await analyzeWithGemini(prompt);
+  } catch (err) {
+    console.error("Gemini Error:", err.message);
+    return ctx.reply("❌ Analisa AI gagal. Coba lagi nanti.");
+  }
+
+  const html = await markdownToTelegramHTML(aiResponse);
+  const finalMsg = `📊 <b>Analisa ${symbol}</b>\n\n${html}`;
+
+  await sendLongMessage(ctx, finalMsg);
 });
 
-// Webhook Handler
+// =========================
+// WEBHOOK (Vercel Friendly)
+// =========================
 module.exports = async (req, res) => {
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     try {
       await bot.handleUpdate(req.body);
-      res.status(200).send('OK');
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('Error');
+      return res.status(200).send("OK");
+    } catch (err) {
+      console.error("Webhook Error:", err);
+      return res.status(500).send("ERR");
     }
-  } else {
-    res.status(200).send('Bot Running');
   }
+
+  res.status(200).send("Bot Running");
 };
