@@ -128,14 +128,34 @@ bot.use((ctx, next) => {
 bot.start((ctx) => ctx.reply("🤖 Bot aktif"));
 bot.help((ctx) =>
   ctx.reply(
-    "📌 List command:\n" +
-      " /start\n" +
-      " /help\n" +
-      " /harga <EMITEN>\n" +
-      " /indikator <EMITEN>\n" +
-      " /analisa <EMITEN>"
+    "📌 <b>List Command Bot Saham</b>\n\n" +
+    "🔹 <b>/start</b>\n" +
+    "   Mengaktifkan bot dan memastikan bot responsif.\n\n" +
+    
+    "🔹 <b>/help</b>\n" +
+    "   Menampilkan daftar perintah dan fungsinya.\n\n" +
+
+    "🔹 <b>/harga &lt;EMITEN&gt;</b>\n" +
+    "   Melihat harga terbaru suatu saham.\n" +
+    "   Contoh: <code>/harga BBCA</code>\n\n" +
+
+    "🔹 <b>/indikator &lt;EMITEN&gt;</b>\n" +
+    "   Menampilkan indikator teknikal (MA, RSI, dll).\n" +
+    "   Contoh: <code>/indikator BBRI</code>\n\n" +
+
+    "🔹 <b>/analisa &lt;EMITEN&gt;</b>\n" +
+    "   Analisa otomatis berbasis AI menggunakan data OHLC.\n" +
+    "   Contoh: <code>/analisa TLKM</code>\n\n" +
+
+    "🔹 <b>/proxy &lt;EMITEN&gt;</b>\n" +
+    "   Proxy broker activity → deteksi akumulasi/distribusi dari volume & price action.\n" +
+    "   Contoh: <code>/proxy ASII</code>\n\n" +
+
+    "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat.",
+    { parse_mode: "HTML" }
   )
 );
+
 
 // =========================
 // COMMAND: INDIKATOR
