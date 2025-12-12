@@ -6,6 +6,7 @@ const axios = require("axios");
 const { fetchHistorical } = require("../src/utils/goapi");
 const { fetchBrokerSummaryWithFallback } = require("../src/utils/goapi");
 const { analyzeProxyBrokerActivity } = require("../src/utils/goapi");
+const { formatProxyBrokerActivity } = require("../src/utils/goapi");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
