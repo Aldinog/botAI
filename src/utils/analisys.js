@@ -173,7 +173,8 @@ async function analyzeStock(symbol) {
 - %D: ${fmt(stochD)}
 → *${stochSignal}*
 
-_Bot beta test, limit 30 request/days_
+_Bot limit 30 request/days_
+
 *Next Update:*
 _Menampilkan News,_
 _Menampilkan Emiten yang sedang trend/ara,_

@@ -40,11 +40,12 @@ const fetchHarga = async (emiten) => {
 📊 Volume: ${data.volume.toLocaleString()}
 🕒 Update: ${updateTime}
 
-Bot beta test, limit 30 request/days
-Next Update:
-Menampilkan News,
-Menampilkan Emiten yang sedang trend/ara,
-Menampilkan Broker Summary`;
+_*Bot limit 30 request/days*_
+
+*Next Update:*
+_Menampilkan News,_
+_Menampilkan Emiten yang sedang trend/ara,_
+_Menampilkan Broker Summary_`;
   } catch (err) {
     console.error("API Error:", err.response?.data || err.message);
     return `❌ Gagal ambil data untuk ${emiten.toUpperCase()}.`;

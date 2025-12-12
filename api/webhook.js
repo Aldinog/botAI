@@ -151,7 +151,8 @@ bot.help((ctx) =>
     "   Proxy broker activity → deteksi akumulasi/distribusi dari volume & price action.\n" +
     "   Contoh: <code>/proxy ASII</code>\n\n" +
 
-    "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat.",
+    "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." + 
+    "Nantikan update menarik selanjutnya!!",
     { parse_mode: "HTML" }
   )
 );
@@ -189,13 +190,16 @@ bot.command("harga", async (ctx) => {
   if (!symbol) {
     return ctx.reply("⚠ Format salah.\nGunakan: /harga BBCA");
   }
+  
+  await ctx.reply("⏳ Wait...")
+  const msg = await fetchHarga(symbol);
+
+  if (result.error) return ctx.reply(`❌ ${msg.error}`);
 
   try {
-    const msg = await fetchHarga(symbol);
-    return ctx.reply(msg, { parse_mode: "HTML" });
-  } catch (err) {
-    console.error(err);
-    return ctx.reply(`❌ Gagal mengambil harga ${symbol}.`);
+    return ctx.reply(msg.text, { parse_mode: "Markdown" });
+  } catch {
+    return ctx.reply(msg.text.replace(/[*_]/g, ""));
   }
 });
 
