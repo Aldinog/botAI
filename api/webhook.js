@@ -4,7 +4,7 @@ require("dotenv").config();
 const axios = require("axios");
 
 const { fetchHistorical } = require("../src/utils/goapi");
-const { fetchBrokerSummary } = require("../src/utils/goapi");
+const { fetchBrokerSummaryWithFallback } = require("../src/utils/goapi");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
@@ -182,37 +182,38 @@ bot.command("harga", async (ctx) => {
 // =========================
 
 bot.command("broksum", async (ctx) => {
-  const text = ctx.message.text.split(" ");
-  const symbol = text[1]?.toUpperCase();
+  const input = ctx.message.text.split(" ");
+  const symbol = input[1]?.toUpperCase();
 
   if (!symbol) {
-    return ctx.reply("⚠ Cara pakai:\n/broksum <SYMBOL>\n\nContoh: /broksum BBCA");
+    return ctx.reply(
+      "⚠ Format salah.\nGunakan: `/broksum BBCA`",
+      { parse_mode: "Markdown" }
+    );
   }
 
-  await ctx.reply("📊 Mengambil data broker summary...");
+  await ctx.reply("⏳ Mengambil data broker summary...");
 
-  const results = await fetchBrokerSummary(symbol);
+  const result = await fetchBrokerSummaryWithFallback(symbol);
 
-  if (results.error) {
-    return ctx.reply(`❌ ${results.error}`);
+  if (!result.success) {
+    return ctx.reply(`❌ ${result.message}`);
   }
 
-  if (results.length === 0) {
-    return ctx.reply(`ℹ️ Tidak ada data broker summary untuk ${symbol} hari ini.`);
-  }
+  // Format output broksum
+  const rows = result.data
+    .map(
+      (x, i) =>
+        `${i + 1}. Broker: *${x.broker_code}*\n   Buy: ${x.buy_value}\n   Sell: ${x.sell_value}`
+    )
+    .join("\n\n");
 
-  // Format broker summary
-  let msg = `📈 <b>Broker Summary ${symbol}</b>\n\n`;
-
-  results.forEach((item) => {
-    msg += `🏦 <b>${item.broker}</b>\n`;
-    msg += `• Buy: <b>${item.net_buy}</b>\n`;
-    msg += `• Sell: <b>${item.net_sell}</b>\n`;
-    msg += `• Freq: ${item.frequency}\n\n`;
-  });
-
-  return ctx.reply(msg.trim(), { parse_mode: "HTML" });
+  ctx.reply(
+    `📊 *Broker Summary ${symbol}*\nTanggal: *${result.date}*\n\n${rows}`,
+    { parse_mode: "Markdown" }
+  );
 });
+
 
 
 

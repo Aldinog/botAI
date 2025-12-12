@@ -58,27 +58,53 @@ async function fetchHistorical(symbol, opts = {}) {
 
 //broksum ---------------------------------------------------
 
-async function fetchBrokerSummary(symbol) {
-  const API_KEY = process.env.GOAPI_API_KEY;
-  const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
+async function fetchBrokerSummaryWithFallback(symbol) {
+  const API_KEY = process.env.GOAPI_KEY;
 
-  const url = `https://api.goapi.io/stock/idx/${symbol}/broker_summary?date=${today}&investor=ALL&api_key=${API_KEY}`;
+  let current = new Date();
+  current.setDate(current.getDate() - 1); // mulai dari kemarin
 
-  try {
-    const { data } = await axios.get(url);
+  let attempts = 0;
+  let lastCheckedDates = [];
 
-    if (!data?.data?.results) {
-      return { error: "Data broker summary tidak ditemukan." };
+  while (attempts < 3) {
+    const date = current.toISOString().split("T")[0];
+    lastCheckedDates.push(date);
+
+    const url = `https://api.goapi.io/stock/idx/${symbol}/broker_summary?date=${date}&investor=ALL&api_key=${API_KEY}`;
+
+    try {
+      const res = await axios.get(url);
+
+      // Jika data ada → return langsung
+      if (res?.data?.data?.results?.length > 0) {
+        return {
+          success: true,
+          date,
+          data: res.data.data.results
+        };
+      }
+
+    } catch (err) {
+      console.error("GoAPI broker summary error:", err.message);
+      // lanjut fallback
     }
 
-    return data.data.results;
-  } catch (err) {
-    console.error("BrokerSummary Error:", err.response?.data || err.message);
-    return { error: "Gagal mengambil data broker summary." };
+    // Mundur 1 hari lagi
+    current.setDate(current.getDate() - 1);
+    attempts++;
   }
+
+  // Jika sampai sini → fallback 3x gagal
+  return {
+    success: false,
+    message: `Sejak ${attempts} hari terakhir (${lastCheckedDates.join(
+      ", "
+    )}) tidak ada data broksum untuk ${symbol}.`
+  };
 }
 
 module.exports = {
   fetchHistorical,
-  fetchBrokerSummary
+  fetchBrokerSummaryWithFallback
 };
