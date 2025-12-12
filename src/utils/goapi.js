@@ -1,7 +1,6 @@
 // api/src/utils/goapi.js
 
 const axios = require('axios');
-
 const GOAPI_KEY = process.env.GOAPI_API_KEY;
 
 /**
@@ -60,7 +59,7 @@ async function fetchHistorical(symbol, opts = {}) {
 //broksum ---------------------------------------------------
 
 async function fetchBrokerSummary(symbol) {
-  const API_KEY = process.env.GOAPI_KEY;
+  const API_KEY = process.env.GOAPI_API_KEY;
   const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
 
   const url = `https://api.goapi.io/stock/idx/${symbol}/broker_summary?date=${today}&investor=ALL&api_key=${API_KEY}`;
