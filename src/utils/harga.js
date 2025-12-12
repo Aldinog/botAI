@@ -40,7 +40,7 @@ const fetchHarga = async (emiten) => {
 📊 Volume: ${data.volume.toLocaleString()}
 🕒 Update: ${updateTime}
 
-_*Bot limit 30 request/days*_
+*Bot limit 30 request/days*
 
 *Next Update:*
 _Menampilkan News,_
