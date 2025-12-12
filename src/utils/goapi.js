@@ -67,7 +67,7 @@ async function fetchBrokerSummaryWithFallback(symbol) {
   let attempts = 0;
   let lastCheckedDates = [];
 
-  while (attempts < 9) {
+  while (attempts < 0) {
     const date = current.toISOString().split("T")[0];
     lastCheckedDates.push(date);
 
@@ -98,8 +98,7 @@ async function fetchBrokerSummaryWithFallback(symbol) {
   // Jika sampai sini → fallback 3x gagal
   return {
     success: false,
-    message: `Sejak ${attempts} hari terakhir (${lastCheckedDates.join(
-      ", "
+    message: `
     )}) tidak ada data broksum untuk ${symbol}.`
   };
 }

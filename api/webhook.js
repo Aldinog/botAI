@@ -194,7 +194,7 @@ bot.command("broksum", async (ctx) => {
     );
   }
 
-  await ctx.reply("⏳ Mengambil data broker summary...");
+  await ctx.reply("❌ fitur sudah ada tetapi tidak bisa digunakan (data tidak tersedia/BERBAYAR)");
 
   const result = await fetchBrokerSummaryWithFallback(symbol);
 
