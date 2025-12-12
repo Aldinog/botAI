@@ -5,6 +5,7 @@ const axios = require("axios");
 
 const { fetchHistorical } = require("../src/utils/goapi");
 const { fetchBrokerSummaryWithFallback } = require("../src/utils/goapi");
+const { analyzeProxyBrokerActivity } = require("../src/utils/goapi");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
@@ -214,7 +215,33 @@ bot.command("broksum", async (ctx) => {
   );
 });
 
+// ============================
+// COMMAND: proxy
+// ============================
 
+bot.command("proxy", async (ctx) => {
+  const text = ctx.message.text.split(" ");
+  const symbol = text[1]?.toUpperCase();
+
+  if (!symbol) {
+    return ctx.reply("⚠ Cara pakai:\n /proxy BBCA");
+  }
+
+  ctx.reply(`⏳ Mengambil data ${symbol}...`);
+
+  try {
+    const candles = await fetchHistorical(symbol, { limit: 120 });
+    const activity = analyzeProxyBrokerActivity(candles);
+
+    const msg = formatProxyBrokerActivity(symbol, activity);
+
+    ctx.reply(msg, { parse_mode: "HTML" });
+
+  } catch (err) {
+    console.error("Proxy error:", err);
+    ctx.reply(`❌ Gagal memproses ${symbol}`);
+  }
+});
 
 
 
