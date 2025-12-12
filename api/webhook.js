@@ -176,6 +176,46 @@ bot.command("harga", async (ctx) => {
   }
 });
 
+// =========================
+// COMMAND: BROKSUM
+// =========================
+
+bot.command("broksum", async (ctx) => {
+  const text = ctx.message.text.split(" ");
+  const symbol = text[1]?.toUpperCase();
+
+  if (!symbol) {
+    return ctx.reply("⚠ Cara pakai:\n/broksum <SYMBOL>\n\nContoh: /broksum BBCA");
+  }
+
+  await ctx.reply("📊 Mengambil data broker summary...");
+
+  const results = await fetchBrokerSummary(symbol);
+
+  if (results.error) {
+    return ctx.reply(`❌ ${results.error}`);
+  }
+
+  if (results.length === 0) {
+    return ctx.reply(`ℹ️ Tidak ada data broker summary untuk ${symbol} hari ini.`);
+  }
+
+  // Format broker summary
+  let msg = `📈 <b>Broker Summary ${symbol}</b>\n\n`;
+
+  results.forEach((item) => {
+    msg += `🏦 <b>${item.broker}</b>\n`;
+    msg += `• Buy: <b>${item.net_buy}</b>\n`;
+    msg += `• Sell: <b>${item.net_sell}</b>\n`;
+    msg += `• Freq: ${item.frequency}\n\n`;
+  });
+
+  return ctx.reply(msg.trim(), { parse_mode: "HTML" });
+});
+
+
+
+
 // ============================
 // COMMAND: ANALISA
 // ============================

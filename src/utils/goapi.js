@@ -57,4 +57,29 @@ async function fetchHistorical(symbol, opts = {}) {
   }
 }
 
-module.exports = { fetchHistorical };
+//broksum ---------------------------------------------------
+
+async function fetchBrokerSummary(symbol) {
+  const API_KEY = process.env.GOAPI_KEY;
+  const today = new Date().toISOString().split("T")[0]; // format YYYY-MM-DD
+
+  const url = `https://api.goapi.io/stock/idx/${symbol}/broker_summary?date=${today}&investor=ALL&api_key=${API_KEY}`;
+
+  try {
+    const { data } = await axios.get(url);
+
+    if (!data?.data?.results) {
+      return { error: "Data broker summary tidak ditemukan." };
+    }
+
+    return data.data.results;
+  } catch (err) {
+    console.error("BrokerSummary Error:", err.response?.data || err.message);
+    return { error: "Gagal mengambil data broker summary." };
+  }
+}
+
+module.exports = {
+  fetchHistorical,
+  fetchBrokerSummary
+};
