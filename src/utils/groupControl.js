@@ -1,5 +1,5 @@
-const allowedGroups = process.env.ALLOWED_GROUPS_IDS
-  ? process.env.ALLOWED_GROUPS_IDS.split(",").map(id => id.trim())
+const allowedGroups = process.env.ALLOWED_GROUP_IDS
+  ? process.env.ALLOWED_GROUP_IDS.split(",").map(id => id.trim())
   : [];
 
 function isAllowedGroup(chatId) {
