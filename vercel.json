@@ -9,6 +9,14 @@
       ]
     },
     {
+      "src": "/api/web",
+      "dest": "api/web.js",
+      "methods": [
+        "POST",
+        "OPTIONS"
+      ]
+    },
+    {
       "src": "/",
       "dest": "/public/index.html"
     },

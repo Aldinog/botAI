@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,13 +8,16 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="dark-cyber-theme">
     <div class="scanline"></div>
     <div class="bg-grid"></div>
-    
+
     <div class="container">
         <header class="cyber-header">
             <h1 class="glitch" data-text="AI CORE ONLINE">AI CORE ONLINE</h1>
@@ -23,29 +27,47 @@
         </header>
 
         <main class="content-area">
-            <div class="cyber-card assistant-card">
-                <div class="card-border"></div>
-                <div class="assistant-visual">
-                    <div class="circle-outer"></div>
-                    <div class="circle-inner"></div>
-                    <div class="core-glow"></div>
+
+            <!-- Input Area -->
+            <div class="cyber-card input-card">
+                <div class="input-group">
+                    <input type="text" id="ticker-input" placeholder="ENTER STOCK TICKER (e.g. BBCA)" maxlength="6">
+                    <div class="input-border"></div>
                 </div>
-                <h2>A.I. ASSISTANT</h2>
-                <p>Advanced neural network integration active. Awaiting input protocols.</p>
-                <button class="cyber-btn" id="start-chat-btn">
-                    <span class="btn-content">INITIALIZE CHAT</span>
-                    <span class="btn-glitch"></span>
-                </button>
+
+                <div class="action-grid">
+                    <button class="action-btn" data-action="price">
+                        <span class="icon">💰</span> PRICE
+                    </button>
+                    <button class="action-btn" data-action="indicators">
+                        <span class="icon">📊</span> INDICATORS
+                    </button>
+                    <button class="action-btn" data-action="analysis">
+                        <span class="icon">🤖</span> AI ANALYZE
+                    </button>
+                    <button class="action-btn" data-action="proxy">
+                        <span class="icon">🕵️</span> PROXY
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="cyber-card terminal-card hidden" id="terminal-card">
+                <div class="terminal-header">
+                    <span class="terminal-title">>_ RESULT.LOG</span>
+                    <button class="close-btn" id="close-terminal">×</button>
+                </div>
+                <div class="terminal-body" id="terminal-output">
+                    <!-- Dynamic Content -->
+                </div>
             </div>
 
             <div class="features-grid">
                 <div class="cyber-card feature-card">
-                    <h3>ANALYTICS</h3>
-                    <div class="stat-bar"><div class="fill" style="width: 85%"></div></div>
-                </div>
-                <div class="cyber-card feature-card">
-                    <h3>SECURITY</h3>
-                    <div class="stat-bar"><div class="fill" style="width: 98%"></div></div>
+                    <h3>SYSTEM STATUS</h3>
+                    <div class="stat-bar">
+                        <div class="fill" style="width: 100%"></div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -53,4 +75,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>

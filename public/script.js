@@ -1,52 +1,83 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize Telegram Web App
     const tg = window.Telegram.WebApp;
-
-    // Expand to full height
     tg.expand();
 
-    // Set header color to match our dark theme
-    if (tg.setHeaderColor) {
-        tg.setHeaderColor('#050505');
-    }
-    if (tg.setBackgroundColor) {
-        tg.setBackgroundColor('#050505');
-    }
+    if (tg.setHeaderColor) tg.setHeaderColor('#050505');
+    if (tg.setBackgroundColor) tg.setBackgroundColor('#050505');
 
-    // Interactivity for the "Initialize Chat" button
-    const startBtn = document.getElementById('start-chat-btn');
-    startBtn.addEventListener('click', () => {
+    // UI Elements
+    const tickerInput = document.getElementById('ticker-input');
+    const terminalCard = document.getElementById('terminal-card');
+    const terminalOutput = document.getElementById('terminal-output');
+    const closeTerminalBtn = document.getElementById('close-terminal');
+    const buttons = document.querySelectorAll('.action-btn');
+
+    // Helper: Show Terminal with loading text
+    const showLoading = (action) => {
+        terminalCard.classList.remove('hidden');
+        terminalOutput.innerHTML = `<span class="blink">> CACHING DATA...</span><br>> EXECUTING ${action.toUpperCase()} PROTOCOL...`;
+
         // Haptic feedback
-        if (tg.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred('heavy');
-        }
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    };
 
-        // Visual feedback
-        startBtn.innerHTML = '<span class="btn-content">INITIALIZING...</span>';
-        
-        // Simulate loading then maybe close or send data
-        setTimeout(() => {
-            startBtn.innerHTML = '<span class="btn-content">ACTIVE</span>';
-            startBtn.style.borderColor = '#00f3ff';
-            startBtn.style.color = '#00f3ff';
-            startBtn.style.boxShadow = '0 0 20px #00f3ff';
-            
-            // Send data back to bot (optional demo)
-            // tg.sendData("Chat Initialized"); 
-        }, 1500);
+    // Helper: Show Result
+    const showResult = (html) => {
+        terminalOutput.innerHTML = html;
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    };
+
+    // Helper: Show Error
+    const showError = (msg) => {
+        terminalOutput.innerHTML = `<span style="color: #ff5555;">> ERROR: ${msg}</span>`;
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+    };
+
+    // Action Buttons Logic
+    buttons.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const action = btn.dataset.action;
+            const symbol = tickerInput.value.trim().toUpperCase();
+
+            if (!symbol) {
+                // Shake input or show visual cue
+                tickerInput.style.borderColor = '#ff5555';
+                setTimeout(() => tickerInput.style.borderColor = '#ff00ff', 500);
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                return;
+            }
+
+            showLoading(action);
+
+            try {
+                const response = await fetch('/api/web', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, symbol })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showResult(data.data);
+                } else {
+                    showError(data.error || 'Unknown System Error');
+                }
+            } catch (err) {
+                showError('Network Connectivity Lost');
+                console.error(err);
+            }
+        });
     });
 
-    // Glitch effect randomization (optional enhancement)
-    const glitchText = document.querySelector('.glitch');
-    if (glitchText) {
-        setInterval(() => {
-            glitchText.style.textShadow = `
-                ${Math.random() * 4 - 2}px ${Math.random() * 4 - 2}px 0 #ff00ff,
-                ${Math.random() * 4 - 2}px ${Math.random() * 4 - 2}px 0 #00f3ff
-            `;
-            setTimeout(() => {
-                glitchText.style.textShadow = '0 0 10px rgba(0, 243, 255, 0.7)';
-            }, 100);
-        }, 3000);
-    }
+    // Close Terminal
+    closeTerminalBtn.addEventListener('click', () => {
+        terminalCard.classList.add('hidden');
+    });
+
+    // Input interaction
+    tickerInput.addEventListener('input', () => {
+        tickerInput.style.borderColor = '#ff00ff';
+    });
 });
