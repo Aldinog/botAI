@@ -3,20 +3,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    if (tg.setHeaderColor) tg.setHeaderColor('#050505');
-    if (tg.setBackgroundColor) tg.setBackgroundColor('#050505');
+    // Set colors for Telegram Header to match our premium dark theme
+    if (tg.setHeaderColor) tg.setHeaderColor('#0f172a');
+    if (tg.setBackgroundColor) tg.setBackgroundColor('#0f172a');
 
     // UI Elements
     const tickerInput = document.getElementById('ticker-input');
     const terminalCard = document.getElementById('terminal-card');
     const terminalOutput = document.getElementById('terminal-output');
     const closeTerminalBtn = document.getElementById('close-terminal');
-    const buttons = document.querySelectorAll('.action-btn');
+    const buttons = document.querySelectorAll('.glass-btn');
 
-    // Helper: Show Terminal with loading text
+    // Helper: Show Terminal with loading pulse
     const showLoading = (action) => {
         terminalCard.classList.remove('hidden');
-        terminalOutput.innerHTML = `<span class="blink">> CACHING DATA...</span><br>> EXECUTING ${action.toUpperCase()} PROTOCOL...`;
+        terminalOutput.innerHTML = `
+            <div class="loading-pulse">
+                <div class="spinner"></div>
+                <span>Processing ${action}...</span>
+            </div>
+        `;
 
         // Haptic feedback
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
@@ -24,13 +30,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Helper: Show Result
     const showResult = (html) => {
-        terminalOutput.innerHTML = html;
+        // Add fade-in animation class to content
+        const contentDiv = document.createElement('div');
+        contentDiv.style.animation = 'fadeInUp 0.3s ease-out';
+        contentDiv.innerHTML = html;
+
+        terminalOutput.innerHTML = '';
+        terminalOutput.appendChild(contentDiv);
+
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     };
 
     // Helper: Show Error
     const showError = (msg) => {
-        terminalOutput.innerHTML = `<span style="color: #ff5555;">> ERROR: ${msg}</span>`;
+        terminalOutput.innerHTML = `<span style="color: #ef4444; font-weight: 500;">⚠ Error: ${msg}</span>`;
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
     };
 
@@ -41,9 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const symbol = tickerInput.value.trim().toUpperCase();
 
             if (!symbol) {
-                // Shake input or show visual cue
-                tickerInput.style.borderColor = '#ff5555';
-                setTimeout(() => tickerInput.style.borderColor = '#ff00ff', 500);
+                // Shake input visual cue
+                tickerInput.style.borderColor = '#ef4444';
+                tickerInput.focus();
+                setTimeout(() => tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)', 1000);
+
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
                 return;
             }
@@ -73,11 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Close Terminal
     closeTerminalBtn.addEventListener('click', () => {
+        // Add slide out animation if desired, for now just hide
         terminalCard.classList.add('hidden');
     });
 
     // Input interaction
     tickerInput.addEventListener('input', () => {
-        tickerInput.style.borderColor = '#ff00ff';
+        tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
     });
 });

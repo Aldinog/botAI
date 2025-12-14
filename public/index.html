@@ -4,71 +4,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Bot Mini App</title>
+    <title>AI Bot - Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="dark-cyber-theme">
-    <div class="scanline"></div>
-    <div class="bg-grid"></div>
+<body class="premium-theme">
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
 
     <div class="container">
-        <header class="cyber-header">
-            <h1 class="glitch" data-text="AI CORE ONLINE">AI CORE ONLINE</h1>
-            <div class="status-indicator">
-                <span class="dot"></span> SYSTEM READY
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="white" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M2 17L12 22L22 17" stroke="white" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M2 12L12 17L22 12" stroke="white" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <h1>AI Assistant</h1>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot"></span> Online
             </div>
         </header>
 
         <main class="content-area">
 
             <!-- Input Area -->
-            <div class="cyber-card input-card">
-                <div class="input-group">
-                    <input type="text" id="ticker-input" placeholder="ENTER STOCK TICKER (e.g. BBCA)" maxlength="6">
-                    <div class="input-border"></div>
+            <div class="glass-card input-card">
+                <div class="input-wrapper">
+                    <label for="ticker-input">STOCK TICKER</label>
+                    <input type="text" id="ticker-input" placeholder="e.g. BBCA, TLKM" maxlength="6">
                 </div>
 
-                <div class="action-grid">
-                    <button class="action-btn" data-action="price">
-                        <span class="icon">💰</span> PRICE
+                <div class="grid-actions">
+                    <button class="glass-btn" data-action="price">
+                        <span class="btn-icon">💰</span>
+                        <span class="btn-text">Price</span>
                     </button>
-                    <button class="action-btn" data-action="indicators">
-                        <span class="icon">📊</span> INDICATORS
+                    <button class="glass-btn" data-action="indicators">
+                        <span class="btn-icon">📊</span>
+                        <span class="btn-text">Indicators</span>
                     </button>
-                    <button class="action-btn" data-action="analysis">
-                        <span class="icon">🤖</span> AI ANALYZE
+                    <button class="glass-btn" data-action="analysis">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-text">AI Analyze</span>
                     </button>
-                    <button class="action-btn" data-action="proxy">
-                        <span class="icon">🕵️</span> PROXY
+                    <button class="glass-btn" data-action="proxy">
+                        <span class="btn-icon">🕵️</span>
+                        <span class="btn-text">Proxy</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Terminal Output -->
-            <div class="cyber-card terminal-card hidden" id="terminal-card">
-                <div class="terminal-header">
-                    <span class="terminal-title">>_ RESULT.LOG</span>
-                    <button class="close-btn" id="close-terminal">×</button>
+            <!-- Output Area -->
+            <div class="glass-card output-card hidden" id="terminal-card">
+                <div class="card-header">
+                    <h3>Analysis Result</h3>
+                    <button class="icon-btn" id="close-terminal">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
-                <div class="terminal-body" id="terminal-output">
+                <div class="output-content" id="terminal-output">
                     <!-- Dynamic Content -->
                 </div>
             </div>
 
-            <div class="features-grid">
-                <div class="cyber-card feature-card">
-                    <h3>SYSTEM STATUS</h3>
-                    <div class="stat-bar">
-                        <div class="fill" style="width: 100%"></div>
-                    </div>
-                </div>
+            <div class="info-card">
+                <p>Powered by Advanced AI Models & Real-time Market Data</p>
             </div>
         </main>
     </div>
