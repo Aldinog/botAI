@@ -7,7 +7,15 @@ const {
     formatProxyBrokerActivity
 } = require('../src/utils/goapi');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
-const { marked } = require('marked');
+// Remove static require
+// const { marked } = require('marked');
+
+// Dynamic import helper
+let marked;
+async function loadMarked() {
+    if (!marked) marked = (await import("marked")).marked;
+    return marked;
+}
 
 // Helper to remove HTML tags or markdown if needed for simple display, 
 // but we might want to keep some specific formatting for the web.
@@ -85,7 +93,8 @@ module.exports = async (req, res) => {
 
         let htmlOutput = result;
         if (!isHtml) {
-            htmlOutput = marked.parse(result);
+            const markedFn = await loadMarked();
+            htmlOutput = markedFn(result);
         }
         // Force newlines to <br> if not handled by marked (e.g. plain text with \n)
         if (!htmlOutput.includes('<p>') && !htmlOutput.includes('<br>')) {
