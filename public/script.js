@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const terminalCard = document.getElementById('terminal-card');
     const terminalOutput = document.getElementById('terminal-output');
     const closeTerminalBtn = document.getElementById('close-terminal');
-    const buttons = document.querySelectorAll('.glass-btn');
+    const buttons = document.querySelectorAll('.glass-btn[data-action]');
 
     // Review Modal Elements
     const reviewModal = document.getElementById('review-modal');
