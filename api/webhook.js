@@ -12,6 +12,7 @@ const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
 const { isAllowedGroup } = require("../src/utils/groupControl");
 const { fetchHarga } = require('../src/utils/harga');
+const { generateReview } = require('../src/utils/review');
 
 const DEFAULT_CANDLES = 50;
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
@@ -155,9 +156,9 @@ bot.help((ctx) =>
     "   Dapatkan signal trading lengkap (Entry, SL, TP) berbasis AI.\n" +
     "   Contoh: <code>/signal BBCA</code>\n\n" +
 
-    "🔹 <b>/review &lt;ACTION&gt; &lt;EMITEN&gt; entry=&lt;RP&gt; [sl=&lt;RP&gt;]</b>\n" +
+    "🔹 <b>/review &lt;BUY/SELL&gt; &lt;SYMBOL&gt; &lt;ENTRY&gt; [SL]</b>\n" +
     "   Review kualitas setup trading kamu.\n" +
-    "   Contoh: <code>/review BUY BBCA entry=9800 sl=9600</code>\n\n" +
+    "   Contoh: <code>/review BUY BBCA 1260</code> atau <code>/review BUY BBCA entry=1260 sl=1200</code>\n\n" +
 
     "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." +
     "Nantikan update menarik selanjutnya!!",
@@ -278,31 +279,23 @@ bot.command("proxy", async (ctx) => {
 // COMMAND: REVIEW
 // ============================
 bot.command("review", async (ctx) => {
-  // Format: /review BUY BBCA entry=10000 sl=9500
-  const text = ctx.message.text.split(" ");
-  if (text.length < 3) {
-    return ctx.reply("⚠ Format: `/review <BUY/SELL> <SYMBOL> entry=<PRICE> [sl=<PRICE>]`", { parse_mode: "Markdown" });
+  // Parsing more robustly using regex to handle "entry=" or plain numbers
+  // Format: /review BUY BBCA 1260 OR /review BUY BBCA entry=1260
+  const input = ctx.message.text;
+  const match = input.match(/\/review\s+(BUY|SELL)\s+([A-Z0-9.-]+)\s+?(?:entry=)?(\d+)(?:\s+?(?:sl=)?(\d+))?/i);
+
+  if (!match) {
+    return ctx.reply("⚠ Format salah.\nGunakan: `/review BUY BBCA 1260` atau `/review BUY BBCA entry=1260 sl=1200`", { parse_mode: "Markdown" });
   }
 
-  const action = text[1];
-  const symbol = text[2];
+  const action = match[1].toUpperCase();
+  const symbol = match[2].toUpperCase();
+  const entryPrice = match[3];
+  const slPrice = match[4] || null;
 
-  // Parse parameters
-  const params = text.slice(3).join(" ");
-  const entryMatch = params.match(/entry=(\d+)/i);
-  const slMatch = params.match(/sl=(\d+)/i);
-
-  if (!entryMatch) {
-    return ctx.reply("⚠ Entry price wajib diisi. Contoh: `entry=10000`", { parse_mode: "Markdown" });
-  }
-
-  const entryPrice = entryMatch[1];
-  const slPrice = slMatch ? slMatch[1] : null;
-
-  await ctx.reply(`🧠 Reviewing Trade Setup: ${action} ${symbol}...`);
+  await ctx.reply(`🧠 Reviewing Trade Setup: ${action} ${symbol} @ ${entryPrice}...`);
 
   try {
-    const { generateReview } = require('../src/utils/review.js');
     const reviewResult = await generateReview(action, symbol, entryPrice, slPrice);
 
     // Convert Markdown to Telegram HTML
@@ -311,7 +304,7 @@ bot.command("review", async (ctx) => {
 
   } catch (err) {
     console.error("Review Error:", err);
-    ctx.reply(`❌ Gagal memproses review untuk ${symbol}`);
+    ctx.reply(`❌ Gagal memproses review untuk ${symbol}. Hubungi admin jika error berlanjut.`);
   }
 });
 
