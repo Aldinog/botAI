@@ -288,6 +288,43 @@ body {
     font-size: 0.9rem;
 }
 
+/* Output Typography */
+.output-content {
+    font-family: var(--font-body);
+    line-height: 1.6;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.output-content p {
+    margin-bottom: 12px;
+}
+
+.output-content ul,
+.output-content ol {
+    margin-bottom: 12px;
+    padding-left: 20px;
+}
+
+.output-content li {
+    margin-bottom: 4px;
+}
+
+.output-content h1,
+.output-content h2,
+.output-content h3,
+.output-content h4 {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    color: var(--accent-blue);
+    font-weight: 600;
+}
+
+.output-content strong {
+    color: white;
+    font-weight: 600;
+}
+
 /* ... existing output css ... */
 
 /* Modal Inputs */
@@ -379,13 +416,106 @@ body {
     display: none;
 }
 
+/* Close Button */
+#close-review {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+#close-review:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg) scale(1.1);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+/* Updated Info Card (Powered By) */
+.info-card {
+    margin-top: auto;
+    padding-top: 30px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.info-card p {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+/* Loading Spinner */
+.loading-pulse {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(99, 102, 241, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--accent-blue);
+    animation: spin 1s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-pulse span {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Ensure Modal Content is Relative for Absolute Positioned Close Button */
 .modal-content {
+    position: relative;
+    /* ... existing styles ... */
     width: 100%;
     max-width: 400px;
     background: rgba(15, 23, 42, 0.9);
     border: 1px solid var(--accent-blue);
     border-radius: var(--card-radius);
     padding: 24px;
+    overflow: visible;
+    /* modification to allow button to hang out if needed, or stick to edges */
 }
 
 .modal-body {

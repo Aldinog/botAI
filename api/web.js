@@ -110,9 +110,10 @@ module.exports = async (req, res) => {
         let htmlOutput = result;
         if (!isHtml) {
             const markedFn = await loadMarked();
-            htmlOutput = markedFn(result);
+            htmlOutput = markedFn(result, { breaks: true });
         }
         // Force newlines to <br> if not handled by marked (e.g. plain text with \n)
+        // If marked handled it, it should have inserted <br> for \n
         if (!htmlOutput.includes('<p>') && !htmlOutput.includes('<br>')) {
             htmlOutput = htmlOutput.replace(/\n/g, '<br>');
         }
