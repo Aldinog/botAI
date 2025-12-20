@@ -78,6 +78,11 @@ module.exports = async (req, res) => {
                 result = formatProxyBrokerActivity(symbol, activity);
                 break;
 
+            case 'signal':
+                const { generateSignal } = await import('../src/utils/signal.js');
+                result = await generateSignal(symbol);
+                break;
+
             default:
                 return res.status(400).json({ error: 'Invalid action' });
         }

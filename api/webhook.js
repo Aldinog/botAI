@@ -131,7 +131,7 @@ bot.help((ctx) =>
     "📌 <b>List Command Bot Saham</b>\n\n" +
     "🔹 <b>/start</b>\n" +
     "   Mengaktifkan bot dan memastikan bot responsif.\n\n" +
-    
+
     "🔹 <b>/help</b>\n" +
     "   Menampilkan daftar perintah dan fungsinya.\n\n" +
 
@@ -151,7 +151,11 @@ bot.help((ctx) =>
     "   Proxy broker activity → deteksi akumulasi/distribusi dari volume & price action.\n" +
     "   Contoh: <code>/proxy ASII</code>\n\n" +
 
-    "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." + 
+    "🔹 <b>/signal &lt;EMITEN&gt;</b>\n" +
+    "   Dapatkan signal trading lengkap (Entry, SL, TP) berbasis AI.\n" +
+    "   Contoh: <code>/signal BBCA</code>\n\n" +
+
+    "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." +
     "Nantikan update menarik selanjutnya!!",
     { parse_mode: "HTML" }
   )
@@ -262,6 +266,39 @@ bot.command("proxy", async (ctx) => {
   } catch (err) {
     console.error("Proxy error:", err);
     ctx.reply(`❌ Gagal memproses ${symbol}`);
+  }
+});
+
+
+// ============================
+// COMMAND: SIGNAL
+// ============================
+bot.command("signal", async (ctx) => {
+  const text = ctx.message.text.split(" ");
+  const symbol = text[1]?.toUpperCase();
+
+  if (!symbol) {
+    return ctx.reply("⚠ Cara pakai:\n /signal BBCA");
+  }
+
+  await ctx.reply(`🧠 Menganalisa Signal untuk ${symbol}...`);
+
+  try {
+    // Dynamic import if needed, or require at top if possible. 
+    // using require at top is better for standard usage but if following pattern:
+    const { generateSignal } = require('../src/utils/signal.js');
+
+    const signalResult = await generateSignal(symbol);
+
+    // Convert Markdown to Telegram HTML if needed
+    const html = await markdownToTelegramHTML(signalResult);
+    const finalMsg = `🚀 <b>Sinyal Trading ${symbol}</b>\n\n${html}`;
+
+    await sendLongMessage(ctx, finalMsg);
+
+  } catch (err) {
+    console.error("Signal Error:", err);
+    ctx.reply(`❌ Gagal menghasilkan signal untuk ${symbol}`);
   }
 });
 
