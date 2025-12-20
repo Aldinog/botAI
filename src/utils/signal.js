@@ -80,6 +80,7 @@ PENTING:
 - Jangan bertele-tele.
 - Jika data tidak mendukung Entry (misal trend tidak jelas atau risiko tinggi), pilih WAIT.
 - Validasi logika: Jangan sarankan BUY jika harga di bawah MA besar dan RSI Overbought, kecuali ada divergensi kuat.
+- Tambahkan Disclaimer singkat agar trader tidak menerima mentah mentah dari AI tanpa validasi.
 `;
 
         // 5. Call Gemini
