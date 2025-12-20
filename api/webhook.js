@@ -155,6 +155,10 @@ bot.help((ctx) =>
     "   Dapatkan signal trading lengkap (Entry, SL, TP) berbasis AI.\n" +
     "   Contoh: <code>/signal BBCA</code>\n\n" +
 
+    "🔹 <b>/review &lt;ACTION&gt; &lt;EMITEN&gt; entry=&lt;RP&gt; [sl=&lt;RP&gt;]</b>\n" +
+    "   Review kualitas setup trading kamu.\n" +
+    "   Contoh: <code>/review BUY BBCA entry=9800 sl=9600</code>\n\n" +
+
     "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." +
     "Nantikan update menarik selanjutnya!!",
     { parse_mode: "HTML" }
@@ -269,6 +273,47 @@ bot.command("proxy", async (ctx) => {
   }
 });
 
+
+// ============================
+// COMMAND: REVIEW
+// ============================
+bot.command("review", async (ctx) => {
+  // Format: /review BUY BBCA entry=10000 sl=9500
+  const text = ctx.message.text.split(" ");
+  if (text.length < 3) {
+    return ctx.reply("⚠ Format: `/review <BUY/SELL> <SYMBOL> entry=<PRICE> [sl=<PRICE>]`", { parse_mode: "Markdown" });
+  }
+
+  const action = text[1];
+  const symbol = text[2];
+
+  // Parse parameters
+  const params = text.slice(3).join(" ");
+  const entryMatch = params.match(/entry=(\d+)/i);
+  const slMatch = params.match(/sl=(\d+)/i);
+
+  if (!entryMatch) {
+    return ctx.reply("⚠ Entry price wajib diisi. Contoh: `entry=10000`", { parse_mode: "Markdown" });
+  }
+
+  const entryPrice = entryMatch[1];
+  const slPrice = slMatch ? slMatch[1] : null;
+
+  await ctx.reply(`🧠 Reviewing Trade Setup: ${action} ${symbol}...`);
+
+  try {
+    const { generateReview } = require('../src/utils/review.js');
+    const reviewResult = await generateReview(action, symbol, entryPrice, slPrice);
+
+    // Convert Markdown to Telegram HTML
+    const html = await markdownToTelegramHTML(reviewResult);
+    await sendLongMessage(ctx, html);
+
+  } catch (err) {
+    console.error("Review Error:", err);
+    ctx.reply(`❌ Gagal memproses review untuk ${symbol}`);
+  }
+});
 
 // ============================
 // COMMAND: SIGNAL
