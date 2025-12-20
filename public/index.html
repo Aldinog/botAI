@@ -70,6 +70,40 @@
                         <span class="btn-icon">📡</span>
                         <span class="btn-text">Signal AI</span>
                     </button>
+                    <button class="glass-btn" data-action="review-modal">
+                        <span class="btn-icon">🧠</span>
+                        <span class="btn-text">Review Entry</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Review Modal -->
+            <div id="review-modal" class="modal-overlay hidden">
+                <div class="glass-card modal-content">
+                    <div class="card-header">
+                        <h3>Review Trade Setup</h3>
+                        <button class="icon-btn" id="close-review">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="input-wrapper">
+                            <label>ACTION</label>
+                            <div class="toggle-group">
+                                <button class="toggle-btn active" data-value="BUY">BUY</button>
+                                <button class="toggle-btn" data-value="SELL">SELL</button>
+                            </div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label>ENTRY PRICE</label>
+                            <input type="number" id="review-entry" placeholder="e.g. 4500">
+                        </div>
+                        <div class="input-wrapper">
+                            <label>STOP LOSS (Optional)</label>
+                            <input type="number" id="review-sl" placeholder="e.g. 4300">
+                        </div>
+                        <button class="glass-btn primary-btn" id="submit-review">
+                            Analyze Setup
+                        </button>
+                    </div>
                 </div>
             </div>
 
