@@ -164,10 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Close Terminal
-    closeTerminalBtn.addEventListener('click', () => {
-        terminalCard.classList.add('hidden');
-    });
+    // Close Terminal Logic - REMOVED as requested
+    // closeTerminalBtn.addEventListener('click', () => {
+    //     terminalCard.classList.add('hidden');
+    // });
+
 
     // Input Focus Effect
     tickerInput.addEventListener('input', () => {
