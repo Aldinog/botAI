@@ -1,87 +1,100 @@
-// Initialize Telegram Web App
-const tg = window.Telegram.WebApp;
-tg.expand();
-if (tg.setHeaderColor) tg.setHeaderColor('#0f172a');
-if (tg.setBackgroundColor) tg.setBackgroundColor('#0f172a');
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Telegram Web App
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-// Global Functions for Tab Switching
-window.openTab = function (tabId) {
-    // Hide all contents
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    // Show target content
-    document.getElementById(tabId).classList.add('active');
+    if (tg.setHeaderColor) tg.setHeaderColor('#0f172a');
+    if (tg.setBackgroundColor) tg.setBackgroundColor('#0f172a');
 
-    // Update button states if needed (optional visual feedback)
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    // simplistic finding of button by onclick attribute or text matching is hard, 
-    // relying on user just clicking.
-}
+    // UI Elements
+    const tickerInput = document.getElementById('ticker-input');
+    const terminalCard = document.getElementById('terminal-card');
+    const terminalOutput = document.getElementById('terminal-output');
+    const closeTerminalBtn = document.getElementById('close-terminal');
+    const buttons = document.querySelectorAll('.glass-btn');
 
-// Generic API Call Helper
-async function callApi(action, symbol, outputId) {
-    const outputDiv = document.getElementById(outputId);
+    // Helper: Show Terminal with loading pulse
+    const showLoading = (action) => {
+        terminalCard.classList.remove('hidden');
+        terminalOutput.innerHTML = `
+            <div class="loading-pulse">
+                <div class="spinner"></div>
+                <span>Processing ${action}...</span>
+            </div>
+        `;
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    };
 
-    if (!symbol) {
-        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-        return alert('Masukkan kode saham!');
-    }
+    // Helper: Show Result
+    const showResult = (html) => {
+        const contentDiv = document.createElement('div');
+        contentDiv.style.animation = 'fadeInUp 0.3s ease-out';
+        contentDiv.innerHTML = html;
+        terminalOutput.innerHTML = '';
+        terminalOutput.appendChild(contentDiv);
+        if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+    };
 
-    // Loading State
-    outputDiv.innerHTML = `
-        <div class="loading-pulse">
-            <div class="spinner"></div>
-            <span>Analyzing ${symbol}...</span>
-        </div>
-    `;
-
-    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-
-    try {
-        const response = await fetch('/api/web', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, symbol })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            // Render Result
-            outputDiv.innerHTML = `<div class="result-content">${data.data}</div>`;
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-        } else {
-            outputDiv.innerHTML = `<div class="error-msg">❌ ${data.error || 'Terjadi kesalahan'}</div>`;
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-        }
-    } catch (err) {
-        console.error(err);
-        outputDiv.innerHTML = `<div class="error-msg">❌ Network Error</div>`;
+    // Helper: Show Error
+    const showError = (msg) => {
+        terminalOutput.innerHTML = `<span style="color: #ef4444; font-weight: 500;">⚠ Error: ${msg}</span>`;
         if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
-    }
-}
+    };
 
-// Specific Button Handlers
-window.getPrice = function () {
-    const symbol = document.getElementById('symbol-price').value.toUpperCase();
-    callApi('price', symbol, 'result-price');
-}
+    // Button Event Listeners
+    buttons.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const action = btn.dataset.action;
+            const symbol = tickerInput.value.trim().toUpperCase();
 
-window.getIndicators = function () {
-    const symbol = document.getElementById('symbol-indicators').value.toUpperCase();
-    callApi('indicators', symbol, 'result-indicators');
-}
+            // Validate Input
+            if (!symbol) {
+                // Shake Animation
+                tickerInput.style.borderColor = '#ef4444';
+                tickerInput.focus();
 
-window.getAnalysis = function () {
-    const symbol = document.getElementById('symbol-analysis').value.toUpperCase();
-    callApi('analysis', symbol, 'result-analysis');
-}
+                setTimeout(() => {
+                    tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                }, 1000);
 
-window.getProxy = function () {
-    const symbol = document.getElementById('symbol-proxy').value.toUpperCase();
-    callApi('proxy', symbol, 'result-proxy');
-}
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                return;
+            }
 
-window.getSignal = function () {
-    const symbol = document.getElementById('symbol-signal').value.toUpperCase();
-    callApi('signal', symbol, 'result-signal');
-}
+            // Execute
+            showLoading(action);
+
+            try {
+                const response = await fetch('/api/web', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, symbol })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showResult(data.data);
+                } else {
+                    showError(data.error || 'Unknown System Error');
+                }
+            } catch (err) {
+                console.error(err);
+                showError('Network Connectivity Lost');
+            }
+        });
+    });
+
+    // Close Terminal Logic
+    closeTerminalBtn.addEventListener('click', () => {
+        terminalCard.classList.add('hidden');
+    });
+
+    // Input Focus Effect
+    tickerInput.addEventListener('input', () => {
+        tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+    });
+
+    // Clean up global scope just in case
+    if (window.openTab) delete window.openTab;
+});

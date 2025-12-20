@@ -49,69 +49,31 @@
                 </div>
 
                 <div class="grid-actions">
-                    <button class="tab-btn" onclick="openTab('price')">
+                    <button class="glass-btn" data-action="price">
                         <span class="btn-icon">💰</span>
                         <span class="btn-text">Harga</span>
                     </button>
-                    <button class="tab-btn" onclick="openTab('indicators')">
+                    <button class="glass-btn" data-action="indicators">
                         <span class="btn-icon">📊</span>
                         <span class="btn-text">Indikator</span>
                     </button>
-                    <button class="tab-btn" onclick="openTab('analysis')">
+                    <button class="glass-btn" data-action="analysis">
                         <span class="btn-icon">✨</span>
                         <span class="btn-text">Analisis AI</span>
                     </button>
-                    <button class="tab-btn" onclick="openTab('proxy')">
+                    <button class="glass-btn" data-action="proxy">
                         <span class="btn-icon">🕵️</span>
                         <span class="btn-text">Aktivitas Proxy</span>
                     </button>
-                    <button class="tab-btn" onclick="openTab('signal')">
+                    <button class="glass-btn" data-action="signal">
                         <span class="btn-icon">📡</span>
                         <span class="btn-text">Signal AI</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Output Area -->
-            <div id="price" class="tab-content active">
-                <div class="input-group">
-                    <input type="text" id="symbol-price" placeholder="Kode Saham (e.g. BBCA)">
-                    <button onclick="getPrice()">Cek Harga</button>
-                </div>
-                <div id="result-price" class="result-box"></div>
-            </div>
-
-            <div id="indicators" class="tab-content">
-                <div class="input-group">
-                    <input type="text" id="symbol-indicators" placeholder="Kode Saham (e.g. BBRI)">
-                    <button onclick="getIndicators()">Cek Indikator</button>
-                </div>
-                <div id="result-indicators" class="result-box"></div>
-            </div>
-
-            <div id="analysis" class="tab-content">
-                <div class="input-group">
-                    <input type="text" id="symbol-analysis" placeholder="Kode Saham (e.g. TLKM)">
-                    <button onclick="getAnalysis()">Analisa AI</button>
-                </div>
-                <div id="result-analysis" class="result-box"></div>
-            </div>
-
-            <div id="proxy" class="tab-content">
-                <div class="input-group">
-                    <input type="text" id="symbol-proxy" placeholder="Kode Saham (e.g. ASII)">
-                    <button onclick="getProxy()">Cek Broker</button>
-                </div>
-                <div id="result-proxy" class="result-box"></div>
-            </div>
-
-            <div id="signal" class="tab-content">
-                <div class="input-group">
-                    <input type="text" id="symbol-signal" placeholder="Kode Saham (e.g. BMRI)">
-                    <button onclick="getSignal()">Signal AI</button>
-                </div>
-                <div id="result-signal" class="result-box"></div>
-            </div>
+            <!-- Output Area (Unified Terminal) -->
+            <!-- Tab contents removed to simplify UI -->
 
             <div class="glass-card output-card hidden" id="terminal-card">
                 <div class="card-header">
