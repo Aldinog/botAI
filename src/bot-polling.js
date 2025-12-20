@@ -6,6 +6,7 @@ const { fetchHistorical } = require('./utils/goapi');
 const { computeIndicators, formatIndicatorsForPrompt } = require('./utils/indicators');
 const { analyzeWithGemini } = require('./utils/gemini');
 const { marked } = require("marked");
+const { generateReview } = require('./utils/review');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const DEFAULT_CANDLES = parseInt(process.env.DEFAULT_CANDLES || '50', 10);
@@ -104,6 +105,61 @@ function startPollingBot() {
       console.error(err);
       await bot.sendMessage(chatId, `⚠️ Terjadi error: ${err.message}`);
     }
+  });
+
+  // ====== /review command ======
+  bot.onText(/\/review\s+(BUY|SELL)\s+(.+)\s+(\d+)(?:\s+(\d+))?/i, async (msg, match) => {
+    const chatId = msg.chat.id.toString();
+
+    if (!isAllowed(chatId)) {
+      return bot.sendMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
+    }
+
+    const action = match[1].toUpperCase();
+    const symbol = match[2].trim().toUpperCase();
+    const entry = match[3];
+    const sl = match[4] || null;
+
+    await bot.sendMessage(chatId, `🔍 Menganalisa setup ${action} untuk *${symbol}* @ ${entry}...`, { parse_mode: 'Markdown' });
+
+    try {
+      const aiResponse = await generateReview(action, symbol, entry, sl);
+      const cleanHtml = markdownToTelegramHTML(aiResponse);
+      const reply = `🧠 <b>Trade Review ${symbol}</b>\n\n${cleanHtml}`;
+
+      await sendLongMessage(bot, chatId, reply);
+    } catch (err) {
+      console.error(err);
+      await bot.sendMessage(chatId, `⚠️ Terjadi error saat review: ${err.message}`);
+    }
+  });
+
+  // ====== /help command ======
+  bot.onText(/\/help/i, async (msg) => {
+    const chatId = msg.chat.id.toString();
+    if (!isAllowed(chatId)) return;
+
+    const helpMsg = `
+<b>Panduan Penggunaan Aston AI Bot</b>
+
+🤖 <b>Fitur & Perintah:</b>
+
+1️⃣ <b>Analisa Saham</b>
+Gunakan <code>/analisa TICKER</code> untuk mendapatkan analisa teknikal lengkap dari AI.
+Contoh: <code>/analisa BBCA</code>
+
+2️⃣ <b>Review Trade Setup (Baru!)</b>
+Gunakan <code>/review ACTION TICKER ENTRY [SL]</code> untuk mereview rencana trade Anda.
+Format:
+• ACTION: BUY atau SELL
+• TICKER: Kode saham (e.g. BBRI)
+• ENTRY: Harga beli/jual
+• SL: Harga Stop Loss (Opsional)
+Contoh: <code>/review BUY BBCA 4500 4300</code>
+
+💡 <i>Pastikan kode saham benar dan data entry sesuai dengan harga pasar saat ini.</i>
+    `;
+    await bot.sendMessage(chatId, helpMsg, { parse_mode: 'HTML' });
   });
 
   // ====== /start command ======
