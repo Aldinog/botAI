@@ -33,6 +33,7 @@ body {
 /* Ambient Background Glows */
 /* Ambient Background Glows */
 /* Ambient Background Glows */
+/* Ambient Background Glows */
 .ambient-glow {
     position: fixed;
     top: 50%;
@@ -40,14 +41,15 @@ body {
     transform: translate(-50%, -50%);
     width: 200vw;
     height: 200vh;
-    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15), transparent 60%),
-        radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.15), transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.15), transparent 50%);
+    /* More vibrant base gradients */
+    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.25), transparent 60%),
+        radial-gradient(circle at 0% 0%, rgba(168, 85, 247, 0.25), transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.2), transparent 50%);
     z-index: -1;
-    filter: blur(80px);
-    /* Increased blur for fluid effect */
-    opacity: 0.15;
-    /* Target opacity 10-15% */
+    filter: blur(60px);
+    /* Reduced blur slightly for better visibility */
+    opacity: 0.4;
+    /* Increased from 0.15 to 0.4 for visibility */
     animation: waveMotion 15s infinite alternate ease-in-out;
     mix-blend-mode: screen;
 }
@@ -56,11 +58,18 @@ body {
 .glow-1 {
     width: 150vw;
     height: 150vh;
-    background: conic-gradient(from 0deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2), rgba(99, 102, 241, 0.2));
-    animation: waveRotate 20s infinite linear;
-    opacity: 0.1;
+    /* Vibrant Conic Gradient (Blue -> Purple -> Pink -> Blue) */
+    background: conic-gradient(from 0deg,
+            rgba(99, 102, 241, 0.4),
+            rgba(168, 85, 247, 0.4),
+            rgba(236, 72, 153, 0.4),
+            rgba(99, 102, 241, 0.4));
+    animation: waveRotate 25s infinite linear;
+    opacity: 0.3;
+    /* Increased for visibility */
     border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-    /* Blob shape */
+    mix-blend-mode: overlay;
+    /* Adds richness when overlapping */
 }
 
 .glow-2 {
