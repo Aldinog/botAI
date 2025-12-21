@@ -114,10 +114,11 @@ async function markdownToTelegramHTML(md) {
 // =========================
 bot.use(async (ctx, next) => {
   const chatId = ctx.chat?.id;
+  const chatUser = ctx.chat?.username;
   if (!chatId) return next();
 
   if (!isAllowedGroup(chatId)) {
-    console.log(`❌ Grup tidak diizinkan: ${chatId}`);
+    console.log(`❌ Grup tidak diizinkan: ${chatId} (${chatUser})`);
     // Hanya balas jika itu adalah pesan teks/perintah dari user
     // Jangan balas update membership (misal bot dikick) karena akan 403
     if (ctx.message) {
