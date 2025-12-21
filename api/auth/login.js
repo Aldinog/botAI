@@ -41,6 +41,10 @@ module.exports = async (req, res) => {
     try {
         // 2. Check group membership
         // Ensure bot is an admin in the group
+        if (!process.env.TELEGRAM_TOKEN) {
+            return res.status(500).json({ error: 'System configuration error: TELEGRAM_TOKEN not set' });
+        }
+
         const groupIds = process.env.ALLOWED_GROUP_IDS ? process.env.ALLOWED_GROUP_IDS.split(',') : [];
         if (groupIds.length === 0) {
             return res.status(500).json({ error: 'System configuration error: Group IDs not set' });
@@ -160,6 +164,10 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({
+            error: 'Internal Server Error',
+            details: error.message || error,
+            hint: 'Check if you have run the SQL initialization in Supabase and set all environment variables in Vercel.'
+        });
     }
 };

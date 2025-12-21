@@ -183,6 +183,10 @@ module.exports = async (req, res) => {
 
     } catch (error) {
         console.error('Web Context Error:', error);
-        res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+        res.status(500).json({
+            error: 'Internal Server Error',
+            details: error.message || error,
+            hint: 'Ensure your DB tables exist and environment variables are set correctly in Vercel.'
+        });
     }
 };
