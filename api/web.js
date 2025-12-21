@@ -95,20 +95,22 @@ module.exports = async (req, res) => {
             return res.status(500).json({ error: 'Security check failed' });
         }
 
+        // Log MiniApp Usage
+        const username = user.username || user.telegram_username || `ID:${user.telegram_user_id}`;
+        if (action) {
+            console.log(`${username} menggunakan miniapp ${action}`);
+        }
+
     } catch (err) {
         return res.status(401).json({ error: 'Unauthorized: Invalid token' });
     }
     // --- End Authentication Middleware ---
 
-    // Log MiniApp Usage
-    const username = user.username || user.telegram_username || `ID:${user.telegram_user_id}`;
-    if (action) {
-        console.log(`${username} menggunakan miniapp ${action}`);
-    }
 
     if (!symbol) {
         return res.status(400).json({ error: 'Symbol is required' });
     }
+
 
     try {
         let result = '';
