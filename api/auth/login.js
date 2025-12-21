@@ -90,11 +90,16 @@ module.exports = async (req, res) => {
 
         if (userError && userError.code === 'PGRST116') {
             // User not found, create new
+            // Requirement: generate password random, simpan password_hash
+            const crypto = require('crypto');
+            const randomPassword = crypto.randomBytes(16).toString('hex');
+
             const { data: newUser, error: insertError } = await supabase
                 .from('users')
                 .insert([{
                     telegram_user_id,
                     telegram_username,
+                    password_hash: randomPassword, // Placeholder for the required field
                     expires_at: expiresAt.toISOString(),
                     last_login: now.toISOString()
                 }])
