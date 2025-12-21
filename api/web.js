@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
         }
 
         // Log MiniApp Usage
-        const username = user.username || user.telegram_username || `ID:${user.telegram_user_id}`;
+        const username = user.username || user.first_name || `ID:${user.telegram_user_id}`;
         if (action) {
             console.log(`${username} menggunakan miniapp ${action}`);
         }
