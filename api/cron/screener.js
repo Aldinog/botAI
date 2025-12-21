@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
     if (results.length > 0) {
         message += "🔍 <b>Pattern Detected:</b>\n\n";
         results.forEach(r => {
-            message += `📌 <b>${r.symbol}</b> (${r.reason})\n`;
+            message += `📌 <b>${r.symbol.replace('.JK', '')}</b> (${r.reason})\n`;
             message += `   • Price: ${r.price}\n`;
             message += `   • Pattern: ${r.pattern}\n`;
             message += `   • RSI: ${r.rsi} | EMA20: ${r.ema20.toLocaleString()}\n\n`;
@@ -47,20 +47,20 @@ module.exports = async (req, res) => {
 
     // 5. Always Append Top Movers (Fallback/Add-on)
     try {
-        message += "📊 <b>Market Snapshot (Top 35)</b>\n";
+        message += "📊 <b>Market Snapshot</b>\n";
         const { gainers, losers } = await getTopMovers();
 
         if (gainers.length > 0) {
             message += "\n🚀 <b>Top Gainers:</b>\n";
             gainers.forEach(g => {
-                message += `• ${g.symbol}: ${g.price} (${g.changePercent > 0 ? '+' : ''}${g.changePercent.toFixed(2)}%)\n`;
+                message += `• ${g.symbol.replace('.JK', '')}: ${g.price} (${g.changePercent > 0 ? '+' : ''}${g.changePercent.toFixed(2)}%)\n`;
             });
         }
 
         if (losers.length > 0) {
             message += "\n🔻 <b>Top Losers:</b>\n";
             losers.forEach(l => {
-                message += `• ${l.symbol}: ${l.price} (${l.changePercent > 0 ? '+' : ''}${l.changePercent.toFixed(2)}%)\n`;
+                message += `• ${l.symbol.replace('.JK', '')}: ${l.price} (${l.changePercent > 0 ? '+' : ''}${l.changePercent.toFixed(2)}%)\n`;
             });
         }
     } catch (e) {
