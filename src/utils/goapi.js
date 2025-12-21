@@ -52,7 +52,7 @@ async function fetchHistorical(symbol, opts = {}) {
 
   } catch (err) {
     console.error("fetchHistorical error:", err.response?.data || err.message);
-    throw new Error("Gagal mengambil data dari GoAPI");
+    throw new Error("Limit Pemakaian Tercapai, Coba lagi nanti");
   }
 }
 
