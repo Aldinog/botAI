@@ -7,6 +7,9 @@ const {
     formatProxyBrokerActivity
 } = require('../src/utils/goapi');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
+const jwt = require('jsonwebtoken');
+const { supabase } = require('../src/utils/supabase');
+const axios = require('axios');
 // Remove static require
 // const { marked } = require('marked');
 
@@ -41,6 +44,61 @@ module.exports = async (req, res) => {
     }
 
     const { action, symbol } = req.body;
+
+    // --- Authentication Middleware ---
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized: Missing token' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-aston');
+
+        // Check session in DB
+        const { data: session, error: sessionError } = await supabase
+            .from('sessions')
+            .select('user_id, users(*)')
+            .eq('token', token)
+            .single();
+
+        if (sessionError || !session || !session.users.is_active) {
+            return res.status(401).json({ error: 'Unauthorized: Invalid or inactive session' });
+        }
+
+        const user = session.users;
+
+        // Check expiry (3-day rule)
+        if (new Date(user.expires_at) < new Date()) {
+            return res.status(403).json({ error: 'Access expired. Please re-register.' });
+        }
+
+        // --- Membership Check (CRITICAL) ---
+        // To avoid "register then leave" exploit, we verify membership
+        const groupIds = process.env.ALLOWED_GROUP_IDS ? process.env.ALLOWED_GROUP_IDS.split(',') : [];
+        const primaryGroupId = groupIds[0];
+
+        try {
+            const memberCheck = await axios.get(`https://api.telegram.org/bot${process.env.TELEGRAM_TOKEN}/getChatMember`, {
+                params: { chat_id: primaryGroupId, user_id: user.telegram_user_id }
+            });
+            const status = memberCheck.data.result.status;
+            if (!['creator', 'administrator', 'member'].includes(status)) {
+                // If they left, deactivate or just block
+                return res.status(403).json({ error: 'Requires membership in Aston Group' });
+            }
+        } catch (e) {
+            console.error('Group check failed in middleware:', e.message);
+            // If API fails, we might fallback to allowing if the token is recent, 
+            // but for maximum security we block.
+            return res.status(500).json({ error: 'Security check failed' });
+        }
+
+    } catch (err) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+    // --- End Authentication Middleware ---
 
     if (!symbol) {
         return res.status(400).json({ error: 'Symbol is required' });

@@ -15,10 +15,13 @@
   "dependencies": {
     "@google/genai": "^1.31.0",
     "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.89.0",
     "axios": "^1.13.2",
+    "crypto-js": "^4.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.3",
     "marked": "^17.0.1",
     "moment-timezone": "^0.6.0",
     "node": "^20.19.6",

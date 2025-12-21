@@ -385,6 +385,27 @@ body {
     background: var(--accent-violet);
 }
 
+.auth-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 40px;
+    text-align: center;
+    border: 1px solid var(--accent-blue);
+}
+
+.auth-box .spinner {
+    width: 50px;
+    height: 50px;
+}
+
+#auth-status {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
