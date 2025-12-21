@@ -73,7 +73,10 @@ module.exports = async (req, res) => {
         }
 
         if (!isMember) {
-            return res.status(403).json({ error: 'You are not a member of the Aston Group' });
+            return res.status(403).json({
+                error: 'kamu bukan member Astongrup',
+                code: 'NOT_MEMBER'
+            });
         }
 
         // 3. User Registration/Update Logic

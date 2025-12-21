@@ -35,10 +35,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 authOverlay.classList.add('hidden');
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             } else {
-                authStatus.innerHTML = `
-                    <div style="color: #ef4444; margin-bottom: 10px;">${data.error || 'Authentication Failed'}</div>
-                    <button class="glass-btn" onclick="location.reload()" style="padding: 10px 20px; font-size: 0.8rem;">Retry</button>
-                `;
+                if (data.code === 'NOT_MEMBER') {
+                    authStatus.innerHTML = `
+                        <div style="color: #ef4444; margin-bottom: 15px; font-weight: 600;">${data.error}</div>
+                        <a href="https://t.me/astongrup" target="_blank" class="glass-btn primary-btn" style="text-decoration: none; padding: 12px 24px; display: inline-block;">
+                            🚀 Join Grup
+                        </a>
+                    `;
+                } else {
+                    authStatus.innerHTML = `
+                        <div style="color: #ef4444; margin-bottom: 10px;">${data.error || 'Authentication Failed'}</div>
+                        <button class="glass-btn" onclick="location.reload()" style="padding: 10px 20px; font-size: 0.8rem;">Retry</button>
+                    `;
+                }
                 if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
         } catch (err) {
