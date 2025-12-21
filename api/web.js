@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
         // Check session in DB
         const { data: session, error: sessionError } = await supabase
             .from('sessions')
-            .select('user_id, users(*), user_first_name')
+            .select('user_id, users(*)')
             .eq('token', token)
             .single();
 
