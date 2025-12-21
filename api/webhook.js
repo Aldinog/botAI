@@ -137,9 +137,15 @@ bot.use(async (ctx, next) => {
 // =========================
 // COMMAND BASICS
 // =========================
-bot.start((ctx) => ctx.reply("🤖 Bot aktif"));
-bot.help((ctx) =>
-  ctx.reply(
+bot.start((ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan start`);
+  return ctx.reply("🤖 Bot aktif");
+});
+bot.help((ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan help`);
+  return ctx.reply(
     "📌 <b>List Command Bot Saham</b>\n\n" +
     "🔹 <b>/start</b>\n" +
     "   Mengaktifkan bot dan memastikan bot responsif.\n\n" +
@@ -174,14 +180,16 @@ bot.help((ctx) =>
     "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." +
     "Nantikan update menarik selanjutnya!!",
     { parse_mode: "HTML" }
-  )
-);
+  );
+});
 
 
 // =========================
 // COMMAND: INDIKATOR
 // =========================
 bot.command("indikator", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan indikator`);
   const symbol = ctx.message.text.split(" ")[1]?.toUpperCase();
 
   if (!symbol) {
@@ -205,6 +213,8 @@ bot.command("indikator", async (ctx) => {
 // COMMAND: HARGA
 // ============================
 bot.command("harga", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan harga`);
   const symbol = ctx.message.text.split(" ")[1]?.toUpperCase();
 
   if (!symbol) {
@@ -225,6 +235,8 @@ bot.command("harga", async (ctx) => {
 // =========================
 
 bot.command("broksum", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan broksum`);
   const input = ctx.message.text.split(" ");
   const symbol = input[1]?.toUpperCase();
 
@@ -262,6 +274,8 @@ bot.command("broksum", async (ctx) => {
 // ============================
 
 bot.command("proxy", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan proxy`);
   const text = ctx.message.text.split(" ");
   const symbol = text[1]?.toUpperCase();
 
@@ -290,6 +304,8 @@ bot.command("proxy", async (ctx) => {
 // COMMAND: REVIEW
 // ============================
 bot.command("review", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan review`);
   // Parsing more robustly using regex to handle "entry=" or plain numbers
   // Format: /review BUY BBCA 1260 OR /review BUY BBCA entry=1260
   const input = ctx.message.text;
@@ -323,6 +339,8 @@ bot.command("review", async (ctx) => {
 // COMMAND: SIGNAL
 // ============================
 bot.command("signal", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan signal`);
   const text = ctx.message.text.split(" ");
   const symbol = text[1]?.toUpperCase();
 
@@ -357,6 +375,8 @@ bot.command("signal", async (ctx) => {
 // COMMAND: ANALISA
 // ============================
 bot.command("analisa", async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan analisa`);
   const text = ctx.message.text.split(" ");
   const symbol = text[1]?.toUpperCase();
 

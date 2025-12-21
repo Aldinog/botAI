@@ -100,6 +100,12 @@ module.exports = async (req, res) => {
     }
     // --- End Authentication Middleware ---
 
+    // Log MiniApp Usage
+    const username = user.username || user.telegram_username || `ID:${user.telegram_user_id}`;
+    if (action) {
+        console.log(`${username} menggunakan miniapp ${action}`);
+    }
+
     if (!symbol) {
         return res.status(400).json({ error: 'Symbol is required' });
     }
