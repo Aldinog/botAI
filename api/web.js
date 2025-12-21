@@ -59,7 +59,7 @@ module.exports = async (req, res) => {
         // Check session in DB
         const { data: session, error: sessionError } = await supabase
             .from('sessions')
-            .select('user_id, users(*)')
+            .select('user_id, users(*), user_first_name')
             .eq('token', token)
             .single();
 
@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
         }
 
         // Log MiniApp Usage
-        const username = user.username || `ID:${user.telegram_user_id}`;
+        const username = user.username;
         const name = user.first_name;
         if (action) {
             console.log(`nama${name}, username${username}, menggunakan miniapp ${action}`);
