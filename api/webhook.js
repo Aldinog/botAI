@@ -112,12 +112,22 @@ async function markdownToTelegramHTML(md) {
 // =========================
 // VALIDASI GROUP
 // =========================
-bot.use((ctx, next) => {
-  const chatId = ctx.chat.id;
+bot.use(async (ctx, next) => {
+  const chatId = ctx.chat?.id;
+  if (!chatId) return next();
 
   if (!isAllowedGroup(chatId)) {
     console.log(`❌ Grup tidak diizinkan: ${chatId}`);
-    return ctx.reply("Halo,,,Silahkan buka App AstonAI untuk menggunakan bot ini.");
+    // Hanya balas jika itu adalah pesan teks/perintah dari user
+    // Jangan balas update membership (misal bot dikick) karena akan 403
+    if (ctx.message) {
+      try {
+        await ctx.reply("Halo,,,Silahkan buka App AstonAI untuk menggunakan bot ini.");
+      } catch (err) {
+        console.error("Gagal mengirim pesan penolakan group:", err.message);
+      }
+    }
+    return; // Berhenti di sini, jangan lanjut ke next()
   }
 
   return next();
@@ -396,7 +406,9 @@ module.exports = async (req, res) => {
       return res.status(200).send("OK");
     } catch (err) {
       console.error("Webhook Error:", err);
-      return res.status(500).send("ERR");
+      // Selalu kembalikan 200 OK agar Vercel/Telegram tidak melakukan retry 
+      // untuk error yang bersifat permanen (misal 403 Forbidden)
+      return res.status(200).send("OK_WITH_ERROR");
     }
   }
 
