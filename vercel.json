@@ -17,6 +17,14 @@
       ]
     },
     {
+      "src": "/api/cron/screener",
+      "dest": "api/cron/screener.js",
+      "methods": [
+        "POST",
+        "GET"
+      ]
+    },
+    {
       "src": "/",
       "dest": "/public/index.html"
     },

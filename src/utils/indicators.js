@@ -12,6 +12,10 @@ function computeIndicators(candles) {
   const ma20 = ti.SMA.calculate({ period: 20, values: closes });
   const ma50 = ti.SMA.calculate({ period: 50, values: closes });
 
+  // Add EMA calculations
+  const ema20 = ti.EMA.calculate({ period: 20, values: closes });
+  const ema50 = ti.EMA.calculate({ period: 50, values: closes });
+
   const rsi = ti.RSI.calculate({ period: 14, values: closes });
 
   const macd = ti.MACD.calculate({
@@ -37,13 +41,15 @@ function computeIndicators(candles) {
     MA5: ma5.length ? ma5[ma5.length - 1] : undefined,
     MA20: ma20.length ? ma20[ma20.length - 1] : undefined,
     MA50: ma50.length ? ma50[ma50.length - 1] : undefined,
+    EMA20: ema20.length ? ema20[ema20.length - 1] : undefined,
+    EMA50: ema50.length ? ema50[ema50.length - 1] : undefined,
     RSI: rsi.length ? rsi[rsi.length - 1] : undefined,
     MACD: macd.length ? macd[macd.length - 1] : undefined, // object {MACD, signal, histogram}
     Stochastic: stochastic.length ? stochastic[stochastic.length - 1] : undefined // object {k, d}
   };
 
   return {
-    all: { ma5, ma20, ma50, rsi, macd, stochastic },
+    all: { ma5, ma20, ma50, ema20, ema50, rsi, macd, stochastic },
     latest
   };
 }
