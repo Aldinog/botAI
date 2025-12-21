@@ -117,7 +117,7 @@ bot.use((ctx, next) => {
 
   if (!isAllowedGroup(chatId)) {
     console.log(`❌ Grup tidak diizinkan: ${chatId}`);
-    return ctx.reply("🚫 Grup ini tidak diizinkan menggunakan bot ini.");
+    return ctx.reply("Halo,,,Silahkan buka App AstonAI untuk menggunakan bot ini.");
   }
 
   return next();
