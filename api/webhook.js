@@ -118,7 +118,7 @@ bot.use(async (ctx, next) => {
   if (!chatId) return next();
 
   if (!isAllowedGroup(chatId)) {
-    console.log(`❌ Grup tidak diizinkan: ${chatId} (${chatUser})`);
+    console.log(`❌User pakai Bot ${chatId} (${chatUser})`);
     // Hanya balas jika itu adalah pesan teks/perintah dari user
     // Jangan balas update membership (misal bot dikick) karena akan 403
     if (ctx.message) {
