@@ -7,8 +7,8 @@ const STOCK_LIST = [
     "BBCA.JK", "BBRI.JK", "BMRI.JK", "BBNI.JK", "TLKM.JK",
     "ASII.JK", "UNVR.JK", "ICBP.JK", "INDF.JK", "KLBF.JK",
     "ADRO.JK", "PTBA.JK", "ITMG.JK", "UNTR.JK", "PGAS.JK",
-    "MEDC.JK", "INCO.JK", "ANTM.JK", "TINS.JK", "GOTO.JK",
-    "ARTO.JK", "CPIN.JK", "JPFA.JK", "SMGR.JK", "INTP.JK",
+    "MEDC.JK", "INCO.JK", "ANTM.JK", "TINS.JK", "DEWA.JK",
+    "ARTO.JK", "BUVA.JK", "SMDR.JK", "SMGR.JK", "INTP.JK",
     "BRIS.JK", "AMRT.JK", "MAPI.JK", "JSMR.JK", "TBIG.JK",
     "TOWR.JK", "EMTK.JK", "SCMA.JK", "HRUM.JK", "AKRA.JK"
 ];

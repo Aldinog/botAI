@@ -1,12 +1,12 @@
 // api/webhook.js (Vercel - CommonJS Friendly)
 const { Telegraf } = require("telegraf");
 require("dotenv").config();
-const axios = require("axios");
 
-const { fetchHistorical } = require("../src/utils/goapi");
-const { fetchBrokerSummaryWithFallback } = require("../src/utils/goapi");
-const { analyzeProxyBrokerActivity } = require("../src/utils/goapi");
-const { formatProxyBrokerActivity } = require("../src/utils/goapi");
+
+const { fetchHistorical } = require("../src/utils/yahoofinance");
+const { fetchBrokerSummaryWithFallback } = require("../src/utils/yahoofinance");
+const { analyzeProxyBrokerActivity } = require("../src/utils/yahoofinance");
+const { formatProxyBrokerActivity } = require("../src/utils/yahoofinance");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
