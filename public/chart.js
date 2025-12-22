@@ -30,10 +30,28 @@ const candlestickSeries = chart.addCandlestickSeries({
     wickDownColor: '#ef4444',
 });
 
-// Resize Handler
-window.addEventListener('resize', () => {
-    chart.resize(chartContainer.clientWidth, chartContainer.clientHeight);
+// Resize Handler using Observer
+const resizeObserver = new ResizeObserver(entries => {
+    for (const entry of entries) {
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+            chart.resize(entry.contentRect.width, entry.contentRect.height);
+            chart.timeScale().fitContent();
+        }
+    }
 });
+resizeObserver.observe(chartContainer);
+
+// Debug Screen Function
+function logDebug(msg) {
+    let debugDiv = document.getElementById('debug-overlay');
+    if (!debugDiv) {
+        debugDiv = document.createElement('div');
+        debugDiv.id = 'debug-overlay';
+        debugDiv.stylecssText = 'position:absolute;bottom:50px;left:10px;background:rgba(0,0,0,0.8);color:#0f0;font-size:10px;padding:5px;pointer-events:none;z-index:999;max-width:300px;';
+        document.body.appendChild(debugDiv);
+    }
+    debugDiv.innerHTML += `> ${msg}<br>`;
+}
 
 // Load Data Function
 async function loadData(interval) {
@@ -59,13 +77,17 @@ async function loadData(interval) {
             })
         });
 
+        logDebug(`Fetch status: ${response.status}`);
         const res = await response.json();
+        logDebug(`Response success: ${res.success}`);
 
         if (res.success && res.data) {
             const { candles, markers } = res.data;
 
             // DEBUG: Update Title with count
             document.getElementById('chart-title').innerText = `${symbol} (${candles.length})`;
+            logDebug(`Candles: ${candles.length}`);
+            if (candles.length > 0) logDebug(`Sample: ${JSON.stringify(candles[0])}`);
 
             if (candles.length === 0) {
                 // Explicitly show error on screen if empty
