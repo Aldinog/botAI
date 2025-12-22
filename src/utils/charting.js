@@ -1,16 +1,15 @@
-```javascript
 const { fetchHistorical } = require('./yahoofinance');
 const { SMA, EMA, RSI, ADX } = require('technicalindicators');
 
 async function getChartData(symbol, interval = '1d') {
-    console.log(`[CHART] Request: ${ symbol } ${ interval } `);
+    console.log(`[CHART] Request: ${symbol} ${interval}`);
     // 1. Fetch Data 
     // Need more data for ADX/EMA stability (at least 200)
     const candles = await fetchHistorical(symbol, { interval, limit: 300 });
-    console.log(`[CHART] Fetched ${ candles ? candles.length : 0 } candles for ${ symbol }`);
-    
+    console.log(`[CHART] Fetched ${candles ? candles.length : 0} candles for ${symbol}`);
+
     if (!candles || candles.length < 50) {
-        console.warn(`[CHART] Insufficient data for ${ symbol }`);
+        console.warn(`[CHART] Insufficient data for ${symbol}`);
         return { candles: [], markers: [] };
     }
 
@@ -26,13 +25,13 @@ async function getChartData(symbol, interval = '1d') {
     const adx14 = ADX.calculate({ period: 14, high: highs, low: lows, close: closes });
 
     const markers = [];
-    
+
     // We iterate through candles. 
     // Need to align arrays.
     // EMA50 starts at index 49 (length = total - 49)
     // RSI14 starts at index 14
     // ADX14 starts at index ~27 (14 + 14? ADX usually needs 2x period to stabilize)
-    
+
     let lastSignal = null; // To filter sequence (BUY -> BUY)
 
     // Helper to safely get indicator value at candle index
@@ -56,28 +55,26 @@ async function getChartData(symbol, interval = '1d') {
     // Helper: Pattern Recognition
     const getPattern = (curr, prev) => {
         if (!curr || !prev) return null;
-        
+
         const cBody = Math.abs(curr.close - curr.open);
         const cRange = curr.high - curr.low;
         const cBodyPct = cRange > 0 ? cBody / cRange : 0;
-        
+
         const pBody = Math.abs(prev.close - prev.open);
         const pRange = prev.high - prev.low;
-        
+
         const isBullish = curr.close > curr.open;
         const isBearish = curr.close < curr.open;
         const prevRed = prev.close < prev.open;
         const prevGreen = prev.close > prev.open;
 
-        // "Jangan panah di candle kecil Body candle ≥ 60% range candle" 
-        // Used as a filter for 'Strong' candles ONLY for Engulfing maybe? 
-        // Because Pinbars have small bodies.
-        
+        // "Jangan panah di candle kecil Body candle >= 60% range candle" 
+
         // 1. PIN BAR / HAMMER / HANGING MAN (Bullish Rejection)
         // Characteristic: Long lower wick, small body at top.
         const upperWick = curr.high - Math.max(curr.open, curr.close);
         const lowerWick = Math.min(curr.open, curr.close) - curr.low;
-        
+
         // Bullish Pin Bar / Hammer (Lower wick >= 2 * body) & Body in upper half
         if (lowerWick >= 2 * cBody && upperWick < lowerWick * 0.5) {
             return 'BULL_PIN';
@@ -93,8 +90,8 @@ async function getChartData(symbol, interval = '1d') {
         // Prev Red, Curr Green. Strong Body?
         if (prevRed && isBullish) {
             if (curr.close > prev.open && curr.open < prev.close) {
-                 // Check strength?
-                 if (cBodyPct >= 0.5) return 'BULL_ENGULF';
+                // Check strength: Body candle >= 60% range candle
+                if (cBodyPct >= 0.6) return 'BULL_ENGULF';
             }
         }
 
@@ -102,7 +99,7 @@ async function getChartData(symbol, interval = '1d') {
         // Prev Green, Curr Red.
         if (prevGreen && isBearish) {
             if (curr.close < prev.open && curr.open > prev.close) {
-                 if (cBodyPct >= 0.5) return 'BEAR_ENGULF';
+                if (cBodyPct >= 0.6) return 'BEAR_ENGULF';
             }
         }
 
@@ -114,11 +111,11 @@ async function getChartData(symbol, interval = '1d') {
     // Start from index 50 to ensure we have EMA50
     for (let i = 50; i < candles.length; i++) {
         const curr = candles[i];
-        const prev = candles[i-1];
-        
+        const prev = candles[i - 1];
+
         const ema = getVal(ema50, i);
         const rsi = getVal(rsi14, i);
-        
+
         if (ema === null || rsi === null) continue;
 
         // Filter: Sideways
@@ -132,7 +129,7 @@ async function getChartData(symbol, interval = '1d') {
         // 2. RSI > 50
         // 3. Pattern: Bull Engulf / Bull Pin
         const buySignal = (curr.close > ema) && (rsi > 50) && (pattern === 'BULL_ENGULF' || pattern === 'BULL_PIN');
-        
+
         // RULE SELL
         // 1. Close < EMA50
         // 2. RSI < 50
@@ -147,7 +144,7 @@ async function getChartData(symbol, interval = '1d') {
                     position: 'belowBar',
                     color: '#22c55e',
                     shape: 'arrowUp',
-                    text: 'BUY' //+ (pattern === 'BULL_ENGULF' ? ' E' : ' P')
+                    text: 'BUY'
                 });
                 lastSignal = 'BUY';
             }
@@ -158,7 +155,7 @@ async function getChartData(symbol, interval = '1d') {
                     position: 'aboveBar',
                     color: '#ef4444',
                     shape: 'arrowDown',
-                    text: 'SELL' //+ (pattern === 'BEAR_ENGULF' ? ' E' : ' P')
+                    text: 'SELL'
                 });
                 lastSignal = 'SELL';
             }
@@ -172,4 +169,3 @@ async function getChartData(symbol, interval = '1d') {
 }
 
 module.exports = { getChartData };
-```
