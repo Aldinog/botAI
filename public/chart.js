@@ -65,10 +65,18 @@ async function loadData(interval) {
             const { candles, markers } = res.data;
 
             // Validate and Sort unique (Lightweight charts strict requirement)
-            // Backend should have sent sorted but let's ensure unique times
             const uniqueCandles = [];
             const times = new Set();
-            candles.forEach(c => {
+
+            // Backend sends oldest -> newest usually, but we ensure sort
+            // Note: time can be string YYYY-MM-DD or number (seconds)
+            const sorted = candles.sort((a, b) => {
+                const tA = typeof a.time === 'string' ? new Date(a.time).getTime() : a.time;
+                const tB = typeof b.time === 'string' ? new Date(b.time).getTime() : b.time;
+                return tA - tB;
+            });
+
+            sorted.forEach(c => {
                 if (!times.has(c.time)) {
                     times.add(c.time);
                     uniqueCandles.push(c);
@@ -76,7 +84,14 @@ async function loadData(interval) {
             });
 
             candlestickSeries.setData(uniqueCandles);
-            candlestickSeries.setMarkers(markers);
+
+            // Filter markers: Only valid if time exists in candles
+            const validMarkers = (markers || []).filter(m => times.has(m.time)).sort((a, b) => {
+                const tA = typeof a.time === 'string' ? new Date(a.time).getTime() : a.time;
+                const tB = typeof b.time === 'string' ? new Date(b.time).getTime() : b.time;
+                return tA - tB;
+            });
+            candlestickSeries.setMarkers(validMarkers);
 
             // Adjust timeframe visibility based on interval
             chart.timeScale().fitContent();
