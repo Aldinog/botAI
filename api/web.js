@@ -5,7 +5,7 @@ const {
     fetchHistorical,
     analyzeProxyBrokerActivity,
     formatProxyBrokerActivity
-} = require('../src/utils/goapi');
+} = require('../src/utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../src/utils/supabase');

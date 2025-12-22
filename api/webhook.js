@@ -328,11 +328,15 @@ bot.command("proxy", async (ctx) => {
 
   try {
     const candles = await fetchHistorical(symbol, { limit: 120 });
+    console.log(`[Proxy] Fetched ${candles.length} candles for ${symbol}`);
+
     const activity = analyzeProxyBrokerActivity(candles);
+    console.log(`[Proxy] Analysis result length: ${activity.length}`);
 
     const msg = formatProxyBrokerActivity(symbol, activity);
+    console.log(`[Proxy] Message to send: ${msg.substring(0, 50)}...`);
 
-    ctx.reply(msg, { parse_mode: "HTML" });
+    await ctx.reply(msg, { parse_mode: "HTML" });
 
   } catch (err) {
     console.error("Proxy error:", err);
