@@ -12,56 +12,49 @@ async function fetchHistorical(symbol, opts = {}) {
         query = `${query}.JK`;
     }
 
-    const limit = opts.limit || 100; // default more context
-    const interval = opts.interval || '1d';
+    // Default options
+    const limit = opts.limit || 100;
+    let interval = opts.interval || '1d';
+
+    // Normalize interval for chart endpoint (1h -> 60m is safer)
+    if (interval === '1h') interval = '60m';
 
     // Date Logic
-    const today = new Date();
-    const toDate = today.toISOString().split('T')[0];
-
-    // Calculate FromDate based on interval
-    // 1h: max 730 days, but we only need enough for ~200 candles + indicators
-    // 1d: can go back further.
+    // For chart endpoint, period1 is required.
     const fromDate = new Date();
-    if (interval === '1h') {
-        fromDate.setDate(fromDate.getDate() - 60); // 60 days of hourly data is plenty
+    if (interval === '60m' || interval === '1h') {
+        fromDate.setDate(fromDate.getDate() - 60); // 60 days
     } else {
-        fromDate.setDate(fromDate.getDate() - 730); // 2 years for daily
+        fromDate.setDate(fromDate.getDate() - 730); // 2 years
     }
-    const fromDateStr = fromDate.toISOString().split('T')[0];
 
-    // Yahoo Finance historical query options
     const queryOptions = {
-        period1: fromDateStr,
-        period2: toDate,
+        period1: fromDate,
+        // period2: new Date(), // Optional, defaults to now
         interval: interval
     };
 
     try {
-        // We suppress warnings to keep logs clean
-        const result = await yahooFinance.historical(query, queryOptions);
+        // Use chart() instead of historical() for better support (Intraday)
+        const result = await yahooFinance.chart(query, queryOptions);
 
-        if (!result || result.length === 0) return [];
+        if (!result || !result.quotes || result.quotes.length === 0) return [];
 
         // Map to our format: { time, open, high, low, close, volume }
-        const formatted = result.map(q => ({
-            // For H1, we need full timestamp? Lightweight Charts handles 'YYYY-MM-DD' or timestamp numbers.
-            // For 1h, yf returns date object with time.
-            // Let's return Unix Timestamp (seconds) for universal compatibility with Lightweight Charts
-            time: Math.floor(new Date(q.date).getTime() / 1000) + (7 * 3600), // Adjust to UTC+7 for display? 
-            // Wait, LW charts expects UTC seconds. Let's just return standard UTC seconds.
-            // Actually, YF returns date in UTC usually.
-            // Let's return YYYY-MM-DD for Daily, and Seconds for Hourly to allow Intraday.
-            time: interval === '1d' ? q.date.toISOString().split('T')[0] : Math.floor(q.date.getTime() / 1000),
+        const formatted = result.quotes.map(q => ({
+            // Lightweight Charts expects seconds for intraday, or YYYY-MM-DD for daily
+            // chart() returns q.date as Date object usually
+            time: (interval === '1d' || interval === '1wk' || interval === '1mo')
+                ? q.date.toISOString().split('T')[0]
+                : Math.floor(new Date(q.date).getTime() / 1000),
             open: q.open,
             high: q.high,
             low: q.low,
             close: q.close,
             volume: q.volume
-        }));
+        })).filter(q => q.open != null && q.close != null); // Filter incomplete candles
 
-        // Return all available (sliced by caller if needed, or return max for chart)
-        // If opts.limit implies slicing:
+        // Return sliced if limit requested
         if (opts.limit) return formatted.slice(-opts.limit);
         return formatted;
 
