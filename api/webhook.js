@@ -219,6 +219,10 @@ bot.help((ctx) => {
     "   Review kualitas setup trading kamu.\n" +
     "   Contoh: <code>/review BUY BBCA 1260</code> atau <code>/review BUY BBCA entry=1260 sl=1200</code>\n\n" +
 
+    "🔹 <b>/fundamental &lt;EMITEN&gt;</b>\n" +
+    "   Dapatkan fundamental suatu saham\n" +
+    "   Contoh: <code>/fundamental BBCA</code>\n\n" +
+
     "📈 Gunakan command di atas untuk membantumu analisa saham dengan cepat." +
     "Nantikan update menarik selanjutnya!!",
     { parse_mode: "HTML" }
