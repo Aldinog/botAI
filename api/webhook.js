@@ -29,19 +29,60 @@ async function loadMarked() {
 // =========================
 // Split Message Safely
 // =========================
-function splitMessageSafe(text, maxLength = 3500) {
+function splitMessageSafe(text, maxLength = 4000) {
   const parts = [];
-  let buffer = "";
+  let currentPart = "";
+  const openTags = [];
 
-  for (let word of text.split(" ")) {
-    if ((buffer + word).length > maxLength) {
-      parts.push(buffer);
-      buffer = "";
+  // Helper to close tags in reverse order
+  const closeTags = (tags) => tags.slice().reverse().map(t => `</${t}>`).join("");
+  // Helper to re-open tags
+  const reopenTags = (tags) => tags.map(t => `<${t}>`).join("");
+
+  // Split by words to avoid breaking words, but we need character-level control for tags if needed.
+  // Using a regex to find tags and words.
+  // This is a simplified parser. For strict Telegram HTML, we care about <b>, <i>, <code>, <pre>.
+  // We'll iterate by tokens (tags or text).
+
+  const regex = /(<\/?(?:b|i|code|pre)>)|([^<]+)/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const token = match[0];
+    const isTag = !!match[1];
+
+    // Calculate potential length if we add this token
+    // We must also account for the closing tags we might need to add if we split here
+    const closingOverhead = closeTags(openTags).length;
+
+    if (currentPart.length + token.length + closingOverhead > maxLength) {
+      // Must split now
+      parts.push(currentPart + closeTags(openTags));
+      currentPart = reopenTags(openTags);
     }
-    buffer += word + " ";
+
+    currentPart += token;
+
+    if (isTag) {
+      if (token.startsWith("</")) {
+        // Closing tag - remove from stack
+        const tagName = token.replace(/<\/?|>/g, "");
+        // Only pop if it matches the last opened (simple validation)
+        if (openTags.length > 0 && openTags[openTags.length - 1] === tagName) {
+          openTags.pop();
+        }
+      } else {
+        // Opening tag - add to stack
+        const tagName = token.replace(/<|>/g, "");
+        openTags.push(tagName);
+      }
+    }
   }
 
-  if (buffer.trim()) parts.push(buffer.trim());
+  if (currentPart.trim()) {
+    parts.push(currentPart + closeTags(openTags));
+  }
+
   return parts;
 }
 
