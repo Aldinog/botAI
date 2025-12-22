@@ -152,6 +152,17 @@ module.exports = async (req, res) => {
                 result = formatFundamentals(fundData);
                 break;
 
+            case 'chart':
+                // Dynamic import to keep init fast
+                const { getChartData } = require('../src/utils/charting');
+                const interval = req.body.interval || '1d';
+                const chartData = await getChartData(symbol, interval);
+                // Directly return JSON, bypass HTML formatting logic
+                return res.status(200).json({
+                    success: true,
+                    data: chartData
+                });
+
             case 'signal':
                 const { generateSignal } = await import('../src/utils/signal.js');
                 result = await generateSignal(symbol);

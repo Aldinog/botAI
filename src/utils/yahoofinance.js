@@ -6,21 +6,35 @@ const yahooFinance = new YahooFinance({ suppressNotices: ['ripHistorical'] });
  * Fetch last N daily candles from Yahoo Finance
  */
 async function fetchHistorical(symbol, opts = {}) {
-    // Ensure .JK suffix if missing and not 4 chars (simple heuristic, or better: just ensure it has it)
-    // Most users type 'BBCA', we need 'BBCA.JK'
+    // Ensure .JK suffix if missing
     let query = symbol;
     if (!query.endsWith(".JK") && !query.includes(".")) {
         query = `${query}.JK`;
     }
 
-    const limit = opts.limit || 50;
+    const limit = opts.limit || 100; // default more context
+    const interval = opts.interval || '1d';
+
+    // Date Logic
+    const today = new Date();
+    const toDate = today.toISOString().split('T')[0];
+
+    // Calculate FromDate based on interval
+    // 1h: max 730 days, but we only need enough for ~200 candles + indicators
+    // 1d: can go back further.
+    const fromDate = new Date();
+    if (interval === '1h') {
+        fromDate.setDate(fromDate.getDate() - 60); // 60 days of hourly data is plenty
+    } else {
+        fromDate.setDate(fromDate.getDate() - 730); // 2 years for daily
+    }
+    const fromDateStr = fromDate.toISOString().split('T')[0];
 
     // Yahoo Finance historical query options
-    const today = new Date().toISOString().split('T')[0];
     const queryOptions = {
-        period1: '2023-01-01',
-        period2: today,
-        interval: '1d',
+        period1: fromDateStr,
+        period2: toDate,
+        interval: interval
     };
 
     try {
@@ -29,9 +43,16 @@ async function fetchHistorical(symbol, opts = {}) {
 
         if (!result || result.length === 0) return [];
 
-        // Map to our format: { time: 'YYYY-MM-DD', open, high, low, close, volume }
+        // Map to our format: { time, open, high, low, close, volume }
         const formatted = result.map(q => ({
-            time: q.date.toISOString().split('T')[0],
+            // For H1, we need full timestamp? Lightweight Charts handles 'YYYY-MM-DD' or timestamp numbers.
+            // For 1h, yf returns date object with time.
+            // Let's return Unix Timestamp (seconds) for universal compatibility with Lightweight Charts
+            time: Math.floor(new Date(q.date).getTime() / 1000) + (7 * 3600), // Adjust to UTC+7 for display? 
+            // Wait, LW charts expects UTC seconds. Let's just return standard UTC seconds.
+            // Actually, YF returns date in UTC usually.
+            // Let's return YYYY-MM-DD for Daily, and Seconds for Hourly to allow Intraday.
+            time: interval === '1d' ? q.date.toISOString().split('T')[0] : Math.floor(q.date.getTime() / 1000),
             open: q.open,
             high: q.high,
             low: q.low,
@@ -39,10 +60,10 @@ async function fetchHistorical(symbol, opts = {}) {
             volume: q.volume
         }));
 
-        // Yahoo Finance usually returns Oldest -> Newest. 
-        // We confirm this: index 0 is old.
-        // Return last N
-        return formatted.slice(-limit);
+        // Return all available (sliced by caller if needed, or return max for chart)
+        // If opts.limit implies slicing:
+        if (opts.limit) return formatted.slice(-opts.limit);
+        return formatted;
 
     } catch (err) {
         console.error(`YF Error for ${query}:`, err.message);

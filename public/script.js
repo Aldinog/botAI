@@ -191,6 +191,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            // Special Handler: Smart Chart Page
+            if (action === 'smart-chart') {
+                if (!symbol) {
+                    tickerInput.style.borderColor = '#ef4444';
+                    tickerInput.focus();
+                    setTimeout(() => tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)', 1000);
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                    return;
+                }
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                // Redirect to Chart Page
+                window.location.href = `chart.html?symbol=${symbol}`;
+                return;
+            }
+
             // Standard Actions
             if (!symbol) {
                 tickerInput.style.borderColor = '#ef4444';
