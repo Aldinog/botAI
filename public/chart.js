@@ -1,18 +1,3 @@
-// Debug log function defined FIRST to catch init errors
-function logDebug(msg) {
-    let debugDiv = document.getElementById('debug-overlay');
-    if (!debugDiv) {
-        debugDiv = document.createElement('div');
-        debugDiv.id = 'debug-overlay';
-        debugDiv.style.cssText = 'position:absolute;bottom:50px;left:10px;background:rgba(0,0,0,0.8);color:#0f0;font-size:12px;padding:8px;pointer-events:none;z-index:9999;max-width:90%;word-wrap:break-word;';
-        document.body.appendChild(debugDiv);
-    }
-    // detailed log with timestamp
-    const time = new Date().toISOString().split('T')[1].split('.')[0];
-    debugDiv.innerHTML += `[${time}] ${msg}<br>`;
-    console.log(`[DEBUG] ${msg}`);
-}
-
 // Global Variables
 let chart, candlestickSeries;
 
@@ -23,14 +8,8 @@ document.getElementById('chart-title').innerText = symbol;
 
 // Initialization
 try {
-    logDebug('Initializing Chart...');
-
-    if (typeof LightweightCharts === 'undefined') {
-        throw new Error('LightweightCharts Library NOT loaded. CDN blocked?');
-    }
-
     const chartContainer = document.getElementById('chart-container');
-    if (!chartContainer) throw new Error('Chart Container (#chart-container) not found');
+    if (!chartContainer) throw new Error('Chart Container not found');
 
     chart = LightweightCharts.createChart(chartContainer, {
         layout: {
@@ -70,8 +49,6 @@ try {
     });
     resizeObserver.observe(chartContainer);
 
-    logDebug('Chart Initialized Successfully');
-
     // Controls Logic
     const btns = document.querySelectorAll('.time-btn');
     btns.forEach(btn => {
@@ -86,8 +63,7 @@ try {
     loadData('1d');
 
 } catch (e) {
-    logDebug(`CRITICAL ERROR: ${e.message}`);
-    alert(`Chart Error: ${e.message}`);
+    console.error(e);
 }
 
 
@@ -101,7 +77,6 @@ async function loadData(interval) {
     }
 
     const token = localStorage.getItem('aston_session_token');
-    logDebug(`Fetching data for ${symbol} (${interval})...`);
 
     try {
         const response = await fetch('/api/web', {
@@ -117,18 +92,15 @@ async function loadData(interval) {
             })
         });
 
-        logDebug(`Fetch status: ${response.status}`);
         const res = await response.json();
-        logDebug(`Response success: ${res.success}`);
 
         if (res.success && res.data) {
             const { candles, markers } = res.data;
 
-            document.getElementById('chart-title').innerText = `${symbol} (${candles.length})`;
-            logDebug(`Candles: ${candles.length}`);
+            document.getElementById('chart-title').innerText = `${symbol}`;
 
             if (candles.length === 0) {
-                spinner.innerHTML = '<span style="color:red">No Data (API Error)</span>';
+                spinner.innerHTML = '<span style="color:red">No Data</span>';
                 return;
             }
 
@@ -162,14 +134,18 @@ async function loadData(interval) {
 
             if (chart) chart.timeScale().fitContent();
         } else {
-            logDebug(`API Error: ${res.error || 'Unknown'}`);
-            alert('Failed to load chart data');
+            console.error(res.error);
         }
 
     } catch (err) {
-        logDebug(`Network Error: ${err.message}`);
-        alert('Error loading data');
+        console.error(err);
     } finally {
         spinner.style.display = 'none';
+        // Clear error text if it was there and simple spinner hide
+        if (spinner.innerHTML.includes('No Data')) {
+            // keep it
+        } else {
+            spinner.innerHTML = '<div class="spinner-icon"></div>'; // Reset spinner HTML if needed or just hide
+        }
     }
 }

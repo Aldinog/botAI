@@ -1,88 +1,175 @@
+```javascript
 const { fetchHistorical } = require('./yahoofinance');
-const { SMA } = require('technicalindicators');
+const { SMA, EMA, RSI, ADX } = require('technicalindicators');
 
 async function getChartData(symbol, interval = '1d') {
-    console.log(`[CHART] Request: ${symbol} ${interval}`);
-    // 1. Fetch Data (Get ~200 candles for ample indicator calc)
+    console.log(`[CHART] Request: ${ symbol } ${ interval } `);
+    // 1. Fetch Data 
+    // Need more data for ADX/EMA stability (at least 200)
     const candles = await fetchHistorical(symbol, { interval, limit: 300 });
-    console.log(`[CHART] Fetched ${candles ? candles.length : 0} candles for ${symbol}`);
-
+    console.log(`[CHART] Fetched ${ candles ? candles.length : 0 } candles for ${ symbol }`);
+    
     if (!candles || candles.length < 50) {
-        console.warn(`[CHART] Insufficient data for ${symbol}`);
+        console.warn(`[CHART] Insufficient data for ${ symbol }`);
         return { candles: [], markers: [] };
     }
 
     // 2. Prepare Data for Indicators
     const closes = candles.map(c => c.close);
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
 
     // 3. Calculate Indicators
-    const ma20 = SMA.calculate({ period: 20, values: closes });
-    const ma50 = SMA.calculate({ period: 50, values: closes });
-
-    // Align Arrays:
-    // SMA result is shorter than input by (period - 1).
-    // We need to match index i of SMA result with index j of candles.
-    // Index 0 of ma20 corresponds to index 19 of candles.
+    // MA 50 (User asked for EMA50 in rule desc, but "MA 50" in text. I will use EMA as per first line "menggunakan indikator EMA50")
+    const ema50 = EMA.calculate({ period: 50, values: closes });
+    const rsi14 = RSI.calculate({ period: 14, values: closes });
+    const adx14 = ADX.calculate({ period: 14, high: highs, low: lows, close: closes });
 
     const markers = [];
-    const minLen = Math.min(ma20.length, ma50.length);
+    
+    // We iterate through candles. 
+    // Need to align arrays.
+    // EMA50 starts at index 49 (length = total - 49)
+    // RSI14 starts at index 14
+    // ADX14 starts at index ~27 (14 + 14? ADX usually needs 2x period to stabilize)
+    
+    let lastSignal = null; // To filter sequence (BUY -> BUY)
 
-    // Loop through the intersection of data
-    // We compare [i] and [i-1] to detect crossover.
-    // Offset for candles index
-    const ma20Offset = 20 - 1;
-    const ma50Offset = 50 - 1;
+    // Helper to safely get indicator value at candle index
+    // arr[0] matches candles[offset]. 
+    // Offset = candles.length - arr.length
+    const getVal = (arr, candleIdx) => {
+        const offset = candles.length - arr.length;
+        const idx = candleIdx - offset;
+        if (idx < 0 || idx >= arr.length) return null;
+        return arr[idx];
+    };
 
-    // Because MA50 defines the valid range starting point
-    // We start loop from 1 (to check i-1) relative to the SHORTEST array (ma50)
-    for (let i = 1; i < ma50.length; i++) {
-        const currMsg50 = ma50[i];
-        const prevMsg50 = ma50[i - 1];
+    // Helper: Is Sideways? (ADX < 20)
+    const isSideways = (idx) => {
+        const adx = getVal(adx14, idx);
+        // User rule: ADX < 20 -> No Signal
+        if (adx && adx.adx < 20) return true;
+        return false;
+    };
 
-        // Find corresponding MA20 values.
-        // Identify the candle index for ma50[i]:
-        const candleIdx = i + ma50Offset;
+    // Helper: Pattern Recognition
+    const getPattern = (curr, prev) => {
+        if (!curr || !prev) return null;
+        
+        const cBody = Math.abs(curr.close - curr.open);
+        const cRange = curr.high - curr.low;
+        const cBodyPct = cRange > 0 ? cBody / cRange : 0;
+        
+        const pBody = Math.abs(prev.close - prev.open);
+        const pRange = prev.high - prev.low;
+        
+        const isBullish = curr.close > curr.open;
+        const isBearish = curr.close < curr.open;
+        const prevRed = prev.close < prev.open;
+        const prevGreen = prev.close > prev.open;
 
-        // Identify corresponding index in ma20 array:
-        // candleIdx = k + ma20Offset => k = candleIdx - ma20Offset
-        const ma20Idx = candleIdx - ma20Offset;
+        // "Jangan panah di candle kecil Body candle ≥ 60% range candle" 
+        // Used as a filter for 'Strong' candles ONLY for Engulfing maybe? 
+        // Because Pinbars have small bodies.
+        
+        // 1. PIN BAR / HAMMER / HANGING MAN (Bullish Rejection)
+        // Characteristic: Long lower wick, small body at top.
+        const upperWick = curr.high - Math.max(curr.open, curr.close);
+        const lowerWick = Math.min(curr.open, curr.close) - curr.low;
+        
+        // Bullish Pin Bar / Hammer (Lower wick >= 2 * body) & Body in upper half
+        if (lowerWick >= 2 * cBody && upperWick < lowerWick * 0.5) {
+            return 'BULL_PIN';
+        }
 
-        const currMsg20 = ma20[ma20Idx];
-        const prevMsg20 = ma20[ma20Idx - 1];
+        // 2. SHOOTING STAR / BEARISH PIN BAR (Bearish Rejection)
+        // Characteristic: Long upper wick, small body at bottom.
+        if (upperWick >= 2 * cBody && lowerWick < upperWick * 0.5) {
+            return 'BEAR_PIN';
+        }
 
-        if (!currMsg20 || !prevMsg20) continue;
+        // 3. BULLISH ENGULFING
+        // Prev Red, Curr Green. Strong Body?
+        if (prevRed && isBullish) {
+            if (curr.close > prev.open && curr.open < prev.close) {
+                 // Check strength?
+                 if (cBodyPct >= 0.5) return 'BULL_ENGULF';
+            }
+        }
 
-        // Logic: Golden Cross (20 crosses above 50)
-        const isGoldenCross = (prevMsg20 <= prevMsg50) && (currMsg20 > currMsg50);
-        // Logic: Death Cross (20 crosses below 50)
-        const isDeathCross = (prevMsg20 >= prevMsg50) && (currMsg20 < currMsg50);
+        // 4. BEARISH ENGULFING
+        // Prev Green, Curr Red.
+        if (prevGreen && isBearish) {
+            if (curr.close < prev.open && curr.open > prev.close) {
+                 if (cBodyPct >= 0.5) return 'BEAR_ENGULF';
+            }
+        }
 
-        if (isGoldenCross) {
-            markers.push({
-                time: candles[candleIdx].time,
-                position: 'belowBar',
-                color: '#22c55e', // Green
-                shape: 'arrowUp',
-                text: 'BUY'
-            });
-        } else if (isDeathCross) {
-            markers.push({
-                time: candles[candleIdx].time,
-                position: 'aboveBar',
-                color: '#ef4444', // Red
-                shape: 'arrowDown',
-                text: 'SELL'
-            });
+        return null;
+    };
+
+
+    // Iterate
+    // Start from index 50 to ensure we have EMA50
+    for (let i = 50; i < candles.length; i++) {
+        const curr = candles[i];
+        const prev = candles[i-1];
+        
+        const ema = getVal(ema50, i);
+        const rsi = getVal(rsi14, i);
+        
+        if (ema === null || rsi === null) continue;
+
+        // Filter: Sideways
+        if (isSideways(i)) continue;
+
+        const pattern = getPattern(curr, prev);
+        if (!pattern) continue;
+
+        // RULE BUY
+        // 1. Close > EMA50
+        // 2. RSI > 50
+        // 3. Pattern: Bull Engulf / Bull Pin
+        const buySignal = (curr.close > ema) && (rsi > 50) && (pattern === 'BULL_ENGULF' || pattern === 'BULL_PIN');
+        
+        // RULE SELL
+        // 1. Close < EMA50
+        // 2. RSI < 50
+        // 3. Pattern: Bear Engulf / Bear Pin
+        const sellSignal = (curr.close < ema) && (rsi < 50) && (pattern === 'BEAR_ENGULF' || pattern === 'BEAR_PIN');
+
+        // Filter: Sequence (No BUY -> BUY)
+        if (buySignal) {
+            if (lastSignal !== 'BUY') {
+                markers.push({
+                    time: curr.time,
+                    position: 'belowBar',
+                    color: '#22c55e',
+                    shape: 'arrowUp',
+                    text: 'BUY' //+ (pattern === 'BULL_ENGULF' ? ' E' : ' P')
+                });
+                lastSignal = 'BUY';
+            }
+        } else if (sellSignal) {
+            if (lastSignal !== 'SELL') {
+                markers.push({
+                    time: curr.time,
+                    position: 'aboveBar',
+                    color: '#ef4444',
+                    shape: 'arrowDown',
+                    text: 'SELL' //+ (pattern === 'BEAR_ENGULF' ? ' E' : ' P')
+                });
+                lastSignal = 'SELL';
+            }
         }
     }
 
-    // Return Candles (all of them, or maybe trim purely empty indicator ones? No keep all for context)
     return {
         candles,
-        markers,
-        // Optional: Return MA lines too if we want to draw them later
-        // lines: { ma20, ma50 }
+        markers
     };
 }
 
 module.exports = { getChartData };
+```
