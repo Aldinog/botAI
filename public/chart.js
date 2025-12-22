@@ -70,7 +70,12 @@ try {
 // Load Data Function
 async function loadData(interval) {
     const spinner = document.getElementById('loading-spinner');
+    const spinnerText = spinner.querySelector('span');
+    if (spinnerText) spinnerText.innerText = 'Fetching Market Data...';
+
     spinner.style.display = 'flex';
+    spinner.style.opacity = '1';
+
     if (candlestickSeries) {
         candlestickSeries.setData([]);
         candlestickSeries.setMarkers([]);
@@ -95,12 +100,13 @@ async function loadData(interval) {
         const res = await response.json();
 
         if (res.success && res.data) {
+            if (spinnerText) spinnerText.innerText = 'Generating Signals...';
             const { candles, markers } = res.data;
 
             document.getElementById('chart-title').innerText = `${symbol}`;
 
             if (candles.length === 0) {
-                spinner.innerHTML = '<span style="color:red">No Data</span>';
+                if (spinnerText) spinnerText.innerText = 'No Data Found';
                 return;
             }
 
@@ -134,18 +140,17 @@ async function loadData(interval) {
 
             if (chart) chart.timeScale().fitContent();
         } else {
+            if (spinnerText) spinnerText.innerText = 'API Error';
             console.error(res.error);
         }
 
     } catch (err) {
+        if (spinnerText) spinnerText.innerText = 'Network Error';
         console.error(err);
     } finally {
-        spinner.style.display = 'none';
-        // Clear error text if it was there and simple spinner hide
-        if (spinner.innerHTML.includes('No Data')) {
-            // keep it
-        } else {
-            spinner.innerHTML = '<div class="spinner-icon"></div>'; // Reset spinner HTML if needed or just hide
-        }
+        spinner.style.opacity = '0';
+        setTimeout(() => {
+            spinner.style.display = 'none';
+        }, 300);
     }
 }
