@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
-const { fetchHistorical } = require('./utils/goapi');
+const { fetchHistorical } = require('./utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('./utils/indicators');
 const { analyzeWithGemini } = require('./utils/gemini');
 const { marked } = require("marked");

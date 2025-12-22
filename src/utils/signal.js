@@ -1,4 +1,4 @@
-const { fetchHistorical, analyzeProxyBrokerActivity } = require('./goapi');
+const { fetchHistorical, analyzeProxyBrokerActivity } = require('./yahoofinance');
 const { computeIndicators } = require('./indicators');
 const { analyzeWithGemini } = require('./gemini');
 

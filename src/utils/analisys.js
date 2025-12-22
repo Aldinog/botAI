@@ -1,35 +1,11 @@
 // utils/analysis.js
 
 const { SMA, RSI, MACD, Stochastic } = require("../utils/indikator");
-const axios = require("axios");
+const { fetchHistorical } = require("../utils/yahoofinance");
 
-// ============================
-// Ambil histori candle 50 hari
-// ============================
-async function getHistorical(symbol) {
-    const to = new Date().toISOString().split("T")[0];
-    const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - 60);
-    const from = fromDate.toISOString().split("T")[0];
+// Use fetchHistorical from yahoofinance instead of internal implementation
+// Removed axios and internal getHistorical
 
-    try {
-        const url = `https://api.goapi.io/stock/idx/${symbol}/historical?from=${from}&to=${to}`;
-
-        const { data } = await axios.get(url, {
-            headers: { "X-API-KEY": process.env.GOAPI_API_KEY },
-        });
-
-        return data?.data?.results || [];
-    } catch (err) {
-        console.error("Error historical:", err.response?.data || err.message);
-        return null;
-    }
-}
-
-// =========================
-// Analisa otomatis
-// =========================
-// utils/analysis.js (hanya fungsi analyzeStock di-update
 
 function safeNum(v, digits = 2) {
     if (v === null || v === undefined || Number.isNaN(v)) return null;
@@ -41,35 +17,25 @@ function fmt(v) {
     return Number(v).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-async function getHistorical(symbol) {
-    const to = new Date().toISOString().split("T")[0];
-    const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - 80); // ambil lebih panjang untuk berjaga2
-    const from = fromDate.toISOString().split("T")[0];
-
-    try {
-        const url = `https://api.goapi.io/stock/idx/${symbol}/historical?from=${from}&to=${to}`;
-        const { data } = await axios.get(url, {
-            params: { api_key: process.env.GOAPI_API_KEY },
-            timeout: 10000
-        });
-        return data?.data?.results || [];
-    } catch (err) {
-        console.error("Error historical:", err.response?.data || err.message);
-        return null;
-    }
-}
-
 async function analyzeStock(symbol) {
-    const candles = await getHistorical(symbol);
+    // Replacement for getHistorical: use fetchHistorical with limit ~80
+    const candles = await fetchHistorical(symbol, { limit: 80 });
     if (!candles || candles.length < 20) {
         return { error: "Data tidak cukup untuk analisa (butuh minimal ~20 candle)." };
     }
 
-    // API sering return newest first atau oldest first — pastikan ascending (oldest..newest)
+    // fetchHistorical already returns oldest -> newest. 
+    // GoAPI logic had a reverse check, but fetchHistorical guarantees order.
     let c = [...candles];
-    // if first date is newer than last, reverse to oldest-first
-    if (new Date(c[0].date) > new Date(c[c.length - 1].date)) c = c.reverse();
+
+    // Safety check just in case logic changes
+    if (new Date(c[0].time) > new Date(c[c.length - 1].time)) c = c.reverse();
+
+    // Map fields (YF fetchHistorical returns open/high/low/close as numbers, time as string)
+    // Existing code uses 'date' possibly? fetchHistorical returns 'time'.
+    // See line 72 original: new Date(c[0].date). 
+    // fetchHistorical returns object with 'time' key. I should normalize this or adapt usage.
+    // Let's adapt usage here.
 
     const close = c.map(x => Number(x.close));
     const high = c.map(x => Number(x.high));

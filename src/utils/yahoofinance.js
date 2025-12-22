@@ -153,5 +153,21 @@ module.exports = {
     fetchHistorical,
     fetchBrokerSummaryWithFallback,
     analyzeProxyBrokerActivity,
-    formatProxyBrokerActivity
+    formatProxyBrokerActivity,
+    fetchQuote
 };
+
+async function fetchQuote(symbol) {
+    let query = symbol;
+    if (!query.endsWith(".JK") && !query.includes(".")) {
+        query = `${query}.JK`;
+    }
+
+    try {
+        const quote = await yahooFinance.quote(query);
+        return quote;
+    } catch (err) {
+        console.error(`YF Quote Error for ${query}:`, err.message);
+        return null;
+    }
+}
