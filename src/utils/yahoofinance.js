@@ -154,7 +154,9 @@ module.exports = {
     fetchBrokerSummaryWithFallback,
     analyzeProxyBrokerActivity,
     formatProxyBrokerActivity,
-    fetchQuote
+    fetchQuote,
+    fetchFundamentals,
+    formatFundamentals
 };
 
 async function fetchQuote(symbol) {
@@ -170,4 +172,75 @@ async function fetchQuote(symbol) {
         console.error(`YF Quote Error for ${query}:`, err.message);
         return null;
     }
+}
+
+async function fetchFundamentals(symbol) {
+    let query = symbol;
+    if (!query.endsWith(".JK") && !query.includes(".")) {
+        query = `${query}.JK`;
+    }
+
+    try {
+        // Fetch valid modules for fundamentals
+        const result = await yahooFinance.quoteSummary(query, {
+            modules: ["summaryDetail", "defaultKeyStatistics", "financialData", "price"]
+        });
+
+        if (!result) return null;
+
+        const summary = result.summaryDetail || {};
+        const stats = result.defaultKeyStatistics || {};
+        const fin = result.financialData || {};
+        const price = result.price || {};
+
+        return {
+            symbol: query,
+            name: price.longName || price.shortName,
+            price: price.regularMarketPrice,
+            marketCap: summary.marketCap,
+            peRatio: summary.trailingPE,
+            forwardPE: summary.forwardPE,
+            pegRatio: stats.pegRatio,
+            pbRatio: stats.priceToBook,
+            roe: fin.returnOnEquity,
+            divYield: summary.dividendYield,
+            profitMargin: fin.profitMargins,
+            revenue: fin.totalRevenue,
+            beta: summary.beta,
+            targetPrice: fin.targetMeanPrice
+        };
+    } catch (err) {
+        console.error(`YF Fundamental Error for ${query}:`, err.message);
+        return null;
+    }
+}
+
+function formatFundamentals(data) {
+    if (!data) return "❌ Data fundamental tidak ditemukan.";
+
+    const fmtNum = (num) => num ? num.toLocaleString('id-ID') : '-';
+    const fmtPct = (num) => num ? (num * 100).toFixed(2) + '%' : '-';
+    // Helper for Trillion/Billion formatting (IDR usually)
+    const fmtCap = (val) => {
+        if (!val) return '-';
+        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
+        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
+        return val.toLocaleString();
+    };
+
+    return `🏛 <b>Fundamental: ${data.name} (${data.symbol.replace('.JK', '')})</b>\n` +
+        `Harga: ${fmtNum(data.price)}\n\n` +
+        `<b>Valuation:</b>\n` +
+        `• Market Cap: ${fmtCap(data.marketCap)}\n` +
+        `• P/E Ratio: ${data.peRatio ? data.peRatio.toFixed(2) + 'x' : '-'}\n` +
+        `• PBV Ratio: ${data.pbRatio ? data.pbRatio.toFixed(2) + 'x' : '-'}\n` +
+        `• PEG Ratio: ${data.pegRatio ? data.pegRatio.toFixed(2) : '-'}\n\n` +
+        `<b>Profitability:</b>\n` +
+        `• ROE: ${fmtPct(data.roe)}\n` +
+        `• Net Margin: ${fmtPct(data.profitMargin)}\n` +
+        `• Dividend Yield: ${fmtPct(data.divYield)}\n\n` +
+        `<b>Other:</b>\n` +
+        `• Beta: ${data.beta ? data.beta.toFixed(2) : '-'}\n` +
+        `• Target Price: ${fmtNum(data.targetPrice)}\n\n` +
+        `<i>Data by Yahoo Finance</i>`;
 }

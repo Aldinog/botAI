@@ -4,7 +4,9 @@ const { analyzeWithGemini } = require('../src/utils/gemini');
 const {
     fetchHistorical,
     analyzeProxyBrokerActivity,
-    formatProxyBrokerActivity
+    formatProxyBrokerActivity,
+    fetchFundamentals,
+    formatFundamentals
 } = require('../src/utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
 const jwt = require('jsonwebtoken');
@@ -142,6 +144,12 @@ module.exports = async (req, res) => {
                 const candlesProxy = await fetchHistorical(symbol, { limit: 120 });
                 const activity = analyzeProxyBrokerActivity(candlesProxy);
                 result = formatProxyBrokerActivity(symbol, activity);
+                break;
+
+            case 'fundamental':
+            case 'profile':
+                const fundData = await fetchFundamentals(symbol);
+                result = formatFundamentals(fundData);
                 break;
 
             case 'signal':

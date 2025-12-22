@@ -7,6 +7,7 @@ const { fetchHistorical } = require("../src/utils/yahoofinance");
 const { fetchBrokerSummaryWithFallback } = require("../src/utils/yahoofinance");
 const { analyzeProxyBrokerActivity } = require("../src/utils/yahoofinance");
 const { formatProxyBrokerActivity } = require("../src/utils/yahoofinance");
+const { fetchFundamentals, formatFundamentals } = require("../src/utils/yahoofinance");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithGemini } = require("../src/utils/gemini");
 const { analyzeStock } = require("../src/utils/analisys");
@@ -460,6 +461,33 @@ bot.command("analisa", async (ctx) => {
   const finalMsg = `📊 <b>Analisa ${symbol}</b>\n\n${html}`;
 
   await sendLongMessage(ctx, finalMsg);
+});
+
+// ============================
+// COMMAND: FUNDAMENTAL
+// ============================
+bot.command(["fundamental", "profile"], async (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan fundamental`);
+  const text = ctx.message.text.split(" ");
+  const symbol = text[1]?.toUpperCase();
+
+  if (!symbol) {
+    return ctx.reply("⚠ Format salah.\nGunakan: /fundamental BBCA");
+  }
+
+  await ctx.reply(`🔎 Mengambil data fundamental <b>${symbol}</b>...`, {
+    parse_mode: "HTML",
+  });
+
+  try {
+    const data = await fetchFundamentals(symbol);
+    const msg = formatFundamentals(data);
+    await ctx.reply(msg, { parse_mode: "HTML" });
+  } catch (err) {
+    console.error("Fundamental Error:", err);
+    ctx.reply(`❌ Gagal mengambil data fundamental ${symbol}`);
+  }
 });
 
 // =========================
