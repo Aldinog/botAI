@@ -2,10 +2,13 @@ const { fetchHistorical } = require('./yahoofinance');
 const { SMA } = require('technicalindicators');
 
 async function getChartData(symbol, interval = '1d') {
+    console.log(`[CHART] Request: ${symbol} ${interval}`);
     // 1. Fetch Data (Get ~200 candles for ample indicator calc)
     const candles = await fetchHistorical(symbol, { interval, limit: 300 });
+    console.log(`[CHART] Fetched ${candles ? candles.length : 0} candles for ${symbol}`);
 
     if (!candles || candles.length < 50) {
+        console.warn(`[CHART] Insufficient data for ${symbol}`);
         return { candles: [], markers: [] };
     }
 

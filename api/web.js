@@ -156,12 +156,21 @@ module.exports = async (req, res) => {
                 // Dynamic import to keep init fast
                 const { getChartData } = require('../src/utils/charting');
                 const interval = req.body.interval || '1d';
-                const chartData = await getChartData(symbol, interval);
-                // Directly return JSON, bypass HTML formatting logic
-                return res.status(200).json({
-                    success: true,
-                    data: chartData
-                });
+                console.log(`[API] Processing chart request for ${symbol} interval ${interval}`);
+
+                try {
+                    const chartData = await getChartData(symbol, interval);
+                    console.log(`[API] Returning chart data: ${chartData.candles.length} candles, ${chartData.markers.length} markers`);
+
+                    // Directly return JSON, bypass HTML formatting logic
+                    return res.status(200).json({
+                        success: true,
+                        data: chartData
+                    });
+                } catch (error) {
+                    console.error(`[API] Chart Error:`, error);
+                    return res.status(500).json({ success: false, error: error.message });
+                }
 
             case 'signal':
                 const { generateSignal } = await import('../src/utils/signal.js');
