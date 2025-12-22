@@ -64,6 +64,16 @@ async function loadData(interval) {
         if (res.success && res.data) {
             const { candles, markers } = res.data;
 
+            // DEBUG: Update Title with count
+            document.getElementById('chart-title').innerText = `${symbol} (${candles.length})`;
+
+            if (candles.length === 0) {
+                // Explicitly show error on screen if empty
+                document.getElementById('loading-spinner').style.display = 'flex';
+                document.getElementById('loading-spinner').innerHTML = '<span style="color:red">No Data (API Error)</span>';
+                return;
+            }
+
             // Validate and Sort unique (Lightweight charts strict requirement)
             const uniqueCandles = [];
             const times = new Set();
