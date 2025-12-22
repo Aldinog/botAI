@@ -33,7 +33,7 @@ async function analyzeWithGemini(prompt) {
 
   } catch (err) {
     console.error("Gemini error:", err?.response?.data || err.message);
-    throw new Error("Gagal memanggil Gemini API: " + err.message);
+    throw new Error("AI Overload, Cobalagi beberapa saat");
   }
 }
 
