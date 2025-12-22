@@ -1,5 +1,5 @@
 const YahooFinance = require('yahoo-finance2').default;
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ['ripHistorical'] });
 // suppressNotices might not be available or needed on new instance, removing for now to be safe
 
 /**
