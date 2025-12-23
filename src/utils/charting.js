@@ -170,10 +170,39 @@ function detectSRandTrendlines(candles) {
     clusters.forEach(cluster => {
         if (cluster.length >= 2) {
             const avgPrice = cluster.reduce((sum, p) => sum + p.price, 0) / cluster.length;
+            const currentPrice = candles[candles.length - 1].close;
+
+            // Check for recent breaches (last 30 candles)
+            const recentHistory = candles.slice(-30);
+            let isBroken = false;
+
+            // A level is "broken" if more than 2 candles in the recent history have 
+            // completely crossed it (Low > level for resistance, or High < level for support)
+            // or if the current price has crossed it from the previous candle.
+
+            let crosses = 0;
+            recentHistory.forEach((c, idx) => {
+                if (c.low < avgPrice && c.high > avgPrice) crosses++;
+
+                // If it's resistance, and price closed above it
+                if (avgPrice > candles[candles.length - 10].close && c.close > avgPrice * 1.01) isBroken = true;
+                // If it's support, and price closed below it
+                if (avgPrice < candles[candles.length - 10].close && c.close < avgPrice * 0.99) isBroken = true;
+            });
+
+            if (isBroken || crosses > 5) return;
+
+            // Immediate breach check (last 2 candles)
+            const prevPrice = candles[candles.length - 2].close;
+            if ((prevPrice < avgPrice && currentPrice > avgPrice) ||
+                (prevPrice > avgPrice && currentPrice < avgPrice)) {
+                return;
+            }
+
             levels.push({
                 price: avgPrice,
                 strength: cluster.length,
-                type: avgPrice > candles[candles.length - 1].close ? 'resistance' : 'support'
+                type: avgPrice > currentPrice ? 'resistance' : 'support'
             });
         }
     });

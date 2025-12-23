@@ -138,6 +138,16 @@ try {
         cancelDrawing();
     });
 
+    /**
+     * Helper to convert Lightweight Charts time to numerical timestamp
+     */
+    function toTimestamp(time) {
+        if (typeof time === 'number') return time;
+        if (typeof time === 'string') return new Date(time).getTime() / 1000;
+        if (time && time.year) return new Date(time.year, time.month - 1, time.day).getTime() / 1000;
+        return 0;
+    }
+
     // Crosshair Tracker
     chart.subscribeCrosshairMove((param) => {
         if (!param.point || !param.time) return;
@@ -152,27 +162,45 @@ try {
 
     // Selection Logic on Click
     chart.subscribeClick((param) => {
-        if (activeTool || !param.point || !param.time) return;
+        if (activeTool) return;
+
+        if (!param.point || !param.time) {
+            selectedDrawingIndex = null;
+            renderManualDrawings();
+            return;
+        }
 
         const price = candlestickSeries.coordinateToPrice(param.point.y);
-        const time = param.time;
+        const clickTime = toTimestamp(param.time);
 
         // Find nearest drawing
         let foundIndex = null;
         manualDrawings.forEach((draw, index) => {
+            const tolerance = price * 0.05; // 5% tolerance for touch
+
             if (draw.type === 'horizontal') {
                 const diff = Math.abs(draw.price - price);
-                if (diff < (price * 0.005)) foundIndex = index; // 0.5% tolerance
+                if (diff < tolerance) foundIndex = index;
             } else if (draw.type === 'trendline') {
-                // Simplified "near points" check
-                const d1 = Math.abs(draw.p1.price - price);
-                const d2 = Math.abs(draw.p2.price - price);
-                if (d1 < (price * 0.01) || d2 < (price * 0.01)) foundIndex = index;
-            } else if (draw.type === 'rectangle') {
-                if (price >= Math.min(draw.p1.price, draw.p2.price) &&
-                    price <= Math.max(draw.p1.price, draw.p2.price)) {
-                    foundIndex = index;
+                const t1 = toTimestamp(draw.p1.time);
+                const t2 = toTimestamp(draw.p2.time);
+
+                // Use a wider time buffer for selection
+                const margin = 3600 * 24; // 1 day buffer
+                if (clickTime >= Math.min(t1, t2) - margin && clickTime <= Math.max(t1, t2) + margin) {
+                    const ratio = (clickTime - t1) / (t2 - t1 || 1);
+                    const linePrice = draw.p1.price + (draw.p2.price - draw.p1.price) * ratio;
+                    if (Math.abs(linePrice - price) < tolerance) foundIndex = index;
                 }
+            } else if (draw.type === 'rectangle') {
+                const t1 = toTimestamp(draw.p1.time);
+                const t2 = toTimestamp(draw.p2.time);
+
+                const inPrice = price >= Math.min(draw.p1.price, draw.p2.price) - tolerance &&
+                    price <= Math.max(draw.p1.price, draw.p2.price) + tolerance;
+                const inTime = clickTime >= Math.min(t1, t2) && clickTime <= Math.max(t1, t2);
+
+                if (inPrice && inTime) foundIndex = index;
             }
         });
 
