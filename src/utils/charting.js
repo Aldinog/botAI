@@ -178,23 +178,35 @@ function detectSRandTrendlines(candles) {
         }
     });
 
-    // Trendlines (Simplified: Connect recent major pivots)
+    // Trendlines (Simplified: Connect recent major pivots and extend to last candle)
     const trendlines = [];
+    const lastCandle = candles[candles.length - 1];
+
     if (highPivots.length >= 2) {
         const p1 = highPivots[highPivots.length - 2];
         const p2 = highPivots[highPivots.length - 1];
+
+        // Calculate slope: (y2 - y1) / (x2 - x1)
+        const slope = (p2.price - p1.price) / (p2.index - p1.index);
+        // Extend to last candle index
+        const extPrice = p2.price + slope * (candles.length - 1 - p2.index);
+
         trendlines.push({
             p1: { time: p1.time, price: p1.price },
-            p2: { time: p2.time, price: p2.price },
+            p2: { time: lastCandle.time, price: extPrice },
             type: 'resistance'
         });
     }
     if (lowPivots.length >= 2) {
         const p1 = lowPivots[lowPivots.length - 2];
         const p2 = lowPivots[lowPivots.length - 1];
+
+        const slope = (p2.price - p1.price) / (p2.index - p1.index);
+        const extPrice = p2.price + slope * (candles.length - 1 - p2.index);
+
         trendlines.push({
             p1: { time: p1.time, price: p1.price },
-            p2: { time: p2.time, price: p2.price },
+            p2: { time: lastCandle.time, price: extPrice },
             type: 'support'
         });
     }

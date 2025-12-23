@@ -4,6 +4,7 @@ let currentMode = 'auto'; // 'auto' or 'manual'
 let autoSeries = []; // Store S/R and Trendline series for easy clearing
 let manualDrawings = JSON.parse(localStorage.getItem('manual_drawings') || '[]');
 let activeTool = null;
+let selectedDrawingIndex = null;
 let drawingPoints = [];
 let tempSeries = null; // Preview series while drawing
 let crosshairPosition = null;
@@ -29,6 +30,9 @@ try {
         },
         width: chartContainer.clientWidth,
         height: chartContainer.clientHeight,
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
         timeScale: {
             timeVisible: true,
             secondsVisible: false,
@@ -94,15 +98,21 @@ try {
     toolBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             if (btn.id === 'tool-eraser') {
-                if (confirm('Delete all drawings?')) {
+                if (selectedDrawingIndex !== null) {
+                    manualDrawings.splice(selectedDrawingIndex, 1);
+                    selectedDrawingIndex = null;
+                } else if (confirm('Delete all drawings?')) {
                     manualDrawings = [];
-                    saveManualDrawings();
-                    renderManualDrawings();
                 }
+                saveManualDrawings();
+                renderManualDrawings();
                 return;
             }
 
             toolBtns.forEach(b => b.classList.remove('active'));
+            selectedDrawingIndex = null;
+            renderManualDrawings();
+
             if (activeTool === btn.id.replace('tool-', '')) {
                 activeTool = null;
                 document.getElementById('touch-controls').style.display = 'none';
@@ -138,6 +148,36 @@ try {
         if (activeTool && drawingPoints.length > 0) {
             updateDrawingPreview();
         }
+    });
+
+    // Selection Logic on Click
+    chart.subscribeClick((param) => {
+        if (activeTool || !param.point || !param.time) return;
+
+        const price = candlestickSeries.coordinateToPrice(param.point.y);
+        const time = param.time;
+
+        // Find nearest drawing
+        let foundIndex = null;
+        manualDrawings.forEach((draw, index) => {
+            if (draw.type === 'horizontal') {
+                const diff = Math.abs(draw.price - price);
+                if (diff < (price * 0.005)) foundIndex = index; // 0.5% tolerance
+            } else if (draw.type === 'trendline') {
+                // Simplified "near points" check
+                const d1 = Math.abs(draw.p1.price - price);
+                const d2 = Math.abs(draw.p2.price - price);
+                if (d1 < (price * 0.01) || d2 < (price * 0.01)) foundIndex = index;
+            } else if (draw.type === 'rectangle') {
+                if (price >= Math.min(draw.p1.price, draw.p2.price) &&
+                    price <= Math.max(draw.p1.price, draw.p2.price)) {
+                    foundIndex = index;
+                }
+            }
+        });
+
+        selectedDrawingIndex = foundIndex;
+        renderManualDrawings();
     });
 
     // Start Data Load
@@ -309,21 +349,25 @@ let manualSeriesRef = [];
 function renderManualDrawings() {
     clearManualFromChart();
 
-    manualDrawings.forEach(draw => {
+    manualDrawings.forEach((draw, index) => {
+        const isSelected = index === selectedDrawingIndex;
+        const color = isSelected ? '#ef4444' : '#6366f1';
+        const width = isSelected ? 3 : 2;
+
         if (draw.type === 'horizontal') {
             const line = candlestickSeries.createPriceLine({
                 price: draw.price,
-                color: '#6366f1',
-                lineWidth: 2,
+                color: color,
+                lineWidth: width,
                 lineStyle: LightweightCharts.LineStyle.Solid,
                 axisLabelVisible: true,
-                title: 'MANUAL',
+                title: isSelected ? 'SELECTED' : 'MANUAL',
             });
             manualSeriesRef.push({ type: 'priceLine', ref: line });
         } else if (draw.type === 'trendline') {
             const series = chart.addLineSeries({
-                color: '#6366f1',
-                lineWidth: 2,
+                color: color,
+                lineWidth: width,
                 lastValueVisible: false,
                 priceLineVisible: false,
             });
@@ -333,16 +377,12 @@ function renderManualDrawings() {
             ]);
             manualSeriesRef.push({ type: 'series', ref: series });
         } else if (draw.type === 'rectangle') {
-            // Rectangles in Lightweight Charts are best done with two line series for top/bottom
-            // or a single line series that "loops" - but that can be messy.
-            // Simplified: Draw 4 lines or use a transparent Area series.
             const series = chart.addLineSeries({
-                color: '#6366f1',
-                lineWidth: 2,
+                color: color,
+                lineWidth: width,
                 lastValueVisible: false,
                 priceLineVisible: false,
             });
-            // Loop: p1 -> p2(price1, time2) -> p2 -> p4(price2, time1) -> p1
             series.setData([
                 { time: draw.p1.time, value: draw.p1.price },
                 { time: draw.p2.time, value: draw.p1.price },
