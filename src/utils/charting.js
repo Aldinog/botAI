@@ -112,10 +112,94 @@ async function getChartData(symbol, interval = '1d') {
         }
     }
 
+    // 5. Detect S/R and Trendlines
+    const { levels, trendlines } = detectSRandTrendlines(candles);
+
     return {
         candles,
-        markers
+        markers,
+        levels,
+        trendlines
     };
+}
+
+/**
+ * Detects Support/Resistance levels and Trendlines
+ */
+function detectSRandTrendlines(candles) {
+    if (candles.length < 50) return { levels: [], trendlines: [] };
+
+    const highs = candles.map(c => c.high);
+    const lows = candles.map(c => c.low);
+    const pivotPeriod = 5; // Search within 5 candles left/right
+
+    const highPivots = [];
+    const lowPivots = [];
+
+    // Pivot detection
+    for (let i = pivotPeriod; i < candles.length - pivotPeriod; i++) {
+        let isHigh = true;
+        let isLow = true;
+        for (let j = 1; j <= pivotPeriod; j++) {
+            if (highs[i] <= highs[i - j] || highs[i] <= highs[i + j]) isHigh = false;
+            if (lows[i] >= lows[i - j] || lows[i] >= lows[i + j]) isLow = false;
+        }
+        if (isHigh) highPivots.push({ index: i, price: highs[i], time: candles[i].time });
+        if (isLow) lowPivots.push({ index: i, price: lows[i], time: candles[i].time });
+    }
+
+    // Support / Resistance Levels (Clustering pivots)
+    const levels = [];
+    const allPivots = [...highPivots, ...lowPivots].sort((a, b) => b.price - a.price);
+    const threshold = candles[candles.length - 1].close * 0.015; // 1.5% threshold for Jakarta market usually works
+
+    const clusters = [];
+    allPivots.forEach(p => {
+        let added = false;
+        for (const cluster of clusters) {
+            const avg = cluster.reduce((sum, cp) => sum + cp.price, 0) / cluster.length;
+            if (Math.abs(p.price - avg) < threshold) {
+                cluster.push(p);
+                added = true;
+                break;
+            }
+        }
+        if (!added) clusters.push([p]);
+    });
+
+    clusters.forEach(cluster => {
+        if (cluster.length >= 2) {
+            const avgPrice = cluster.reduce((sum, p) => sum + p.price, 0) / cluster.length;
+            levels.push({
+                price: avgPrice,
+                strength: cluster.length,
+                type: avgPrice > candles[candles.length - 1].close ? 'resistance' : 'support'
+            });
+        }
+    });
+
+    // Trendlines (Simplified: Connect recent major pivots)
+    const trendlines = [];
+    if (highPivots.length >= 2) {
+        const p1 = highPivots[highPivots.length - 2];
+        const p2 = highPivots[highPivots.length - 1];
+        trendlines.push({
+            p1: { time: p1.time, price: p1.price },
+            p2: { time: p2.time, price: p2.price },
+            type: 'resistance'
+        });
+    }
+    if (lowPivots.length >= 2) {
+        const p1 = lowPivots[lowPivots.length - 2];
+        const p2 = lowPivots[lowPivots.length - 1];
+        trendlines.push({
+            p1: { time: p1.time, price: p1.price },
+            p2: { time: p2.time, price: p2.price },
+            type: 'support'
+        });
+    }
+
+    return { levels, trendlines };
 }
 
 module.exports = { getChartData };

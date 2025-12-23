@@ -1,5 +1,12 @@
 // Global Variables
 let chart, candlestickSeries;
+let currentMode = 'auto'; // 'auto' or 'manual'
+let autoSeries = []; // Store S/R and Trendline series for easy clearing
+let manualDrawings = JSON.parse(localStorage.getItem('manual_drawings') || '[]');
+let activeTool = null;
+let drawingPoints = [];
+let tempSeries = null; // Preview series while drawing
+let crosshairPosition = null;
 
 // Get URL Params
 const urlParams = new URLSearchParams(window.location.search);
@@ -50,13 +57,87 @@ try {
     resizeObserver.observe(chartContainer);
 
     // Controls Logic
-    const btns = document.querySelectorAll('.time-btn');
-    btns.forEach(btn => {
+    const timeBtns = document.querySelectorAll('.time-btn');
+    timeBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            btns.forEach(b => b.classList.remove('active'));
+            timeBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             loadData(btn.dataset.interval);
         });
+    });
+
+    // Mode Toggle Logic
+    const btnAuto = document.getElementById('btn-auto');
+    const btnManual = document.getElementById('btn-manual');
+    const drawingToolbar = document.getElementById('manual-toolbar');
+
+    btnAuto.addEventListener('click', () => {
+        currentMode = 'auto';
+        btnAuto.classList.add('active');
+        btnManual.classList.remove('active');
+        drawingToolbar.style.display = 'none';
+        clearManualFromChart();
+        renderAutoFeatures(lastResponseData);
+    });
+
+    btnManual.addEventListener('click', () => {
+        currentMode = 'manual';
+        btnManual.classList.add('active');
+        btnAuto.classList.remove('active');
+        drawingToolbar.style.display = 'flex';
+        clearAutoFeatures();
+        renderManualDrawings();
+    });
+
+    // Drawing Tool Handlers
+    const toolBtns = document.querySelectorAll('.tool-btn');
+    toolBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.id === 'tool-eraser') {
+                if (confirm('Delete all drawings?')) {
+                    manualDrawings = [];
+                    saveManualDrawings();
+                    renderManualDrawings();
+                }
+                return;
+            }
+
+            toolBtns.forEach(b => b.classList.remove('active'));
+            if (activeTool === btn.id.replace('tool-', '')) {
+                activeTool = null;
+                document.getElementById('touch-controls').style.display = 'none';
+            } else {
+                activeTool = btn.id.replace('tool-', '');
+                btn.classList.add('active');
+                document.getElementById('touch-controls').style.display = 'flex';
+                drawingPoints = [];
+            }
+        });
+    });
+
+    // Confirmation logic for drawing
+    document.getElementById('draw-confirm').addEventListener('click', () => {
+        if (!activeTool || !crosshairPosition) return;
+
+        drawingPoints.push({ ...crosshairPosition });
+
+        handleDrawingStep();
+    });
+
+    document.getElementById('draw-cancel').addEventListener('click', () => {
+        cancelDrawing();
+    });
+
+    // Crosshair Tracker
+    chart.subscribeCrosshairMove((param) => {
+        if (!param.point || !param.time) return;
+
+        const price = candlestickSeries.coordinateToPrice(param.point.y);
+        crosshairPosition = { time: param.time, price: price };
+
+        if (activeTool && drawingPoints.length > 0) {
+            updateDrawingPreview();
+        }
     });
 
     // Start Data Load
@@ -66,6 +147,9 @@ try {
     console.error(e);
 }
 
+
+// Global so we can re-render on mode switch
+let lastResponseData = null;
 
 // Load Data Function
 async function loadData(interval) {
@@ -80,6 +164,7 @@ async function loadData(interval) {
         candlestickSeries.setData([]);
         candlestickSeries.setMarkers([]);
     }
+    clearAutoFeatures();
 
     const token = localStorage.getItem('aston_session_token');
 
@@ -100,8 +185,9 @@ async function loadData(interval) {
         const res = await response.json();
 
         if (res.success && res.data) {
+            lastResponseData = res.data;
             if (spinnerText) spinnerText.innerText = 'Generating Signals...';
-            const { candles, markers } = res.data;
+            const { candles, markers, levels, trendlines } = res.data;
 
             document.getElementById('chart-title').innerText = `${symbol}`;
 
@@ -138,6 +224,12 @@ async function loadData(interval) {
                 candlestickSeries.setMarkers(validMarkers);
             }
 
+            if (currentMode === 'auto') {
+                renderAutoFeatures(res.data);
+            } else {
+                renderManualDrawings();
+            }
+
             if (chart) chart.timeScale().fitContent();
         } else {
             if (spinnerText) spinnerText.innerText = 'API Error';
@@ -153,4 +245,195 @@ async function loadData(interval) {
             spinner.style.display = 'none';
         }, 300);
     }
+}
+
+/**
+ * AUTO MODE RENDERING
+ */
+function renderAutoFeatures(data) {
+    if (!data) return;
+    clearAutoFeatures();
+
+    const { levels, trendlines } = data;
+
+    // Render S/R Levels
+    if (levels) {
+        levels.forEach(level => {
+            const priceLine = candlestickSeries.createPriceLine({
+                price: level.price,
+                color: level.type === 'support' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Dashed,
+                axisLabelVisible: true,
+                title: level.type.toUpperCase(),
+            });
+            autoSeries.push({ type: 'priceLine', ref: priceLine });
+        });
+    }
+
+    // Render Trendlines
+    if (trendlines) {
+        trendlines.forEach(line => {
+            const series = chart.addLineSeries({
+                color: line.type === 'support' ? '#22c55e' : '#ef4444',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                lastValueVisible: false,
+                priceLineVisible: false,
+            });
+            series.setData([
+                { time: line.p1.time, value: line.p1.price },
+                { time: line.p2.time, value: line.p2.price }
+            ]);
+            autoSeries.push({ type: 'series', ref: series });
+        });
+    }
+}
+
+function clearAutoFeatures() {
+    autoSeries.forEach(item => {
+        if (item.type === 'priceLine') {
+            candlestickSeries.removePriceLine(item.ref);
+        } else if (item.type === 'series') {
+            chart.removeSeries(item.ref);
+        }
+    });
+    autoSeries = [];
+}
+
+/**
+ * MANUAL MODE LOGIC
+ */
+let manualSeriesRef = [];
+
+function renderManualDrawings() {
+    clearManualFromChart();
+
+    manualDrawings.forEach(draw => {
+        if (draw.type === 'horizontal') {
+            const line = candlestickSeries.createPriceLine({
+                price: draw.price,
+                color: '#6366f1',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: 'MANUAL',
+            });
+            manualSeriesRef.push({ type: 'priceLine', ref: line });
+        } else if (draw.type === 'trendline') {
+            const series = chart.addLineSeries({
+                color: '#6366f1',
+                lineWidth: 2,
+                lastValueVisible: false,
+                priceLineVisible: false,
+            });
+            series.setData([
+                { time: draw.p1.time, value: draw.p1.price },
+                { time: draw.p2.time, value: draw.p2.price }
+            ]);
+            manualSeriesRef.push({ type: 'series', ref: series });
+        } else if (draw.type === 'rectangle') {
+            // Rectangles in Lightweight Charts are best done with two line series for top/bottom
+            // or a single line series that "loops" - but that can be messy.
+            // Simplified: Draw 4 lines or use a transparent Area series.
+            const series = chart.addLineSeries({
+                color: '#6366f1',
+                lineWidth: 2,
+                lastValueVisible: false,
+                priceLineVisible: false,
+            });
+            // Loop: p1 -> p2(price1, time2) -> p2 -> p4(price2, time1) -> p1
+            series.setData([
+                { time: draw.p1.time, value: draw.p1.price },
+                { time: draw.p2.time, value: draw.p1.price },
+                { time: draw.p2.time, value: draw.p2.price },
+                { time: draw.p1.time, value: draw.p2.price },
+                { time: draw.p1.time, value: draw.p1.price }
+            ]);
+            manualSeriesRef.push({ type: 'series', ref: series });
+        }
+    });
+}
+
+function clearManualFromChart() {
+    manualSeriesRef.forEach(item => {
+        if (item.type === 'priceLine') {
+            candlestickSeries.removePriceLine(item.ref);
+        } else if (item.type === 'series') {
+            chart.removeSeries(item.ref);
+        }
+    });
+    manualSeriesRef = [];
+}
+
+function saveManualDrawings() {
+    localStorage.setItem('manual_drawings', JSON.stringify(manualDrawings));
+}
+
+function cancelDrawing() {
+    activeTool = null;
+    drawingPoints = [];
+    if (tempSeries) {
+        chart.removeSeries(tempSeries);
+        tempSeries = null;
+    }
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('touch-controls').style.display = 'none';
+}
+
+function handleDrawingStep() {
+    if (activeTool === 'horizontal') {
+        manualDrawings.push({
+            type: 'horizontal',
+            price: drawingPoints[0].price
+        });
+        finishDrawing();
+    } else if (activeTool === 'trendline' || activeTool === 'rectangle') {
+        if (drawingPoints.length === 2) {
+            manualDrawings.push({
+                type: activeTool,
+                p1: drawingPoints[0],
+                p2: drawingPoints[1]
+            });
+            finishDrawing();
+        }
+    }
+}
+
+function updateDrawingPreview() {
+    if (!activeTool || drawingPoints.length === 0 || !crosshairPosition) return;
+
+    if (tempSeries) {
+        chart.removeSeries(tempSeries);
+        tempSeries = null;
+    }
+
+    tempSeries = chart.addLineSeries({
+        color: 'rgba(99, 102, 241, 0.5)',
+        lineWidth: 2,
+        lineStyle: LightweightCharts.LineStyle.Dotted,
+        lastValueVisible: false,
+        priceLineVisible: false,
+    });
+
+    if (activeTool === 'trendline') {
+        tempSeries.setData([
+            { time: drawingPoints[0].time, value: drawingPoints[0].price },
+            { time: crosshairPosition.time, value: crosshairPosition.price }
+        ]);
+    } else if (activeTool === 'rectangle') {
+        tempSeries.setData([
+            { time: drawingPoints[0].time, value: drawingPoints[0].price },
+            { time: crosshairPosition.time, value: drawingPoints[0].price },
+            { time: crosshairPosition.time, value: crosshairPosition.price },
+            { time: drawingPoints[0].time, value: crosshairPosition.price },
+            { time: drawingPoints[0].time, value: drawingPoints[0].price }
+        ]);
+    }
+}
+
+function finishDrawing() {
+    saveManualDrawings();
+    renderManualDrawings();
+    cancelDrawing();
 }
