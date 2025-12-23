@@ -30,13 +30,15 @@ async function getChartData(symbol, interval = '1d') {
     const lows = candles.map(c => c.low);
     const volumes = candles.map(c => c.volume);
 
+    const ema9 = EMA.calculate({ period: 9, values: closes });
+    const ema21 = EMA.calculate({ period: 21, values: closes });
     const ema10 = EMA.calculate({ period: 10, values: closes });
     const ema20 = EMA.calculate({ period: 20, values: closes });
     const rsi9 = RSI.calculate({ period: 9, values: closes });
     const atr14 = ATR.calculate({ period: 14, high: highs, low: lows, close: closes });
     const smaVol20 = SMA.calculate({ period: 20, values: volumes });
 
-    // 4. Detect S/R Levels first so we can use them in signal logic
+    // 4. Detect S/R Levels for SNR-based logic
     const { levels, trendlines } = detectSRandTrendlines(candles);
 
     const markers = [];
@@ -56,57 +58,58 @@ async function getChartData(symbol, interval = '1d') {
     for (let i = 21; i < candles.length; i++) {
         const curr = candles[i];
 
+        // Indicators for Logic 1
+        const e9 = getVal(ema9, i);
+        const e21 = getVal(ema21, i);
+        // Indicators for Logic 2
         const e10 = getVal(ema10, i);
         const e10prev = getVal(ema10, i - 1);
         const e20 = getVal(ema20, i);
         const e20prev = getVal(ema20, i - 1);
+        // Shared Indicators
         const rsi = getVal(rsi9, i);
         const vol20 = getVal(smaVol20, i);
         const atr = getVal(atr14, i);
 
-        if (e10 === null || e20 === null || rsi === null || vol20 === null || atr === null || e10prev === null || e20prev === null) continue;
+        if (e9 === null || e21 === null || e10 === null || e20 === null || rsi === null || vol20 === null || atr === null || e10prev === null || e20prev === null) continue;
 
-        // --- FILTERS ---
-        const isHighVol = curr.volume > vol20 * 1.1; // Reduced to 10% for sensitivity
+        // --- COMMON FILTERS ---
+        const isHighVol = curr.volume > vol20 * 1.2;
         const range = curr.high - curr.low;
         const body = Math.abs(curr.close - curr.open);
-        const isStrong = range > 0 && (body / range >= 0.4); // Reduced to 40% for more signals
+        const isStrong = range > 0 && (body / range >= 0.5);
+        const distFromEMA21 = Math.abs(curr.close - e21);
+        const isTooFar = distFromEMA21 > (atr * 1.5);
 
-        // --- SNR PROXIMITY ---
-        // Check if price touched or was near an SNR level in the last 10 candles
+        // --- LOGIC 1: TREND FOLLOWING (The Complex Logic) ---
+        const logic1Buy = (e9 > e21) && (rsi > 50 && rsi < 70) && !isTooFar && isHighVol && isStrong && (curr.close > curr.open);
+        const logic1Sell = (e9 < e21) && (rsi < 50 && rsi > 30) && !isTooFar && isHighVol && isStrong && (curr.close < curr.open);
+
+        // --- LOGIC 2: SNR + MA CROSS (The Specific Logic) ---
         let nearSupport = false;
         let nearResistance = false;
-        const tolerance = atr * 0.5; // Half ATR tolerance for "near"
+        const snrTolerance = atr * 0.5;
 
         for (let j = Math.max(0, i - 10); j <= i; j++) {
-            const checkCandle = candles[j];
             levels.forEach(lvl => {
-                if (lvl.type === 'support' && checkCandle.low <= lvl.price + tolerance) nearSupport = true;
-                if (lvl.type === 'resistance' && checkCandle.high >= lvl.price - tolerance) nearResistance = true;
+                if (lvl.type === 'support' && candles[j].low <= lvl.price + snrTolerance) nearSupport = true;
+                if (lvl.type === 'resistance' && candles[j].high >= lvl.price - snrTolerance) nearResistance = true;
             });
         }
 
-        // --- MA CROSSOVER LOGIC ---
         const goldenCross = e10prev <= e20prev && e10 > e20;
         const deathCross = e10prev >= e20prev && e10 < e20;
 
-        // --- SIGNAL LOGIC ---
-        // BUY: Near Support + Golden Cross + Other Indicators
-        const buySignal = nearSupport && goldenCross &&
-            rsi > 45 && rsi < 75 &&
-            curr.close > curr.open &&
-            isHighVol && isStrong;
+        const logic2Buy = nearSupport && goldenCross;
+        const logic2Sell = nearResistance && deathCross;
 
-        // SELL: Near Resistance + Death Cross + Other Indicators
-        const sellSignal = nearResistance && deathCross &&
-            rsi < 55 && rsi > 25 &&
-            curr.close < curr.open &&
-            isHighVol && isStrong;
+        // --- COMBINED FINAL TRIGGER ---
+        const buySignal = logic1Buy || logic2Buy;
+        const sellSignal = logic1Sell || logic2Sell;
 
         // Adaptive Cooldown Logic
         if (buySignal) {
             let canSignal = false;
-            // First signal always, then with cooling down
             if (lastSignal !== 'BUY') {
                 canSignal = true;
                 consecutiveCount = 1;
