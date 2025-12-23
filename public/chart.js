@@ -7,6 +7,8 @@ let activeTool = null;
 let selectedDrawingIndex = null;
 let drawingPoints = [];
 let tempSeries = null; // Preview series while drawing
+let manualSeriesRef = [];
+let lastResponseData = null;
 let crosshairPosition = null;
 
 // Get URL Params
@@ -101,9 +103,20 @@ try {
                 if (selectedDrawingIndex !== null) {
                     manualDrawings.splice(selectedDrawingIndex, 1);
                     selectedDrawingIndex = null;
-                } else if (confirm('Delete all drawings?')) {
+                } else if (confirm('Hapus semua gambar di chart ini?')) {
                     manualDrawings = [];
                 }
+
+                // CRITICAL: Clear tool state when erasing
+                activeTool = null;
+                drawingPoints = [];
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('touch-controls').style.display = 'none';
+                if (tempSeries) {
+                    chart.removeSeries(tempSeries);
+                    tempSeries = null;
+                }
+
                 saveManualDrawings();
                 renderManualDrawings();
                 return;
@@ -217,7 +230,7 @@ try {
 
 
 // Global so we can re-render on mode switch
-let lastResponseData = null;
+// (declared at top)
 
 // Load Data Function
 async function loadData(interval) {
@@ -372,8 +385,6 @@ function clearAutoFeatures() {
 /**
  * MANUAL MODE LOGIC
  */
-let manualSeriesRef = [];
-
 function renderManualDrawings() {
     clearManualFromChart();
 
