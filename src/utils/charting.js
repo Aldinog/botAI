@@ -30,17 +30,19 @@ async function getChartData(symbol, interval = '1d') {
     const lows = candles.map(c => c.low);
     const volumes = candles.map(c => c.volume);
 
-    const ema9 = EMA.calculate({ period: 9, values: closes });
-    const ema21 = EMA.calculate({ period: 21, values: closes });
+    const ema10 = EMA.calculate({ period: 10, values: closes });
+    const ema20 = EMA.calculate({ period: 20, values: closes });
     const rsi9 = RSI.calculate({ period: 9, values: closes });
     const atr14 = ATR.calculate({ period: 14, high: highs, low: lows, close: closes });
     const smaVol20 = SMA.calculate({ period: 20, values: volumes });
 
+    // 4. Detect S/R Levels first so we can use them in signal logic
+    const { levels, trendlines } = detectSRandTrendlines(candles);
+
     const markers = [];
     let lastSignal = null;
     let lastSignalIndex = 0;
-    let consecutiveCount = 0; // Tracks same-type signals in a row
-
+    let consecutiveCount = 0;
 
     // Helper to align indicator values
     const getVal = (arr, candleIdx) => {
@@ -50,57 +52,61 @@ async function getChartData(symbol, interval = '1d') {
         return arr[idx];
     };
 
-    // 4. Iterate and Generate Signals
+    // 5. Iterate and Generate Signals
     for (let i = 21; i < candles.length; i++) {
         const curr = candles[i];
 
-        const e9 = getVal(ema9, i);
-        const e21 = getVal(ema21, i);
+        const e10 = getVal(ema10, i);
+        const e10prev = getVal(ema10, i - 1);
+        const e20 = getVal(ema20, i);
+        const e20prev = getVal(ema20, i - 1);
         const rsi = getVal(rsi9, i);
         const vol20 = getVal(smaVol20, i);
         const atr = getVal(atr14, i);
 
-        if (e9 === null || e21 === null || rsi === null || vol20 === null || atr === null) continue;
+        if (e10 === null || e20 === null || rsi === null || vol20 === null || atr === null || e10prev === null || e20prev === null) continue;
 
         // --- FILTERS ---
-
-        // A. Volume Spike Filter
-        const isHighVol = curr.volume > vol20 * 1.2;
-
-        // B. Candle Strength (Body >= 50% of Range)
+        const isHighVol = curr.volume > vol20 * 1.1; // Reduced to 10% for sensitivity
         const range = curr.high - curr.low;
         const body = Math.abs(curr.close - curr.open);
-        const isStrong = range > 0 && (body / range >= 0.5);
+        const isStrong = range > 0 && (body / range >= 0.4); // Reduced to 40% for more signals
 
-        // C. Mean Reversion Filter (Don't buy/sell if too far from EMA21)
-        const distFromEMA = Math.abs(curr.close - e21);
-        const isTooFar = distFromEMA > (atr * 1.5);
+        // --- SNR PROXIMITY ---
+        // Check if price touched or was near an SNR level in the last 10 candles
+        let nearSupport = false;
+        let nearResistance = false;
+        const tolerance = atr * 0.5; // Half ATR tolerance for "near"
 
-        // D. MTF Trend Filter
-        const isBullishTrend = e9 > e21 && (interval !== '60m' || dailyTrend !== 'bearish');
-        const isBearishTrend = e9 < e21 && (interval !== '60m' || dailyTrend !== 'bullish');
+        for (let j = Math.max(0, i - 10); j <= i; j++) {
+            const checkCandle = candles[j];
+            levels.forEach(lvl => {
+                if (lvl.type === 'support' && checkCandle.low <= lvl.price + tolerance) nearSupport = true;
+                if (lvl.type === 'resistance' && checkCandle.high >= lvl.price - tolerance) nearResistance = true;
+            });
+        }
+
+        // --- MA CROSSOVER LOGIC ---
+        const goldenCross = e10prev <= e20prev && e10 > e20;
+        const deathCross = e10prev >= e20prev && e10 < e20;
 
         // --- SIGNAL LOGIC ---
-
-        // BUY Signal: Bullish Trend + Momentum OK + Not Pulled Too High + Volume + Candle Strength
-        const buySignal = isBullishTrend &&
-            rsi > 50 && rsi < 70 &&  // Filter RSI (Atasi Pucuk)
-            !isTooFar &&             // Filter Jarak EMA (Mean Reversion)
+        // BUY: Near Support + Golden Cross + Other Indicators
+        const buySignal = nearSupport && goldenCross &&
+            rsi > 45 && rsi < 75 &&
             curr.close > curr.open &&
-            isHighVol &&
-            isStrong;
+            isHighVol && isStrong;
 
-        // SELL Signal: Bearish Trend + Momentum OK + Not Pulled Too Low + Volume + Candle Strength
-        const sellSignal = isBearishTrend &&
-            rsi < 50 && rsi > 30 &&  // Filter RSI (Atasi Dasar)
-            !isTooFar &&             // Filter Jarak EMA (Mean Reversion)
+        // SELL: Near Resistance + Death Cross + Other Indicators
+        const sellSignal = nearResistance && deathCross &&
+            rsi < 55 && rsi > 25 &&
             curr.close < curr.open &&
-            isHighVol &&
-            isStrong;
+            isHighVol && isStrong;
 
         // Adaptive Cooldown Logic
         if (buySignal) {
             let canSignal = false;
+            // First signal always, then with cooling down
             if (lastSignal !== 'BUY') {
                 canSignal = true;
                 consecutiveCount = 1;
@@ -149,9 +155,6 @@ async function getChartData(symbol, interval = '1d') {
             }
         }
     }
-
-    // 5. Detect S/R and Trendlines
-    const { levels, trendlines } = detectSRandTrendlines(candles);
 
     return {
         candles,
