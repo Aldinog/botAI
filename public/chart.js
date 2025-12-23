@@ -139,15 +139,18 @@ try {
     });
 
     // Confirmation logic for drawing
-    document.getElementById('draw-confirm').addEventListener('click', () => {
+    document.getElementById('draw-confirm').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!activeTool || !crosshairPosition) return;
 
         drawingPoints.push({ ...crosshairPosition });
-
         handleDrawingStep();
     });
 
-    document.getElementById('draw-cancel').addEventListener('click', () => {
+    document.getElementById('draw-cancel').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         cancelDrawing();
     });
 
@@ -416,20 +419,35 @@ function renderManualDrawings() {
             ]);
             manualSeriesRef.push({ type: 'series', ref: series });
         } else if (draw.type === 'rectangle') {
-            const series = chart.addLineSeries({
-                color: color,
-                lineWidth: width,
-                lastValueVisible: false,
-                priceLineVisible: false,
-            });
-            series.setData([
-                { time: draw.p1.time, value: draw.p1.price },
-                { time: draw.p2.time, value: draw.p1.price },
-                { time: draw.p2.time, value: draw.p2.price },
-                { time: draw.p1.time, value: draw.p2.price },
-                { time: draw.p1.time, value: draw.p1.price }
-            ]);
-            manualSeriesRef.push({ type: 'series', ref: series });
+            try {
+                if (toTimestamp(draw.p1.time) === toTimestamp(draw.p2.time)) return;
+
+                const series = chart.addLineSeries({
+                    color: color,
+                    lineWidth: width,
+                    lastValueVisible: false,
+                    priceLineVisible: false,
+                });
+                series.setData([
+                    { time: draw.p1.time, value: draw.p1.price },
+                    { time: draw.p2.time, value: draw.p1.price }
+                ]);
+                manualSeriesRef.push({ type: 'series', ref: series });
+
+                const series2 = chart.addLineSeries({
+                    color: color,
+                    lineWidth: width,
+                    lastValueVisible: false,
+                    priceLineVisible: false,
+                });
+                series2.setData([
+                    { time: draw.p1.time, value: draw.p2.price },
+                    { time: draw.p2.time, value: draw.p2.price }
+                ]);
+                manualSeriesRef.push({ type: 'series', ref: series2 });
+            } catch (err) {
+                console.error('LWC Render Error:', err);
+            }
         }
     });
 }
@@ -496,18 +514,19 @@ function updateDrawingPreview() {
     });
 
     if (activeTool === 'trendline') {
+        if (toTimestamp(drawingPoints[0].time) === toTimestamp(crosshairPosition.time)) return;
         tempSeries.setData([
             { time: drawingPoints[0].time, value: drawingPoints[0].price },
             { time: crosshairPosition.time, value: crosshairPosition.price }
         ]);
     } else if (activeTool === 'rectangle') {
+        if (toTimestamp(drawingPoints[0].time) === toTimestamp(crosshairPosition.time)) return;
+        // Preview with two horizontal lines
         tempSeries.setData([
             { time: drawingPoints[0].time, value: drawingPoints[0].price },
-            { time: crosshairPosition.time, value: drawingPoints[0].price },
-            { time: crosshairPosition.time, value: crosshairPosition.price },
-            { time: drawingPoints[0].time, value: crosshairPosition.price },
-            { time: drawingPoints[0].time, value: drawingPoints[0].price }
+            { time: crosshairPosition.time, value: drawingPoints[0].price }
         ]);
+        // Note: Second line of box is not shown in preview for simplicity/safety
     }
 }
 
