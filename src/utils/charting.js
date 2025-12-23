@@ -38,6 +38,7 @@ async function getChartData(symbol, interval = '1d') {
 
     const markers = [];
     let lastSignal = null;
+    let lastSignalIndex = 0;
 
     // Helper to align indicator values
     const getVal = (arr, candleIdx) => {
@@ -91,7 +92,7 @@ async function getChartData(symbol, interval = '1d') {
             isHighVol &&
             isStrong;
 
-        if (buySignal && lastSignal !== 'BUY') {
+        if (buySignal && (lastSignal !== 'BUY' || (i - lastSignalIndex > 8))) {
             markers.push({
                 time: curr.time,
                 position: 'belowBar',
@@ -100,7 +101,8 @@ async function getChartData(symbol, interval = '1d') {
                 text: 'BUY'
             });
             lastSignal = 'BUY';
-        } else if (sellSignal && lastSignal !== 'SELL') {
+            lastSignalIndex = i;
+        } else if (sellSignal && (lastSignal !== 'SELL' || (i - lastSignalIndex > 8))) {
             markers.push({
                 time: curr.time,
                 position: 'aboveBar',
@@ -109,6 +111,7 @@ async function getChartData(symbol, interval = '1d') {
                 text: 'SELL'
             });
             lastSignal = 'SELL';
+            lastSignalIndex = i;
         }
     }
 
@@ -136,16 +139,19 @@ function detectSRandTrendlines(candles) {
     const highPivots = [];
     const lowPivots = [];
 
-    // Pivot detection
+    // Pivot detection based on Candle Bodies (as requested)
+    const bodiesHigh = candles.map(c => Math.max(c.open, c.close));
+    const bodiesLow = candles.map(c => Math.min(c.open, c.close));
+
     for (let i = pivotPeriod; i < candles.length - pivotPeriod; i++) {
         let isHigh = true;
         let isLow = true;
         for (let j = 1; j <= pivotPeriod; j++) {
-            if (highs[i] <= highs[i - j] || highs[i] <= highs[i + j]) isHigh = false;
-            if (lows[i] >= lows[i - j] || lows[i] >= lows[i + j]) isLow = false;
+            if (bodiesHigh[i] <= bodiesHigh[i - j] || bodiesHigh[i] <= bodiesHigh[i + j]) isHigh = false;
+            if (bodiesLow[i] >= bodiesLow[i - j] || bodiesLow[i] >= bodiesLow[i + j]) isLow = false;
         }
-        if (isHigh) highPivots.push({ index: i, price: highs[i], time: candles[i].time });
-        if (isLow) lowPivots.push({ index: i, price: lows[i], time: candles[i].time });
+        if (isHigh) highPivots.push({ index: i, price: bodiesHigh[i], time: candles[i].time });
+        if (isLow) lowPivots.push({ index: i, price: bodiesLow[i], time: candles[i].time });
     }
 
     // Support / Resistance Levels (Clustering pivots)

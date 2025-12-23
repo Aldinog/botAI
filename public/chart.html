@@ -253,8 +253,8 @@
         </div>
         <div class="controls">
             <div class="mode-toggle">
-                <button class="mode-btn active" id="btn-auto">Auto</button>
-                <button class="mode-btn" id="btn-manual">Manual</button>
+                <button class="mode-btn active" id="btn-auto">Analysis</button>
+                <button class="mode-btn" id="btn-clear">Clear</button>
             </div>
             <button class="time-btn active" data-interval="1d">D1</button>
             <button class="time-btn" data-interval="1h">H1</button>
@@ -269,36 +269,6 @@
             </div>
         </div>
 
-        <!-- Manual Toolbar -->
-        <div class="drawing-toolbar" id="manual-toolbar">
-            <button class="tool-btn" id="tool-trendline" title="Trendline">
-                <svg viewBox="0 0 24 24">
-                    <path d="M21 7L9 19L3.5 13.5L4.91 12.09L9 16.17L19.59 5.59L21 7Z" />
-                </svg>
-            </button>
-            <button class="tool-btn" id="tool-horizontal" title="Horizontal Line">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19 13H5V11H19V13Z" />
-                </svg>
-            </button>
-            <button class="tool-btn" id="tool-rectangle" title="Rectangle">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M19 5H5C3.9 5 3 5.9 3 7V17C3 18.1 3.9 19 5 19H19C20.1 19 21 18.1 21 17V7C21 5.9 20.1 5 19 5ZM19 17H5V7H19V17Z" />
-                </svg>
-            </button>
-            <button class="tool-btn" id="tool-eraser" title="Remove Drawing" style="margin-top: 10px; color: #ef4444;">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
-                </svg>
-            </button>
-        </div>
-
-        <!-- Touch Feedback / Confirmation -->
-        <div id="touch-controls">
-            <button class="cancel-btn" id="draw-cancel">Cancel</button>
-            <button class="confirm-btn" id="draw-confirm">Confirm Point</button>
-        </div>
     </div>
 
     <script src="chart.js"></script>
