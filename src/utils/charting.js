@@ -103,9 +103,15 @@ async function getChartData(symbol, interval = '1d') {
         const logic2Buy = nearSupport && goldenCross;
         const logic2Sell = nearResistance && deathCross;
 
+        // --- LOGIC 3: PURE MA CROSS (Any Cross) ---
+        const logic3Buy = goldenCross;
+        const logic3Sell = deathCross;
+
         // --- COMBINED FINAL TRIGGER ---
-        const buySignal = logic1Buy || logic2Buy;
-        const sellSignal = logic1Sell || logic2Sell;
+        // Will trigger if Trend Following (L1) OR SNR Rebound (L2) OR Pure Cross (L3) is true.
+        // Actually L3 covers L2 entirely, but we keep it here for clarity.
+        const buySignal = logic1Buy || logic2Buy || logic3Buy;
+        const sellSignal = logic1Sell || logic2Sell || logic3Sell;
 
         // Adaptive Cooldown Logic
         if (buySignal) {
