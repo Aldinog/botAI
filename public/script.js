@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            authStatus.innerText = 'Verifying membership...';
+            authStatus.innerText = 'Loading bentar...';
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

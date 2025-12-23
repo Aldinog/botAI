@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
             const status = memberCheck.data.result.status;
             if (!['creator', 'administrator', 'member'].includes(status)) {
                 // If they left, deactivate or just block
-                return res.status(403).json({ error: 'Requires membership in Aston Group' });
+                return res.status(403).json({ error: 'Silahkan Join Aston Group untuk melanjutkan' });
             }
         } catch (e) {
             console.error('Group check failed in middleware:', e.message);
