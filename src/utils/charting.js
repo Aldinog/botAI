@@ -39,6 +39,8 @@ async function getChartData(symbol, interval = '1d') {
     const markers = [];
     let lastSignal = null;
     let lastSignalIndex = 0;
+    let consecutiveCount = 0; // Tracks same-type signals in a row
+
 
     // Helper to align indicator values
     const getVal = (arr, candleIdx) => {
@@ -56,62 +58,95 @@ async function getChartData(symbol, interval = '1d') {
         const e21 = getVal(ema21, i);
         const rsi = getVal(rsi9, i);
         const vol20 = getVal(smaVol20, i);
+        const atr = getVal(atr14, i);
 
-        if (e9 === null || e21 === null || rsi === null || vol20 === null) continue;
+        if (e9 === null || e21 === null || rsi === null || vol20 === null || atr === null) continue;
 
         // --- FILTERS ---
 
         // A. Volume Spike Filter
-        const isHighVol = curr.volume > vol20 * 1.2; // 20% higher than average
+        const isHighVol = curr.volume > vol20 * 1.2;
 
         // B. Candle Strength (Body >= 50% of Range)
         const range = curr.high - curr.low;
         const body = Math.abs(curr.close - curr.open);
         const isStrong = range > 0 && (body / range >= 0.5);
 
-        // C. MTF Trend Filter (Only for Intraday)
-        let trendOk = true;
-        if (dailyTrend === 'bullish' && curr.close < e21) trendOk = false; // logic tweak: allow if above e21
-        // Keep it simple as per plan: H1 signal must follow Daily trend
+        // C. Mean Reversion Filter (Don't buy/sell if too far from EMA21)
+        const distFromEMA = Math.abs(curr.close - e21);
+        const isTooFar = distFromEMA > (atr * 1.5);
+
+        // D. MTF Trend Filter
         const isBullishTrend = e9 > e21 && (interval !== '60m' || dailyTrend !== 'bearish');
         const isBearishTrend = e9 < e21 && (interval !== '60m' || dailyTrend !== 'bullish');
 
         // --- SIGNAL LOGIC ---
 
-        // BUY Signal
+        // BUY Signal: Bullish Trend + Momentum OK + Not Pulled Too High + Volume + Candle Strength
         const buySignal = isBullishTrend &&
-            rsi > 50 &&
+            rsi > 50 && rsi < 70 &&  // Filter RSI (Atasi Pucuk)
+            !isTooFar &&             // Filter Jarak EMA (Mean Reversion)
             curr.close > curr.open &&
             isHighVol &&
             isStrong;
 
-        // SELL Signal
+        // SELL Signal: Bearish Trend + Momentum OK + Not Pulled Too Low + Volume + Candle Strength
         const sellSignal = isBearishTrend &&
-            rsi < 50 &&
+            rsi < 50 && rsi > 30 &&  // Filter RSI (Atasi Dasar)
+            !isTooFar &&             // Filter Jarak EMA (Mean Reversion)
             curr.close < curr.open &&
             isHighVol &&
             isStrong;
 
-        if (buySignal && (lastSignal !== 'BUY' || (i - lastSignalIndex > 8))) {
-            markers.push({
-                time: curr.time,
-                position: 'belowBar',
-                color: '#22c55e',
-                shape: 'arrowUp',
-                text: 'BUY'
-            });
-            lastSignal = 'BUY';
-            lastSignalIndex = i;
-        } else if (sellSignal && (lastSignal !== 'SELL' || (i - lastSignalIndex > 8))) {
-            markers.push({
-                time: curr.time,
-                position: 'aboveBar',
-                color: '#ef4444',
-                shape: 'arrowDown',
-                text: 'SELL'
-            });
-            lastSignal = 'SELL';
-            lastSignalIndex = i;
+        // Adaptive Cooldown Logic
+        if (buySignal) {
+            let canSignal = false;
+            if (lastSignal !== 'BUY') {
+                canSignal = true;
+                consecutiveCount = 1;
+            } else if (consecutiveCount === 1 && (i - lastSignalIndex > 8)) {
+                canSignal = true;
+                consecutiveCount = 2;
+            } else if (consecutiveCount === 2 && (i - lastSignalIndex > 16)) {
+                canSignal = true;
+                consecutiveCount = 3;
+            }
+
+            if (canSignal) {
+                markers.push({
+                    time: curr.time,
+                    position: 'belowBar',
+                    color: '#22c55e',
+                    shape: 'arrowUp',
+                    text: 'BUY'
+                });
+                lastSignal = 'BUY';
+                lastSignalIndex = i;
+            }
+        } else if (sellSignal) {
+            let canSignal = false;
+            if (lastSignal !== 'SELL') {
+                canSignal = true;
+                consecutiveCount = 1;
+            } else if (consecutiveCount === 1 && (i - lastSignalIndex > 8)) {
+                canSignal = true;
+                consecutiveCount = 2;
+            } else if (consecutiveCount === 2 && (i - lastSignalIndex > 16)) {
+                canSignal = true;
+                consecutiveCount = 3;
+            }
+
+            if (canSignal) {
+                markers.push({
+                    time: curr.time,
+                    position: 'aboveBar',
+                    color: '#ef4444',
+                    shape: 'arrowDown',
+                    text: 'SELL'
+                });
+                lastSignal = 'SELL';
+                lastSignalIndex = i;
+            }
         }
     }
 
