@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
 
         if (!isMember) {
             return res.status(403).json({
-                error: 'kamu bukan member Astongrup',
+                error: 'Silahkan join grup dulu untuk akses bot',
                 code: 'NOT_MEMBER'
             });
         }
