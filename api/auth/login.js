@@ -145,13 +145,11 @@ module.exports = async (req, res) => {
         }
 
         // 5. Fetch Global Settings
-        const { data: maintenanceData } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'maintenance_mode')
-            .single();
+        const { data: mData } = await supabase.from('app_settings').select('value').eq('key', 'maintenance_mode').single();
+        const { data: tData } = await supabase.from('app_settings').select('value').eq('key', 'active_theme').single();
 
-        const maintenanceMode = maintenanceData ? maintenanceData.value : false;
+        const maintenanceMode = mData ? mData.value : false;
+        const activeTheme = tData ? tData.value : 'default';
         const isAdmin = targetUser.telegram_user_id.toString() === (process.env.ADMIN_ID || '');
 
         // 6. Generate Session Token (JWT)
@@ -179,7 +177,8 @@ module.exports = async (req, res) => {
                 username: targetUser.telegram_username,
                 expires_at: targetUser.expires_at,
                 is_maintenance: maintenanceMode,
-                is_admin: isAdmin
+                is_admin: isAdmin,
+                active_theme: activeTheme
             }
         });
 

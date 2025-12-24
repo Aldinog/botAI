@@ -28,7 +28,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (res.ok && data.user && data.user.is_admin) {
                 authOverlay.classList.add('hidden');
+
+                // Seasonal Theme
+                const activeTheme = data.user.active_theme || 'default';
+                if (activeTheme !== 'default') {
+                    document.body.classList.add(`theme-${activeTheme}`);
+                    if (activeTheme === 'christmas') initSnowflakes();
+                }
+
                 updateMTUI(data.user.is_maintenance);
+                document.getElementById('theme-selector').value = activeTheme;
                 loadWatchlist();
             } else {
                 authStatus.innerHTML = '<span style="color:#ef4444">Akses Ditolak: Khusus Admin</span>';
@@ -139,6 +148,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.success) updateMTUI(data.is_maintenance);
     };
 
+    document.getElementById('update-theme-btn').onclick = async () => {
+        const theme = document.getElementById('theme-selector').value;
+        const res = await fetch('/api/web', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+            body: JSON.stringify({ action: 'admin/update-theme', theme })
+        });
+        if (res.ok) {
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            alert('Tema berhasil diubah! Silakan reload aplikasi.');
+        }
+    };
+
     document.getElementById('force-scan-btn').onclick = async () => {
         const btn = document.getElementById('force-scan-btn');
         btn.disabled = true;
@@ -162,3 +184,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     verifyAdmin();
 });
+
+function initSnowflakes() {
+    const container = document.getElementById('snow-container');
+    if (!container) return;
+
+    const count = 30; // Slightly less for admin page
+    const symbols = ['❄', '❅', '❆', '✧'];
+
+    for (let i = 0; i < count; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        flake.style.left = Math.random() * 100 + 'vw';
+        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
+        flake.style.opacity = Math.random();
+        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+        flake.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(flake);
+    }
+}

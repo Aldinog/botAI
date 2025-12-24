@@ -163,6 +163,13 @@ module.exports = async (req, res) => {
             return res.status(200).json({ success: true, message: 'Scanner triggered in background' });
         }
 
+        if (action === 'admin/update-theme') {
+            if (!isAdmin) return res.status(403).json({ error: 'Admin only' });
+            const { theme } = req.body;
+            await supabase.from('app_settings').upsert({ key: 'active_theme', value: theme });
+            return res.status(200).json({ success: true, theme });
+        }
+
         // Log MiniApp Usage
         const username = user.telegram_username || `ID:${user.telegram_user_id}`;
         if (action) {

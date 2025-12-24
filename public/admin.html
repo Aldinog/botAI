@@ -124,6 +124,7 @@
 </head>
 
 <body>
+    <div class="snow-container" id="snow-container"></div>
     <div class="ambient-glow"></div>
 
     <div class="admin-container">
@@ -153,6 +154,27 @@
                     <button id="toggle-mt-btn" class="glass-btn">
                         <i class="fas fa-tools"></i>
                         <span class="btn-text" id="mt-btn-text">Maintenance: OFF</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seasonal Theme Manager -->
+            <div class="glass-card">
+                <h3>Seasonal Theme Manager</h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">
+                    Ubah suasana aplikasi sesuai hari raya.
+                </p>
+                <div class="add-symbol-form">
+                    <select id="theme-selector"
+                        style="flex: 1; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; outline: none;">
+                        <option value="default">Default (Premium Dark)</option>
+                        <option value="christmas">Christmas (Natal)</option>
+                        <option value="ramadan">Ramadan</option>
+                        <option value="idulfitri">Idul Fitri</option>
+                    </select>
+                    <button id="update-theme-btn" class="glass-btn primary-btn"
+                        style="margin:0; width: auto; padding: 0 20px;">
+                        Set Theme
                     </button>
                 </div>
             </div>

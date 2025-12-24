@@ -34,6 +34,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('aston_session_token', sessionToken);
                 authOverlay.classList.add('hidden');
 
+                // --- Seasonal Theme Logic ---
+                const activeTheme = data.user.active_theme || 'default';
+                if (activeTheme !== 'default') {
+                    document.body.classList.add(`theme-${activeTheme}`);
+                    if (activeTheme === 'christmas') {
+                        initSnowflakes();
+                        if (authStatus) authStatus.innerText = 'Merry Christmas! Prossesing... 🎄';
+                    }
+                }
+
                 // --- Maintenance & Admin Logic ---
                 const user = data.user;
                 const adminBtn = document.getElementById('admin-toggle-btn');
@@ -289,3 +299,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
     });
 });
+
+function initSnowflakes() {
+    const container = document.getElementById('snow-container');
+    if (!container) return;
+
+    const count = 50;
+    const symbols = ['❄', '❅', '❆', '✧'];
+
+    for (let i = 0; i < count; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        flake.style.left = Math.random() * 100 + 'vw';
+        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
+        flake.style.opacity = Math.random();
+        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+        flake.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(flake);
+    }
+}
