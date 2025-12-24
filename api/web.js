@@ -1,6 +1,6 @@
 const { fetchHarga } = require('../src/utils/harga');
 const { analyzeStock } = require('../src/utils/analisys');
-const { analyzeWithGemini } = require('../src/utils/gemini');
+const { analyzeWithAI } = require('../src/utils/ai');
 const {
     fetchHistorical,
     analyzeProxyBrokerActivity,
@@ -135,7 +135,7 @@ module.exports = async (req, res) => {
                 } else {
                     const indicators = computeIndicators(candles);
                     const prompt = formatIndicatorsForPrompt(symbol, indicators);
-                    result = await analyzeWithGemini(prompt);
+                    result = await analyzeWithAI(prompt);
                 }
                 break;
 

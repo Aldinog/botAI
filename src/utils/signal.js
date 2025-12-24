@@ -1,6 +1,6 @@
 const { fetchHistorical, analyzeProxyBrokerActivity } = require('./yahoofinance');
 const { computeIndicators } = require('./indicators');
-const { analyzeWithGemini } = require('./gemini');
+const { analyzeWithAI } = require('./ai');
 
 /**
  * Generate a trading signal for a given symbol
@@ -84,7 +84,7 @@ PENTING:
 `;
 
         // 5. Call Gemini
-        const result = await analyzeWithGemini(prompt);
+        const result = await analyzeWithAI(prompt);
         return result;
 
     } catch (error) {

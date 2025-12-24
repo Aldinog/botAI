@@ -1,6 +1,6 @@
 const { fetchHistorical, analyzeProxyBrokerActivity } = require('./yahoofinance');
 const { computeIndicators } = require('./indicators');
-const { analyzeWithGemini } = require('./gemini');
+const { analyzeWithAI } = require('./ai');
 
 /**
  * Identify Key Swing Points (Highs and Lows)
@@ -282,7 +282,7 @@ AI Review:
 "[Short, educational, professional narrative explaining WHY the score is high/low using technical terms properly. Max 3-4 lines.]"
 `;
 
-        let aiResponse = await analyzeWithGemini(prompt);
+        let aiResponse = await analyzeWithAI(prompt);
         // Fallback or cleanup if AI fails
         if (!aiResponse) aiResponse = "Analisa AI tidak tersedia saat ini.";
 

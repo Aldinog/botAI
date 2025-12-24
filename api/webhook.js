@@ -9,7 +9,7 @@ const { analyzeProxyBrokerActivity } = require("../src/utils/yahoofinance");
 const { formatProxyBrokerActivity } = require("../src/utils/yahoofinance");
 const { fetchFundamentals, formatFundamentals } = require("../src/utils/yahoofinance");
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
-const { analyzeWithGemini } = require("../src/utils/gemini");
+const { analyzeWithAI } = require("../src/utils/ai");
 const { analyzeStock } = require("../src/utils/analisys");
 const { isAllowedGroup } = require("../src/utils/groupControl");
 const { fetchHarga } = require('../src/utils/harga');
@@ -455,7 +455,7 @@ bot.command("analisa", async (ctx) => {
 
   let aiResponse;
   try {
-    aiResponse = await analyzeWithGemini(prompt);
+    aiResponse = await analyzeWithAI(prompt);
   } catch (err) {
     console.error("Gemini Error:", err.message);
     return ctx.reply("❌ Analisa AI gagal. Coba lagi nanti.");

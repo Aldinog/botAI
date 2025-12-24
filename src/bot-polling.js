@@ -4,7 +4,7 @@ require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const { fetchHistorical } = require('./utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('./utils/indicators');
-const { analyzeWithGemini } = require('./utils/gemini');
+const { analyzeWithAI } = require('./utils/ai');
 const { marked } = require("marked");
 const { generateReview } = require('./utils/review');
 
@@ -94,7 +94,7 @@ function startPollingBot() {
       const indicators = computeIndicators(candles);
       const prompt = formatIndicatorsForPrompt(symbol, indicators);
 
-      const aiResponse = await analyzeWithGemini(prompt);
+      const aiResponse = await analyzeWithAI(prompt);
 
       const cleanHtml = markdownToTelegramHTML(aiResponse);
       const reply = `📊 <b>Analisa ${symbol}</b>\n\n${cleanHtml}`;
