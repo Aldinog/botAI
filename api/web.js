@@ -220,9 +220,9 @@ module.exports = async (req, res) => {
     } catch (error) {
         console.error('Web Context Error:', error);
         res.status(500).json({
-            error: 'AI Overload, Cobalagi beberapa saat',
+            error: error.message || 'AI Overload, Cobalagi beberapa saat',
             details: error.message || error,
-            hint: 'Ensure your DB tables exist and environment variables are set correctly in Vercel.'
+            hint: 'Pastikan OPENROUTER_API_KEY sudah terpasang di Vercel Dashboard.'
         });
     }
 };
