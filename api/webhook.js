@@ -227,26 +227,20 @@ bot.help((ctx) => {
 bot.command(["indikator", "harga", "broksum", "proxy", "review", "signal", "analisa", "fundamental", "profile"], bot_reply_redirect);
 
 // =========================
-// COMMAND: INDIKATOR
+// WEBHOOK (Vercel Friendly)
 // =========================
-bot.command("indikator", async (ctx) => {
-  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
-  console.log(`${user} menggunakan indikator`);
-  // =========================
-  // WEBHOOK (Vercel Friendly)
-  // =========================
-  module.exports = async (req, res) => {
-    if (req.method === "POST") {
-      try {
-        await bot.handleUpdate(req.body);
-        return res.status(200).send("OK");
-      } catch (err) {
-        console.error("Webhook Error:", err);
-        // Selalu kembalikan 200 OK agar Vercel/Telegram tidak melakukan retry 
-        // untuk error yang bersifat permanen (misal 403 Forbidden)
-        return res.status(200).send("OK_WITH_ERROR");
-      }
+module.exports = async (req, res) => {
+  if (req.method === "POST") {
+    try {
+      await bot.handleUpdate(req.body);
+      return res.status(200).send("OK");
+    } catch (err) {
+      console.error("Webhook Error:", err);
+      // Selalu kembalikan 200 OK agar Vercel/Telegram tidak melakukan retry 
+      // untuk error yang bersifat permanen (misal 403 Forbidden)
+      return res.status(200).send("OK_WITH_ERROR");
     }
+  }
 
-    res.status(200).send("Bot Running");
-  };
+  res.status(200).send("Bot Running");
+};
