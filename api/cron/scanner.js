@@ -114,10 +114,10 @@ async function sendTelegramNotification(symbol, signal, chartData) {
     const MINI_APP_URL = `https://t.me/astonaicbot/astonmology?startapp=${symbol.replace('.JK', '')}`;
 
     // Find nearest Support for SL and Resistance for TP
-    let sl = 'N/A';
-    let tp = 'N/A';
+    let sl = null;
+    let tp = null;
 
-    if (chartData.levels) {
+    if (signal.action === 'BUY' && chartData.levels) {
         const sortedLevels = chartData.levels.sort((a, b) => a.price - b.price);
         const supportLevels = sortedLevels.filter(l => l.price < price).reverse();
         const resistanceLevels = sortedLevels.filter(l => l.price > price);
@@ -126,15 +126,20 @@ async function sendTelegramNotification(symbol, signal, chartData) {
         if (resistanceLevels.length > 0) tp = Math.round(resistanceLevels[0].price);
     }
 
-    const message = `
+    let message = `
 🚀 <b>SIGNAL ${signal.action} DETECTED!</b>
 
 🔹 <b>Emiten:</b> <code>${symbol.replace('.JK', '')}</code>
 🔹 <b>Alasan:</b> ${signal.reason}
 🔹 <b>Harga:</b> ${price}
-🔹 <b>Suggested SL:</b> ${sl}
-🔹 <b>Suggested TP:</b> ${tp}
-🔹 <b>Strength:</b> ${signal.probability || 'Medium'}
+`;
+
+    if (signal.action === 'BUY') {
+        if (sl) message += `🔹 <b>Suggested SL:</b> ${sl}\n`;
+        if (tp) message += `🔹 <b>Suggested TP:</b> ${tp}\n`;
+    }
+
+    message += `🔹 <b>Strength:</b> ${signal.probability || 'Medium'}
 
 📊 <b>Saran:</b> Cek chart selengkapnya di App.
     `;
