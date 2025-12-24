@@ -67,70 +67,37 @@ function markdownToTelegramHTML(md) {
 
 // ----------------------------------------------------------------
 
+const MINI_APP_URL = "https://t.me/astonaicbot/astonmology";
+
+const bot_reply_redirect = (bot, chatId) => {
+  return bot.sendMessage(chatId, "🤖 <b>Silakan gunakan App AstonAI untuk fitur ini.</b>", {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🚀 Buka App", url: MINI_APP_URL }]
+      ]
+    }
+  });
+};
+
 function startPollingBot() {
   if (!TELEGRAM_TOKEN) throw new Error('TELEGRAM_TOKEN missing in env');
   const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
   console.log('Telegram bot polling started.');
 
-  // ====== /analisa command ======
-  bot.onText(/\/analisa\s+(.+)/i, async (msg, match) => {
+  // ====== Redirect All Major Commands ======
+  const redirectCommands = ['/analisa', '/review', '/harga', '/indikator', '/proxy', '/signal', '/fundamental'];
+
+  bot.on('message', (msg) => {
+    if (!msg.text) return;
     const chatId = msg.chat.id.toString();
+    const command = msg.text.split(' ')[0].toLowerCase();
 
-    // Restrict groups
-    if (!isAllowed(chatId)) {
-      return bot.sendMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
-    }
-
-    const symbol = match[1].trim().toUpperCase();
-    await bot.sendMessage(chatId, `🔎 Menerima permintaan analisa untuk *${symbol}*...`, { parse_mode: 'Markdown' });
-
-    try {
-      const candles = await fetchHistorical(symbol, { limit: DEFAULT_CANDLES });
-
-      if (!candles || candles.length === 0) {
-        return bot.sendMessage(chatId, `❌ Gagal mengambil data untuk ${symbol}. Periksa symbol atau API key GoAPI.`);
+    if (redirectCommands.some(cmd => command.startsWith(cmd))) {
+      if (!isAllowed(chatId)) {
+        return bot.sendMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
       }
-
-      const indicators = computeIndicators(candles);
-      const prompt = formatIndicatorsForPrompt(symbol, indicators);
-
-      const aiResponse = await analyzeWithAI(prompt);
-
-      const cleanHtml = markdownToTelegramHTML(aiResponse);
-      const reply = `📊 <b>Analisa ${symbol}</b>\n\n${cleanHtml}`;
-
-      await sendLongMessage(bot, chatId, reply);
-
-    } catch (err) {
-      console.error(err);
-      await bot.sendMessage(chatId, `⚠️ Terjadi error: ${err.message}`);
-    }
-  });
-
-  // ====== /review command ======
-  bot.onText(/\/review\s+(BUY|SELL)\s+(.+)\s+(\d+)(?:\s+(\d+))?/i, async (msg, match) => {
-    const chatId = msg.chat.id.toString();
-
-    if (!isAllowed(chatId)) {
-      return bot.sendMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
-    }
-
-    const action = match[1].toUpperCase();
-    const symbol = match[2].trim().toUpperCase();
-    const entry = match[3];
-    const sl = match[4] || null;
-
-    await bot.sendMessage(chatId, `🔍 Menganalisa setup ${action} untuk *${symbol}* @ ${entry}...`, { parse_mode: 'Markdown' });
-
-    try {
-      const aiResponse = await generateReview(action, symbol, entry, sl);
-      const cleanHtml = markdownToTelegramHTML(aiResponse);
-      const reply = `🧠 <b>Trade Review ${symbol}</b>\n\n${cleanHtml}`;
-
-      await sendLongMessage(bot, chatId, reply);
-    } catch (err) {
-      console.error(err);
-      await bot.sendMessage(chatId, `⚠️ Terjadi error saat review: ${err.message}`);
+      return bot_reply_redirect(bot, chatId);
     }
   });
 
@@ -142,24 +109,24 @@ function startPollingBot() {
     const helpMsg = `
 <b>Panduan Penggunaan Aston AI Bot</b>
 
-🤖 <b>Fitur & Perintah:</b>
+🚀 <b>Semua Fitur Pindah Ke App!</b>
+Sekarang Anda bisa melakukan Analisa, Cek Harga, Signal, dan Review Setup lebih mudah melalui Mini App kami.
 
-1️⃣ <b>Analisa Saham</b>
-Gunakan <code>/analisa TICKER</code> untuk mendapatkan analisa teknikal lengkap dari AI.
-Contoh: <code>/analisa BBCA</code>
+🤖 <b>Fitur Utama di Mini App:</b>
+• /harga, /indikator, /analisa
+• /proxy, /signal, /review
+• /fundamental
 
-2️⃣ <b>Review Trade Setup (Baru!)</b>
-Gunakan <code>/review ACTION TICKER ENTRY [SL]</code> untuk mereview rencana trade Anda.
-Format:
-• ACTION: BUY atau SELL
-• TICKER: Kode saham (e.g. BBRI)
-• ENTRY: Harga beli/jual
-• SL: Harga Stop Loss (Opsional)
-Contoh: <code>/review BUY BBCA 4500 4300</code>
-
-💡 <i>Pastikan kode saham benar dan data entry sesuai dengan harga pasar saat ini.</i>
+<i>Mulai sekarang dengan klik tombol di bawah!</i>
     `;
-    await bot.sendMessage(chatId, helpMsg, { parse_mode: 'HTML' });
+    await bot.sendMessage(chatId, helpMsg, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🚀 Buka App", url: MINI_APP_URL }]
+        ]
+      }
+    });
   });
 
   // ====== /start command ======
