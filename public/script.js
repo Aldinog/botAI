@@ -304,7 +304,7 @@ function initSnowflakes() {
     const container = document.getElementById('snow-container');
     if (!container) return;
 
-    const count = 50;
+    const count = 20; // Reduced number of flakes for subtle effect
     const symbols = ['❄', '❅', '❆', '✧'];
 
     for (let i = 0; i < count; i++) {
