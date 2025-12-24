@@ -1,7 +1,9 @@
-// api/src/utils/indicators.js
-
+// src/utils/indicators.js
 const ti = require('technicalindicators');
 
+/**
+ * Computes all technical indicators for a set of candles
+ */
 function computeIndicators(candles) {
   const closes = candles.map(c => c.close);
   const highs = candles.map(c => c.high);
@@ -12,11 +14,13 @@ function computeIndicators(candles) {
   const ma20 = ti.SMA.calculate({ period: 20, values: closes });
   const ma50 = ti.SMA.calculate({ period: 50, values: closes });
 
-  // Add EMA calculations
+  const ema9 = ti.EMA.calculate({ period: 9, values: closes });
+  const ema21 = ti.EMA.calculate({ period: 21, values: closes });
+  const ema10 = ti.EMA.calculate({ period: 10, values: closes });
   const ema20 = ti.EMA.calculate({ period: 20, values: closes });
-  const ema50 = ti.EMA.calculate({ period: 50, values: closes });
 
-  const rsi = ti.RSI.calculate({ period: 14, values: closes });
+  const rsi9 = ti.RSI.calculate({ period: 9, values: closes });
+  const rsi14 = ti.RSI.calculate({ period: 14, values: closes });
 
   const macd = ti.MACD.calculate({
     values: closes,
@@ -35,57 +39,112 @@ function computeIndicators(candles) {
     signalPeriod: 3
   });
 
+  const atr14 = ti.ATR.calculate({ period: 14, high: highs, low: lows, close: closes });
+  const smaVol20 = ti.SMA.calculate({ period: 20, values: volumes });
+
   const latest = {
     latestClose: closes[closes.length - 1],
     latestVolume: volumes[volumes.length - 1],
     MA5: ma5.length ? ma5[ma5.length - 1] : undefined,
     MA20: ma20.length ? ma20[ma20.length - 1] : undefined,
     MA50: ma50.length ? ma50[ma50.length - 1] : undefined,
+    EMA9: ema9.length ? ema9[ema9.length - 1] : undefined,
+    EMA21: ema21.length ? ema21[ema21.length - 1] : undefined,
+    EMA10: ema10.length ? ema10[ema10.length - 1] : undefined,
     EMA20: ema20.length ? ema20[ema20.length - 1] : undefined,
-    EMA50: ema50.length ? ema50[ema50.length - 1] : undefined,
-    RSI: rsi.length ? rsi[rsi.length - 1] : undefined,
-    MACD: macd.length ? macd[macd.length - 1] : undefined, // object {MACD, signal, histogram}
-    Stochastic: stochastic.length ? stochastic[stochastic.length - 1] : undefined // object {k, d}
+    RSI9: rsi9.length ? rsi9[rsi9.length - 1] : undefined,
+    RSI: rsi14.length ? rsi14[rsi14.length - 1] : undefined,
+    MACD: macd.length ? macd[macd.length - 1] : undefined,
+    Stochastic: stochastic.length ? stochastic[stochastic.length - 1] : undefined,
+    ATR: atr14.length ? atr14[atr14.length - 1] : undefined,
+    SMAVol20: smaVol20.length ? smaVol20[smaVol20.length - 1] : undefined
   };
 
   return {
-    all: { ma5, ma20, ma50, ema20, ema50, rsi, macd, stochastic },
+    all: { ma5, ma20, ma50, ema9, ema21, ema10, ema20, rsi9, rsi14, macd, stochastic, atr14, smaVol20 },
     latest
   };
 }
 
+/**
+ * Advanced Signal Logic (Matching Smart Chart)
+ */
+function detectAdvancedSignal(candles, indicators, levels = []) {
+  const i = candles.length - 1;
+  const curr = candles[i];
+  const last = candles[i - 1];
+  const ind = indicators.latest;
+
+  const e9 = ind.EMA9;
+  const e21 = ind.EMA21;
+  const e10 = ind.EMA10;
+  const e20 = ind.EMA20;
+
+  // Need previous values for crossover detection
+  const allInd = indicators.all;
+  const e10prev = allInd.ema10[allInd.ema10.length - 2];
+  const e20prev = allInd.ema20[allInd.ema20.length - 2];
+
+  const rsi = ind.RSI9;
+  const vol20 = ind.SMAVol20;
+  const atr = ind.ATR;
+
+  if (!e9 || !e21 || !e10 || !e20 || !rsi || !vol20 || !atr || !e10prev || !e20prev) {
+    return { action: 'WAIT', reason: null };
+  }
+
+  // Filters
+  const isHighVol = curr.volume > vol20 * 1.2;
+  const range = curr.high - curr.low;
+  const body = Math.abs(curr.close - curr.open);
+  const isStrong = range > 0 && (body / range >= 0.5);
+  const distFromEMA21 = Math.abs(curr.close - e21);
+  const isTooFar = distFromEMA21 > (atr * 1.5);
+
+  // Logic 1: Trend Following
+  const l1Buy = (e9 > e21) && (rsi > 50 && rsi < 70) && !isTooFar && isHighVol && isStrong && (curr.close > curr.open);
+  const l1Sell = (e9 < e21) && (rsi < 50 && rsi > 30) && !isTooFar && isHighVol && isStrong && (curr.close < curr.open);
+
+  // Logic 2: SNR + MA Cross
+  let nearSupport = false;
+  let nearResistance = false;
+  const snrTolerance = atr * 0.5;
+  levels.forEach(lvl => {
+    if (lvl.type === 'support' && curr.low <= lvl.price + snrTolerance) nearSupport = true;
+    if (lvl.type === 'resistance' && curr.high >= lvl.price - snrTolerance) nearResistance = true;
+  });
+
+  const goldenCross = e10prev <= e20prev && e10 > e20;
+  const deathCross = e10prev >= e20prev && e10 < e20;
+
+  const l2Buy = nearSupport && goldenCross;
+  const l2Sell = nearResistance && deathCross;
+
+  // Logic 3: Pure MA Cross
+  const l3Buy = goldenCross;
+  const l3Sell = deathCross;
+
+  if (l1Buy) return { action: 'BUY', reason: 'Trend Following (+Volume)', probability: isHighVol ? 'High' : 'Medium' };
+  if (l2Buy) return { action: 'BUY', reason: 'SNR Rebound + MA Cross', probability: 'High' };
+  if (l3Buy) return { action: 'BUY', reason: 'MA Goldencross (E10/20)', probability: 'Medium' };
+
+  if (l1Sell) return { action: 'SELL', reason: 'Trend (Bearish) + Vol', probability: isHighVol ? 'High' : 'Medium' };
+  if (l2Sell) return { action: 'SELL', reason: 'SNR Resistance + MA Cross', probability: 'High' };
+  if (l3Sell) return { action: 'SELL', reason: 'MA Deathcross (E10/20)', probability: 'Medium' };
+
+  return { action: 'WAIT', reason: null };
+}
+
 function formatIndicatorsForPrompt(symbol, indicators) {
   const latest = indicators.latest;
-  const lines = [];
-
-  lines.push(`Analisa teknikal untuk ${symbol}:`);
+  const lines = [`Analisa teknikal untuk ${symbol}:`];
   lines.push(`Harga terakhir: ${num(latest.latestClose)}`);
   lines.push(`Volume terakhir: ${num(latest.latestVolume)}`);
-  lines.push(`MA5: ${num(latest.MA5)}`);
-  lines.push(`MA20: ${num(latest.MA20)}`);
-  lines.push(`MA50: ${num(latest.MA50)}`);
+  lines.push(`MA5: ${num(latest.MA5)}, MA20: ${num(latest.MA20)}, MA50: ${num(latest.MA50)}`);
   lines.push(`RSI(14): ${num(latest.RSI)}`);
-  if (latest.MACD) {
-    lines.push(`MACD: macd=${num(latest.MACD.MACD)}, signal=${num(latest.MACD.signal)}, hist=${num(latest.MACD.histogram)}`);
-  } else {
-    lines.push('MACD: tidak tersedia');
-  }
-  if (latest.Stochastic) {
-    lines.push(`Stochastic: %K=${num(latest.Stochastic.k)}, %D=${num(latest.Stochastic.d)}`);
-  } else {
-    lines.push('Stochastic: tidak tersedia');
-  }
 
-  lines.push('');
-  lines.push('Instruksi untuk analis AI:');
-  lines.push('Buat analisa teknikal lengkap dan terstruktur berdasarkan indikator di atas. Sertakan:');
-  lines.push('1) Trend utama (long-term & short-term) — jelaskan dasar teknikalnya.');
-  lines.push('2) Sinyal dari MA (golden/death cross jika ada), RSI (overbought/oversold), MACD (crossover/histogram), Stochastic (k/d).');
-  lines.push('3) Level support dan resistance yang bisa diidentifikasi dari harga terakhir dan MA (sebisa mungkin berikan angka).');
-  lines.push('4) Rekomendasi trading teknikal: entry zone, stoploss, dan take profit (sertakan rasio risiko/imbalan jika memungkinkan).');
-  lines.push('5) Risiko utama yang harus diperhatikan.');
-  lines.push('');
-  lines.push('Format jawaban: gunakan sections, bullet points, dan ringkasan akhir. Singkat, jelas, dan teknikal.');
+  if (latest.MACD) lines.push(`MACD: ${num(latest.MACD.MACD)}, signal=${num(latest.MACD.signal)}`);
+  if (latest.Stochastic) lines.push(`Stochastic: %K=${num(latest.Stochastic.k)}, %D=${num(latest.Stochastic.d)}`);
 
   return lines.join('\n');
 }
@@ -94,4 +153,4 @@ function num(v) {
   return (v === undefined || v === null || Number.isNaN(v)) ? 'N/A' : (Math.round(v * 100) / 100).toString();
 }
 
-module.exports = { computeIndicators, formatIndicatorsForPrompt };
+module.exports = { computeIndicators, formatIndicatorsForPrompt, detectAdvancedSignal };

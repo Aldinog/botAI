@@ -184,6 +184,12 @@ bot.start((ctx) => {
   console.log(`${user} menggunakan start`);
   return ctx.reply("🤖 Bot aktif");
 });
+
+bot.command("cekchatid", (ctx) => {
+  const chatId = ctx.chat.id;
+  const userId = ctx.from.id;
+  return ctx.reply(`🆔 <b>Chat Info</b>\n\n• Chat ID: <code>${chatId}</code>\n• User ID: <code>${userId}</code>`, { parse_mode: "HTML" });
+});
 const MINI_APP_URL = "https://t.me/astonaicbot/astonmology";
 
 const bot_reply_redirect = async (ctx) => {

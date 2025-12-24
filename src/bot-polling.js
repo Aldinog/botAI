@@ -1,5 +1,4 @@
-// api/src/bot-polling.js
-
+// src/bot-polling.js
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const { fetchHistorical } = require('./utils/yahoofinance');
@@ -9,60 +8,48 @@ const { marked } = require("marked");
 const { generateReview } = require('./utils/review');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
-const DEFAULT_CANDLES = parseInt(process.env.DEFAULT_CANDLES || '50', 10);
+const ALLOWED_GROUP_IDS = process.env.ALLOWED_GROUP_IDS ? process.env.ALLOWED_GROUP_IDS.split(',') : [];
+const DEFAULT_CANDLES = 50;
 
-// ===== Allowed groups =====
-const ALLOWED_GROUPS = process.env.ALLOWED_GROUP_IDS
-  ? process.env.ALLOWED_GROUP_IDS.split(",").map(id => id.trim())
-  : process.env.ALLOWED_GROUP_ID
-    ? [process.env.ALLOWED_GROUP_ID.trim()]
-    : [];
-
-// Helper: cek apakah chat diperbolehkan
+// Helper to check if chat is allowed
 function isAllowed(chatId) {
-  if (ALLOWED_GROUPS.length === 0) return true; // jika tidak didefinisikan, bot bebas
-  return ALLOWED_GROUPS.includes(chatId.toString());
+  if (ALLOWED_GROUP_IDS.length === 0) return true;
+  return ALLOWED_GROUP_IDS.includes(chatId);
 }
 
-// ----------- fungsi untuk mengirim pesan panjang -----------
-function splitMessage(text, maxLength = 4000) {
-  const parts = [];
-  for (let i = 0; i < text.length; i += maxLength) {
-    parts.push(text.substring(i, i + maxLength));
-  }
-  return parts;
-}
-
-async function sendLongMessage(bot, chatId, text) {
-  const parts = splitMessage(text);
-  for (const part of parts) {
-    await bot.sendMessage(chatId, part, { parse_mode: "HTML" });
-  }
-}
-
+// Convert Markdown to Telegram-safe HTML
 function markdownToTelegramHTML(md) {
-  let html = marked(md);
+  let html = marked.parse(md);
 
+  // Simple tag conversions for Telegram HTML
   html = html
-    .replace(/<h[1-6]>/g, "<b>")
-    .replace(/<\/h[1-6]>/g, "</b>\n\n")
-    .replace(/<strong>/g, "<b>")
-    .replace(/<\/strong>/g, "</b>")
-    .replace(/<em>/g, "<i>")
-    .replace(/<\/em>/g, "</i>")
-    .replace(/<p>/g, "")
-    .replace(/<\/p>/g, "\n\n")
-    .replace(/<ul>/g, "")
-    .replace(/<\/ul>/g, "")
-    .replace(/<ol>/g, "")
-    .replace(/<\/ol>/g, "")
-    .replace(/<li>/g, "• ")
-    .replace(/<\/li>/g, "\n")
-    .replace(/<hr\s*\/?>/g, "────────────\n")
-    .replace(/<br\s*\/?>/g, "\n")
-    .replace(/\n{3,}/g, "\n\n");
+    .replace(/<p>/g, '')
+    .replace(/<\/p>/g, '\n\n')
+    .replace(/<strong>/g, '<b>')
+    .replace(/<\/strong>/g, '</b>')
+    .replace(/<em>/g, '<i>')
+    .replace(/<\/em>/g, '</i>')
+    .replace(/<ul>/g, '')
+    .replace(/<\/ul>/g, '')
+    .replace(/<li>/g, '• ')
+    .replace(/<\/li>/g, '\n')
+    .replace(/<h[1-6]>/g, '<b>')
+    .replace(/<\/h[1-6]>/g, '</b>\n')
+    .replace(/<br\s*\/?>/g, '\n')
+    .trim();
 
-  return html.trim();
+  return html;
+}
+
+// Helper for long messages
+async function sendLongMessage(bot, chatId, text) {
+  if (text.length <= 4000) {
+    return bot.sendMessage(chatId, text, { parse_mode: 'HTML' });
+  }
+  const chunks = text.match(/[\s\S]{1,4000}/g) || [];
+  for (const chunk of chunks) {
+    await bot.sendMessage(chatId, chunk, { parse_mode: 'HTML' });
+  }
 }
 
 // ----------------------------------------------------------------
@@ -70,7 +57,7 @@ function markdownToTelegramHTML(md) {
 const MINI_APP_URL = "https://t.me/astonaicbot/astonmology";
 
 const bot_reply_redirect = (bot, chatId) => {
-  return bot.sendMessage(chatId, "🤖 <b>Silakan gunakan App AstonAI untuk fitur ini.</b>", {
+  return bot.sendMessage(chatId, "🤖 <b>Silakan gunakan App Astonmology untuk fitur ini.</b>", {
     parse_mode: "HTML",
     reply_markup: {
       inline_keyboard: [
@@ -92,6 +79,11 @@ function startPollingBot() {
     if (!msg.text) return;
     const chatId = msg.chat.id.toString();
     const command = msg.text.split(' ')[0].toLowerCase();
+
+    // Check /cekchatid first
+    if (command === '/cekchatid') {
+      return bot.sendMessage(chatId, `🆔 <b>Chat Info</b>\n\n• Chat ID: <code>${chatId}</code>\n• User ID: <code>${msg.from.id}</code>`, { parse_mode: "HTML" });
+    }
 
     if (redirectCommands.some(cmd => command.startsWith(cmd))) {
       if (!isAllowed(chatId)) {
@@ -130,18 +122,13 @@ Sekarang Anda bisa melakukan Analisa, Cek Harga, Signal, dan Review Setup lebih 
   });
 
   // ====== /start command ======
-  bot.on('message', (msg) => {
-    const chatId = msg.chat.id.toString();
-
-    // Restrict groups
-    if (!isAllowed(chatId)) {
-      return bot.sendMessage(chatId, "❌ Bot ini hanya bisa digunakan di grup resmi.");
-    }
-
-    if (msg.text && msg.text.toLowerCase().startsWith('/start')) {
-      bot.sendMessage(chatId, 'Halo! Kirim perintah /analisa <TICKER>. Contoh: /analisa BBCA');
-    }
+  bot.onText(/\/start/i, (msg) => {
+    bot.sendMessage(msg.chat.id, "🤖 Bot aktif. Silakan gunakan perintah /help untuk panduan.");
   });
+}
+
+if (require.main === module) {
+  startPollingBot();
 }
 
 module.exports = { startPollingBot };

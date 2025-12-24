@@ -56,65 +56,13 @@ async function getChartData(symbol, interval = '1d') {
 
     // 5. Iterate and Generate Signals
     for (let i = 21; i < candles.length; i++) {
-        const curr = candles[i];
+        const slice = candles.slice(0, i + 1);
+        const indicatorsAtI = computeIndicators(slice);
+        // We need levels for SNR logic, but detecting levels for every candle is slow.
+        // For historical markers, we'll use a simplified check or pre-calculated levels.
+        const signal = detectAdvancedSignal(slice, indicatorsAtI, levels);
 
-        // Indicators for Logic 1
-        const e9 = getVal(ema9, i);
-        const e21 = getVal(ema21, i);
-        // Indicators for Logic 2
-        const e10 = getVal(ema10, i);
-        const e10prev = getVal(ema10, i - 1);
-        const e20 = getVal(ema20, i);
-        const e20prev = getVal(ema20, i - 1);
-        // Shared Indicators
-        const rsi = getVal(rsi9, i);
-        const vol20 = getVal(smaVol20, i);
-        const atr = getVal(atr14, i);
-
-        if (e9 === null || e21 === null || e10 === null || e20 === null || rsi === null || vol20 === null || atr === null || e10prev === null || e20prev === null) continue;
-
-        // --- COMMON FILTERS ---
-        const isHighVol = curr.volume > vol20 * 1.2;
-        const range = curr.high - curr.low;
-        const body = Math.abs(curr.close - curr.open);
-        const isStrong = range > 0 && (body / range >= 0.5);
-        const distFromEMA21 = Math.abs(curr.close - e21);
-        const isTooFar = distFromEMA21 > (atr * 1.5);
-
-        // --- LOGIC 1: TREND FOLLOWING (The Complex Logic) ---
-        const logic1Buy = (e9 > e21) && (rsi > 50 && rsi < 70) && !isTooFar && isHighVol && isStrong && (curr.close > curr.open);
-        const logic1Sell = (e9 < e21) && (rsi < 50 && rsi > 30) && !isTooFar && isHighVol && isStrong && (curr.close < curr.open);
-
-        // --- LOGIC 2: SNR + MA CROSS (The Specific Logic) ---
-        let nearSupport = false;
-        let nearResistance = false;
-        const snrTolerance = atr * 0.5;
-
-        for (let j = Math.max(0, i - 10); j <= i; j++) {
-            levels.forEach(lvl => {
-                if (lvl.type === 'support' && candles[j].low <= lvl.price + snrTolerance) nearSupport = true;
-                if (lvl.type === 'resistance' && candles[j].high >= lvl.price - snrTolerance) nearResistance = true;
-            });
-        }
-
-        const goldenCross = e10prev <= e20prev && e10 > e20;
-        const deathCross = e10prev >= e20prev && e10 < e20;
-
-        const logic2Buy = nearSupport && goldenCross;
-        const logic2Sell = nearResistance && deathCross;
-
-        // --- LOGIC 3: PURE MA CROSS (Any Cross) ---
-        const logic3Buy = goldenCross;
-        const logic3Sell = deathCross;
-
-        // --- COMBINED FINAL TRIGGER ---
-        // Will trigger if Trend Following (L1) OR SNR Rebound (L2) OR Pure Cross (L3) is true.
-        // Actually L3 covers L2 entirely, but we keep it here for clarity.
-        const buySignal = logic1Buy || logic2Buy || logic3Buy;
-        const sellSignal = logic1Sell || logic2Sell || logic3Sell;
-
-        // Adaptive Cooldown Logic
-        if (buySignal) {
+        if (signal.action === 'BUY') {
             let canSignal = false;
             if (lastSignal !== 'BUY') {
                 canSignal = true;
@@ -129,7 +77,7 @@ async function getChartData(symbol, interval = '1d') {
 
             if (canSignal) {
                 markers.push({
-                    time: curr.time,
+                    time: candles[i].time,
                     position: 'belowBar',
                     color: '#22c55e',
                     shape: 'arrowUp',
@@ -138,7 +86,7 @@ async function getChartData(symbol, interval = '1d') {
                 lastSignal = 'BUY';
                 lastSignalIndex = i;
             }
-        } else if (sellSignal) {
+        } else if (signal.action === 'SELL') {
             let canSignal = false;
             if (lastSignal !== 'SELL') {
                 canSignal = true;
@@ -153,7 +101,7 @@ async function getChartData(symbol, interval = '1d') {
 
             if (canSignal) {
                 markers.push({
-                    time: curr.time,
+                    time: candles[i].time,
                     position: 'aboveBar',
                     color: '#ef4444',
                     shape: 'arrowDown',
