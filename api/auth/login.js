@@ -144,9 +144,19 @@ module.exports = async (req, res) => {
             return res.status(403).json({ error: 'Your access has expired. Please re-register.' });
         }
 
-        // 5. Generate Session Token (JWT)
+        // 5. Fetch Global Settings
+        const { data: maintenanceData } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'maintenance_mode')
+            .single();
+
+        const maintenanceMode = maintenanceData ? maintenanceData.value : false;
+        const isAdmin = targetUser.telegram_user_id.toString() === (process.env.ADMIN_ID || '');
+
+        // 6. Generate Session Token (JWT)
         const token = jwt.sign(
-            { id: targetUser.id, telegram_user_id: targetUser.telegram_user_id },
+            { id: targetUser.id, telegram_user_id: targetUser.telegram_user_id, is_admin: isAdmin },
             process.env.JWT_SECRET || 'fallback-secret-aston',
             { expiresIn: '3d' }
         );
@@ -165,8 +175,11 @@ module.exports = async (req, res) => {
             token,
             user: {
                 id: targetUser.id,
+                telegram_user_id: targetUser.telegram_user_id,
                 username: targetUser.telegram_username,
-                expires_at: targetUser.expires_at
+                expires_at: targetUser.expires_at,
+                is_maintenance: maintenanceMode,
+                is_admin: isAdmin
             }
         });
 

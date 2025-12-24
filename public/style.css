@@ -610,3 +610,53 @@ body {
 .primary-btn:hover {
     background: var(--accent-violet);
 }
+
+/* Admin Styles */
+#admin-toggle-btn {
+    z-index: 1001;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: var(--accent-blue);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+#admin-toggle-btn.hidden {
+    display: none !important;
+}
+
+#admin-toggle-btn:hover {
+    background: var(--accent-blue);
+    color: white;
+}
+
+#admin-toggle-btn i {
+    font-size: 1rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: white;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Toggle Switch Styling for MT */
+#toggle-mt-btn.active {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}

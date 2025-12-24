@@ -70,6 +70,24 @@ module.exports = async (req, res) => {
         }
 
         const user = session.users;
+        const isAdmin = user.telegram_user_id.toString() === (process.env.ADMIN_ID || '');
+
+        // --- Maintenance Mode Guard ---
+        const { data: maintenanceData } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'maintenance_mode')
+            .single();
+
+        const isMaintenance = maintenanceData ? maintenanceData.value : false;
+
+        // If maintenance is ON and user is NOT admin, block all EXCEPT public/helper actions if any
+        if (isMaintenance && !isAdmin) {
+            return res.status(503).json({
+                error: 'Mohon maaf APP masih Maintenance',
+                code: 'MAINTENANCE_MODE'
+            });
+        }
 
         // Check expiry (3-day rule)
         if (new Date(user.expires_at) < new Date()) {
@@ -77,7 +95,7 @@ module.exports = async (req, res) => {
         }
 
         // --- Membership Check (CRITICAL) ---
-        // To avoid "register then leave" exploit, we verify membership
+        // ... (existing membership check logic)
         const groupIds = process.env.ALLOWED_GROUP_IDS ? process.env.ALLOWED_GROUP_IDS.split(',') : [];
         const primaryGroupId = groupIds[0];
 
@@ -87,14 +105,24 @@ module.exports = async (req, res) => {
             });
             const status = memberCheck.data.result.status;
             if (!['creator', 'administrator', 'member'].includes(status)) {
-                // If they left, deactivate or just block
                 return res.status(403).json({ error: 'Silahkan Join Aston Group untuk melanjutkan' });
             }
         } catch (e) {
             console.error('Group check failed in middleware:', e.message);
-            // If API fails, we might fallback to allowing if the token is recent, 
-            // but for maximum security we block.
             return res.status(500).json({ error: 'Security check failed' });
+        }
+
+        // --- Admin Specific Actions ---
+        if (action === 'toggle-maintenance') {
+            if (!isAdmin) return res.status(403).json({ error: 'Akses ditolak: Admin only' });
+
+            const newState = !isMaintenance;
+            await supabase
+                .from('app_settings')
+                .update({ value: newState })
+                .eq('key', 'maintenance_mode');
+
+            return res.status(200).json({ success: true, is_maintenance: newState });
         }
 
         // Log MiniApp Usage

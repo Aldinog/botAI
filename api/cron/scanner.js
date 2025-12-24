@@ -1,7 +1,7 @@
 // api/cron/scanner.js
 const { supabase } = require('../../src/utils/supabase');
 const { fetchHistorical } = require('../../src/utils/yahoofinance');
-const { computeIndicators, detectAdvancedSignal } = require('../../src/utils/indicators');
+const { computeIndicators, detectAdvancedSignal, getLatestSignal } = require('../../src/utils/indicators');
 const { getChartData } = require('../../src/utils/charting');
 const axios = require('axios');
 const moment = require('moment-timezone');
@@ -60,8 +60,7 @@ module.exports = async (req, res) => {
                 if (!chartData.candles || chartData.candles.length < 30) continue;
 
                 // 5. Detect Signal
-                const indicators = computeIndicators(chartData.candles);
-                const signal = detectAdvancedSignal(chartData.candles, indicators, chartData.levels);
+                const signal = getLatestSignal(chartData.candles, chartData.levels);
 
                 // 6. Record Scanned State
                 await supabase.from('scan_state').upsert({

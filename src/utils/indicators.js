@@ -68,26 +68,28 @@ function computeIndicators(candles) {
 
 /**
  * Advanced Signal Logic (Matching Smart Chart)
+ * @param {Array} candles All candles
+ * @param {Object} allIndicators Pre-computed indicator arrays
+ * @param {number} i Index to check
+ * @param {Array} levels S/R levels
  */
-function detectAdvancedSignal(candles, indicators, levels = []) {
-  const i = candles.length - 1;
+function detectAdvancedSignal(candles, allIndicators, i, levels = []) {
+  if (i < 21) return { action: 'WAIT', reason: null };
+
   const curr = candles[i];
-  const last = candles[i - 1];
-  const ind = indicators.latest;
+  const ind = allIndicators; // Reference for readability
 
-  const e9 = ind.EMA9;
-  const e21 = ind.EMA21;
-  const e10 = ind.EMA10;
-  const e20 = ind.EMA20;
+  const e9 = ind.ema9[i - (candles.length - ind.ema9.length)];
+  const e21 = ind.ema21[i - (candles.length - ind.ema21.length)];
+  const e10 = ind.ema10[i - (candles.length - ind.ema10.length)];
+  const e20 = ind.ema20[i - (candles.length - ind.ema20.length)];
 
-  // Need previous values for crossover detection
-  const allInd = indicators.all;
-  const e10prev = allInd.ema10[allInd.ema10.length - 2];
-  const e20prev = allInd.ema20[allInd.ema20.length - 2];
+  const e10prev = ind.ema10[i - 1 - (candles.length - ind.ema10.length)];
+  const e20prev = ind.ema20[i - 1 - (candles.length - ind.ema20.length)];
 
-  const rsi = ind.RSI9;
-  const vol20 = ind.SMAVol20;
-  const atr = ind.ATR;
+  const rsi = ind.rsi9[i - (candles.length - ind.rsi9.length)];
+  const vol20 = ind.smaVol20[i - (candles.length - ind.smaVol20.length)];
+  const atr = ind.atr14[i - (candles.length - ind.atr14.length)];
 
   if (!e9 || !e21 || !e10 || !e20 || !rsi || !vol20 || !atr || !e10prev || !e20prev) {
     return { action: 'WAIT', reason: null };
@@ -135,6 +137,14 @@ function detectAdvancedSignal(candles, indicators, levels = []) {
   return { action: 'WAIT', reason: null };
 }
 
+/**
+ * Helper for latest signal only
+ */
+function getLatestSignal(candles, levels = []) {
+  const indicators = computeIndicators(candles);
+  return detectAdvancedSignal(candles, indicators.all, candles.length - 1, levels);
+}
+
 function formatIndicatorsForPrompt(symbol, indicators) {
   const latest = indicators.latest;
   const lines = [`Analisa teknikal untuk ${symbol}:`];
@@ -153,4 +163,4 @@ function num(v) {
   return (v === undefined || v === null || Number.isNaN(v)) ? 'N/A' : (Math.round(v * 100) / 100).toString();
 }
 
-module.exports = { computeIndicators, formatIndicatorsForPrompt, detectAdvancedSignal };
+module.exports = { computeIndicators, formatIndicatorsForPrompt, detectAdvancedSignal, getLatestSignal };

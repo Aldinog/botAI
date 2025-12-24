@@ -41,7 +41,14 @@
                             stroke-linejoin="round" />
                     </svg>
                 </div>
-                <h1>Astonmology</h1>
+                <!-- Admin Access Button (Hidden by default) -->
+                <button id="admin-toggle-btn" class="glass-btn hidden"
+                    style="position: absolute; top: 15px; left: 15px; display: flex; align-items: center; gap: 8px; border-radius: 30px; padding: 10px 15px;">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin</span>
+                </button>
+
+                <h1>Astonmology AI Bot</h1>
             </div>
             <div class="status-badge">
                 <span class="status-dot"></span> Online
@@ -140,6 +147,45 @@
                 <button class="glass-btn primary-btn" id="submit-review">
                     Analyze Setup
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content" style="max-width: 350px;">
+            <div class="modal-header">
+                <h3>Admin Panel</h3>
+                <button class="close-btn" id="close-admin">×</button>
+            </div>
+            <div class="modal-body" style="padding-bottom: 25px;">
+                <p style="font-size: 0.9rem; color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                    Kontrol sistem aplikasi Astonmology.
+                </p>
+
+                <div class="admin-action-item"
+                    style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="font-weight: 600;">Maintenance Mode</span>
+                        <span style="font-size: 0.75rem; color: #94a3b8;" id="mt-status-text">OFF</span>
+                    </div>
+                    <button id="toggle-mt-btn" class="toggle-btn" style="min-width: 80px;">OFF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Overlay (Popup) -->
+    <div id="maintenance-overlay" class="modal-overlay hidden" style="z-index: 9999; backdrop-filter: blur(20px);">
+        <div class="glass-card"
+            style="text-align: center; max-width: 400px; padding: 40px 30px; border: 2px solid rgba(245, 158, 11, 0.3);">
+            <div style="font-size: 4rem; margin-bottom: 20px; color: #f59e0b;">🛠</div>
+            <h2 style="margin-bottom: 15px; color: #fff;">Under Maintenance</h2>
+            <p style="color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 25px;">
+                Mohon maaf APP masih maintenance untuk peningkatan sistem. Silakan coba lagi nanti.
+            </p>
+            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5); font-style: italic;">
+                -- Tim Astonmology --
             </div>
         </div>
     </div>

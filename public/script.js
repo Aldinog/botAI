@@ -33,6 +33,61 @@ document.addEventListener('DOMContentLoaded', async () => {
                 sessionToken = data.token;
                 localStorage.setItem('aston_session_token', sessionToken);
                 authOverlay.classList.add('hidden');
+
+                // --- Maintenance & Admin Logic ---
+                const user = data.user;
+                const adminBtn = document.getElementById('admin-toggle-btn');
+                const maintenanceOverlay = document.getElementById('maintenance-overlay');
+                const mtStatusText = document.getElementById('mt-status-text');
+                const toggleMtBtn = document.getElementById('toggle-mt-btn');
+
+                // 1. Show admin button if admin
+                if (user.is_admin) {
+                    adminBtn.classList.remove('hidden');
+                    // Setup Admin Modal Logic
+                    const adminModal = document.getElementById('admin-modal');
+                    const closeAdminBtn = document.getElementById('close-admin');
+
+                    adminBtn.onclick = () => adminModal.classList.remove('hidden');
+                    closeAdminBtn.onclick = () => adminModal.classList.add('hidden');
+
+                    // Update MT UI
+                    const updateMtUI = (isOn) => {
+                        mtStatusText.innerText = isOn ? 'ON' : 'OFF';
+                        mtStatusText.style.color = isOn ? '#ef4444' : '#94a3b8';
+                        toggleMtBtn.innerText = isOn ? 'ON' : 'OFF';
+                        toggleMtBtn.classList.toggle('active', isOn);
+                    };
+
+                    updateMtUI(user.is_maintenance);
+
+                    // Toggle MT Action
+                    toggleMtBtn.onclick = async () => {
+                        try {
+                            const res = await fetch('/api/web', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${sessionToken}`
+                                },
+                                body: JSON.stringify({ action: 'toggle-maintenance' })
+                            });
+                            const result = await res.json();
+                            if (res.ok && result.success) {
+                                updateMtUI(result.is_maintenance);
+                                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                            }
+                        } catch (err) {
+                            console.error('Toggle Maintenance Error:', err);
+                        }
+                    };
+                }
+
+                // 2. Block if Maintenance is ON and NOT Admin
+                if (user.is_maintenance && !user.is_admin) {
+                    maintenanceOverlay.classList.remove('hidden');
+                }
+
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             } else {
                 if (data.code === 'NOT_MEMBER') {
