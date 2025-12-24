@@ -59,43 +59,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 1. Show admin button if admin
                 if (user.is_admin) {
                     adminBtn.classList.remove('hidden');
-                    // Setup Admin Modal Logic
-                    const adminModal = document.getElementById('admin-modal');
-                    const closeAdminBtn = document.getElementById('close-admin');
-
-                    adminBtn.onclick = () => adminModal.classList.remove('hidden');
-                    closeAdminBtn.onclick = () => adminModal.classList.add('hidden');
-
-                    // Update MT UI
-                    const updateMtUI = (isOn) => {
-                        mtStatusText.innerText = isOn ? 'ON' : 'OFF';
-                        mtStatusText.style.color = isOn ? '#ef4444' : '#94a3b8';
-                        toggleMtBtn.innerText = isOn ? 'ON' : 'OFF';
-                        toggleMtBtn.classList.toggle('active', isOn);
-                        updateStatusBadge(isOn);
-                    };
-
-                    updateMtUI(user.is_maintenance);
-
-                    // Toggle MT Action
-                    toggleMtBtn.onclick = async () => {
-                        try {
-                            const res = await fetch('/api/web', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${sessionToken}`
-                                },
-                                body: JSON.stringify({ action: 'toggle-maintenance' })
-                            });
-                            const result = await res.json();
-                            if (res.ok && result.success) {
-                                updateMtUI(result.is_maintenance);
-                                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-                            }
-                        } catch (err) {
-                            console.error('Toggle Maintenance Error:', err);
-                        }
+                    adminBtn.onclick = () => {
+                        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                        window.location.href = 'admin.html';
                     };
                 }
 

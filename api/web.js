@@ -115,14 +115,52 @@ module.exports = async (req, res) => {
         // --- Admin Specific Actions ---
         if (action === 'toggle-maintenance') {
             if (!isAdmin) return res.status(403).json({ error: 'Akses ditolak: Admin only' });
-
             const newState = !isMaintenance;
-            await supabase
-                .from('app_settings')
-                .update({ value: newState })
-                .eq('key', 'maintenance_mode');
-
+            await supabase.from('app_settings').update({ value: newState }).eq('key', 'maintenance_mode');
             return res.status(200).json({ success: true, is_maintenance: newState });
+        }
+
+        if (action === 'watchlist/list') {
+            if (!isAdmin) return res.status(403).json({ error: 'Admin only' });
+            const { data, error } = await supabase.from('monitor_symbols').select('*').order('symbol');
+            if (error) return res.status(400).json({ error: error.message });
+            return res.status(200).json({ success: true, data });
+        }
+
+        if (action === 'watchlist/add') {
+            if (!isAdmin) return res.status(403).json({ error: 'Admin only' });
+            const { symbol: newSym } = req.body;
+            if (!newSym) return res.status(400).json({ error: 'Symbol required' });
+            const formattedSym = newSym.toUpperCase().endsWith('.JK') ? newSym.toUpperCase() : `${newSym.toUpperCase()}.JK`;
+            const { error } = await supabase.from('monitor_symbols').insert([{ symbol: formattedSym, is_active: true }]);
+            if (error) return res.status(400).json({ error: error.message });
+            return res.status(200).json({ success: true });
+        }
+
+        if (action === 'watchlist/delete') {
+            if (!isAdmin) return res.status(403).json({ error: 'Admin only' });
+            const { symbol: targetSym } = req.body;
+            await supabase.from('monitor_symbols').delete().eq('symbol', targetSym);
+            return res.status(200).json({ success: true });
+        }
+
+        if (action === 'watchlist/toggle') {
+            if (!isAdmin) return res.status(403).json({ error: 'Admin only' });
+            const { symbol: targetSym, is_active } = req.body;
+            await supabase.from('monitor_symbols').update({ is_active }).eq('symbol', targetSym);
+            return res.status(200).json({ success: true });
+        }
+
+        if (action === 'admin/force-scan') {
+            if (!isAdmin) return res.status(403).json({ error: 'Admin only' });
+            // For architecture simplicity, we'll try to trigger the internal logic
+            const scanner = require('./cron/scanner');
+            const mockReq = { body: {} };
+            const mockRes = {
+                status: (code) => ({ json: (data) => { console.log('Mock Scanner Finish:', data); } })
+            };
+            scanner(mockReq, mockRes);
+            return res.status(200).json({ success: true, message: 'Scanner triggered in background' });
         }
 
         // Log MiniApp Usage

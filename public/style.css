@@ -548,34 +548,42 @@ body {
     background: var(--accent-violet);
 }
 
-/* Admin Styles Refined */
-#admin-toggle-btn {
-    z-index: 1001;
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #fff;
+/* Admin Badge Button Refined */
+.admin-badge-btn {
     font-size: 0.75rem;
     font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(139, 92, 246, 0.2);
+    /* Tinted Purple Glass */
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    padding: 6px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.admin-badge-btn:hover {
+    background: rgba(139, 92, 246, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+.admin-badge-btn i {
+    font-size: 0.8rem;
+    color: #f59e0b;
+    /* Golden Shield */
 }
 
 #admin-toggle-btn.hidden {
     display: none !important;
-}
-
-#admin-toggle-btn:hover {
-    background: var(--accent-gradient);
-    border-color: transparent;
-    transform: translateY(-2px);
-}
-
-#admin-toggle-btn i {
-    font-size: 0.9rem;
-    color: #f59e0b;
-    /* Golden Shield */
 }
 
 .close-btn {
