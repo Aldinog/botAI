@@ -40,6 +40,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const maintenanceOverlay = document.getElementById('maintenance-overlay');
                 const mtStatusText = document.getElementById('mt-status-text');
                 const toggleMtBtn = document.getElementById('toggle-mt-btn');
+                const statusBadge = document.getElementById('app-status-badge');
+                const statusText = document.getElementById('status-text');
+
+                const updateStatusBadge = (isMt) => {
+                    if (isMt) {
+                        statusBadge.classList.add('maintenance-active');
+                        statusText.innerText = 'Maintenance';
+                    } else {
+                        statusBadge.classList.remove('maintenance-active');
+                        statusText.innerText = 'Online';
+                    }
+                };
+
+                // Initial Status
+                updateStatusBadge(user.is_maintenance);
 
                 // 1. Show admin button if admin
                 if (user.is_admin) {
@@ -57,6 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         mtStatusText.style.color = isOn ? '#ef4444' : '#94a3b8';
                         toggleMtBtn.innerText = isOn ? 'ON' : 'OFF';
                         toggleMtBtn.classList.toggle('active', isOn);
+                        updateStatusBadge(isOn);
                     };
 
                     updateMtUI(user.is_maintenance);
