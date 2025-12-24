@@ -3,7 +3,7 @@ const axios = require("axios");
 require("dotenv").config();
 
 const apiKey = process.env.OPENROUTER_API_KEY;
-const model = process.env.AI_MODEL || "google/gemini-2.0-flash-lite-preview-02-05:free";
+const model = process.env.AI_MODEL || "google/gemini-2.0-flash-exp:free";
 
 if (!apiKey) {
     console.warn("⚠️ OPENROUTER_API_KEY belum diset di environment variables");
