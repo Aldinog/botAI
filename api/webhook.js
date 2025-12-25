@@ -239,17 +239,33 @@ bot.command(["indikator", "harga", "broksum", "proxy", "review", "signal", "anal
 // WEBHOOK (Vercel Friendly)
 // =========================
 module.exports = async (req, res) => {
+  // Diagnostic for root URL
+  if (req.method === "GET") {
+    return res.status(200).json({
+      status: "Bot Running",
+      token_configured: !!TELEGRAM_TOKEN,
+      allowed_groups_count: allowedGroups.length,
+      mode: "Webhook"
+    });
+  }
+
   if (req.method === "POST") {
     try {
+      if (!req.body || Object.keys(req.body).length === 0) {
+        console.warn("⚠️ Webhook received empty body");
+        return res.status(200).send("EMPTY_BODY");
+      }
+
+      console.log(`📩 Webhook update received: ${req.body.update_id}`);
+
       await bot.handleUpdate(req.body);
       return res.status(200).send("OK");
     } catch (err) {
-      console.error("Webhook Error:", err);
-      // Selalu kembalikan 200 OK agar Vercel/Telegram tidak melakukan retry 
-      // untuk error yang bersifat permanen (misal 403 Forbidden)
+      console.error("❌ Webhook Handling Error:", err.message);
+      // We still return 200 to prevent Telegram from hammering the endpoint with retries
       return res.status(200).send("OK_WITH_ERROR");
     }
   }
 
-  res.status(200).send("Bot Running");
+  res.status(405).send("Method Not Allowed");
 };
