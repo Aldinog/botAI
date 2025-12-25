@@ -55,8 +55,60 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // --- Logic Gate: Maintenance vs Access ---
 
                 // 1. Is Maintenance ON and User is NOT Admin? -> BLOCK EVERYTHING
-                if (user.is_maintenance && !user.is_admin) {
+                if (response.status === 503 && data.code === 'MAINTENANCE_MODE') {
                     maintenanceOverlay.classList.remove('hidden');
+
+                    // Countdown Logic if end_time is provided
+                    if (data.end_time) {
+                        const statusParams = document.getElementById('mt-status-params');
+                        if (statusParams) {
+                            const endTime = new Date(data.end_time).getTime();
+
+                            // Render Premium Countdown HTML structure
+                            statusParams.innerHTML = `
+                                <div style="text-align:center; animation: fadeIn 1s ease;">
+                                    <p style="font-size: 1.1em; color: #fbbf24; margin-bottom: 15px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">
+                                        System is upgrading
+                                    </p>
+                                    <div id="mt-countdown" style="
+                                        display: flex; gap: 10px; justify-content: center; 
+                                        background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px;
+                                        border: 1px solid rgba(251, 191, 36, 0.3); backdrop-filter: blur(5px);
+                                        margin-bottom: 10px;
+                                    ">
+                                        <div class="mt-unit"><span id="mt-h" style="font-size:1.5em; font-weight:bold; color:white;">00</span><span style="font-size:0.7em; color:#94a3b8; display:block;">HRS</span></div>
+                                        <div style="font-size:1.5em; color:#fbbf24; padding-top:2px;">:</div>
+                                        <div class="mt-unit"><span id="mt-m" style="font-size:1.5em; font-weight:bold; color:white;">00</span><span style="font-size:0.7em; color:#94a3b8; display:block;">MIN</span></div>
+                                        <div style="font-size:1.5em; color:#fbbf24; padding-top:2px;">:</div>
+                                        <div class="mt-unit"><span id="mt-s" style="font-size:1.5em; font-weight:bold; color:white;">00</span><span style="font-size:0.7em; color:#94a3b8; display:block;">SEC</span></div>
+                                    </div>
+                                    <div style="font-size: 0.8em; color: #94a3b8;">Kami akan kembali segera</div>
+                                </div>
+                            `;
+
+                            // Start Interval
+                            const interval = setInterval(() => {
+                                const now = new Date().getTime();
+                                const distance = endTime - now;
+
+                                if (distance < 0) {
+                                    clearInterval(interval);
+                                    statusParams.innerHTML = '<div style="color:#10b981; font-weight:bold; font-size:1.2em;">System Online! Reloading...</div>';
+                                    setTimeout(() => location.reload(), 2000);
+                                    return;
+                                }
+
+                                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                document.getElementById('mt-h').innerText = String(hours).padStart(2, '0');
+                                document.getElementById('mt-m').innerText = String(minutes).padStart(2, '0');
+                                document.getElementById('mt-s').innerText = String(seconds).padStart(2, '0');
+                            }, 1000);
+                        }
+                    }
+
                     // Do NOT apply custom theme. Force Default to hide any "surprise" themes.
                     console.log('Maintenance Active: Blocking Theme & Access');
                     if (window.themeEngine) window.themeEngine.applyTheme('default');

@@ -139,14 +139,66 @@ document.addEventListener('DOMContentLoaded', async () => {
         toggleMtBtn.classList.toggle('active', isOn);
     };
 
-    toggleMtBtn.onclick = async () => {
-        const res = await fetch('/api/web', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-            body: JSON.stringify({ action: 'toggle-maintenance' })
-        });
-        const data = await res.json();
-        if (data.success) updateMTUI(data.is_maintenance);
+    // --- Maintenance Logic ---
+    let isMaintenanceActive = false; // State tracker
+
+    toggleMtBtn.onclick = () => {
+        if (isMaintenanceActive) {
+            // Turning OFF: No modal needed
+            toggleMaintenanceAPI(null);
+        } else {
+            // Turning ON: Show Modal
+            document.getElementById('mt-modal').classList.remove('hidden');
+        }
+    };
+
+    document.getElementById('cancel-mt-btn').onclick = () => {
+        document.getElementById('mt-modal').classList.add('hidden');
+    };
+
+    document.getElementById('confirm-mt-btn').onclick = () => {
+        const timeInput = document.getElementById('mt-time-input').value;
+        let endTimeISO = null;
+
+        if (timeInput) {
+            const now = new Date();
+            const [hours, minutes] = timeInput.split(':').map(Number);
+            let target = new Date();
+            target.setHours(hours, minutes, 0, 0);
+
+            // If target time is earlier than now, assume it's for tomorrow
+            if (target < now) {
+                target.setDate(target.getDate() + 1);
+            }
+            endTimeISO = target.toISOString();
+        }
+
+        toggleMaintenanceAPI(endTimeISO);
+        document.getElementById('mt-modal').classList.add('hidden');
+    };
+
+    async function toggleMaintenanceAPI(endTime) {
+        try {
+            const res = await fetch('/api/web', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+                body: JSON.stringify({ action: 'toggle-maintenance', endTime })
+            });
+            const data = await res.json();
+            if (data.success) {
+                isMaintenanceActive = data.is_maintenance; // Sync state
+                updateMTUI(data.is_maintenance);
+            }
+        } catch (e) { console.error('MT Error', e); }
+    };
+
+    // Update initial state check
+    const updateMTUI = (isOn) => {
+        isMaintenanceActive = isOn;
+        statusBadge.classList.toggle('maintenance-active', isOn);
+        statusText.innerText = isOn ? 'Maintenance' : 'Online';
+        mtBtnText.innerText = `Maintenance: ${isOn ? 'ON' : 'OFF'}`;
+        toggleMtBtn.classList.toggle('active', isOn);
     };
 
     document.getElementById('update-theme-btn').onclick = async () => {

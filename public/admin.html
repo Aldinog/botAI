@@ -230,6 +230,29 @@
     </div>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Maintenance Modal -->
+    <div id="mt-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-body">
+            <h3>Maintenance Mode</h3>
+            <p>Aktifkan mode maintenance? User biasa tidak akan bisa login.</p>
+
+            <div class="input-group" style="margin-top: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:0.9em; color:#94a3b8;">Jam Selesai
+                    (Opsional)</label>
+                <input type="time" id="mt-time-input"
+                    style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white;">
+                <div style="font-size: 0.8em; color: #64748b; margin-top: 5px;">Format 24 Jam WIB. Kosongkan untuk
+                    manual off.</div>
+            </div>
+
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button id="cancel-mt-btn" class="glass-btn"
+                    style="border-color: #ef4444; color: #ef4444;">Batal</button>
+                <button id="confirm-mt-btn" class="glass-btn primary-btn">Aktifkan</button>
+            </div>
+        </div>
+    </div>
+
     <script src="admin.js"></script>
 </body>
 

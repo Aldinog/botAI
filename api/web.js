@@ -75,17 +75,39 @@ module.exports = async (req, res) => {
         // --- Maintenance Mode Guard ---
         const { data: maintenanceData } = await supabase
             .from('app_settings')
-            .select('value')
-            .eq('key', 'maintenance_mode')
-            .single();
+            .select('key, value')
+            .in('key', ['maintenance_mode', 'maintenance_end_time']);
 
-        const isMaintenance = maintenanceData ? maintenanceData.value : false;
+        const settingsMap = {};
+        if (maintenanceData) {
+            maintenanceData.forEach(item => settingsMap[item.key] = item.value);
+        }
+
+        let isMaintenance = settingsMap['maintenance_mode'] || false;
+        let maintenanceEndTime = settingsMap['maintenance_end_time'];
+
+        // Auto-Disable Logic
+        if (isMaintenance && maintenanceEndTime) {
+            const now = new Date();
+            const end = new Date(maintenanceEndTime);
+            if (now >= end) {
+                // Auto Turn Off
+                await supabase.from('app_settings').upsert([
+                    { key: 'maintenance_mode', value: false },
+                    { key: 'maintenance_end_time', value: null }
+                ]);
+                isMaintenance = false;
+                maintenanceEndTime = null;
+                console.log('Maintenance Mode Auto-Disabled (Time Reached)');
+            }
+        }
 
         // If maintenance is ON and user is NOT admin, block all EXCEPT public/helper actions if any
         if (isMaintenance && !isAdmin) {
             return res.status(503).json({
                 error: 'Mohon maaf APP masih Maintenance',
-                code: 'MAINTENANCE_MODE'
+                code: 'MAINTENANCE_MODE',
+                end_time: maintenanceEndTime // Return time for countdown
             });
         }
 
@@ -115,8 +137,23 @@ module.exports = async (req, res) => {
         // --- Admin Specific Actions ---
         if (action === 'toggle-maintenance') {
             if (!isAdmin) return res.status(403).json({ error: 'Akses ditolak: Admin only' });
+
+            const { endTime } = req.body; // Expect ISO string or null
             const newState = !isMaintenance;
-            await supabase.from('app_settings').update({ value: newState }).eq('key', 'maintenance_mode');
+
+            // Prepare updates
+            const updates = [
+                { key: 'maintenance_mode', value: newState }
+            ];
+
+            if (newState && endTime) {
+                updates.push({ key: 'maintenance_end_time', value: endTime });
+            } else if (!newState) {
+                // Clear time if turning off
+                updates.push({ key: 'maintenance_end_time', value: null });
+            }
+
+            await supabase.from('app_settings').upsert(updates);
             return res.status(200).json({ success: true, is_maintenance: newState });
         }
 
