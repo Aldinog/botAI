@@ -193,3 +193,78 @@ body.theme-newyear .newyear-text span {
         box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
     }
 }
+
+/* --- 5. ✨ Enhancements: Shimmer, Countdown, Clicks --- */
+
+/* Shimmer Effect for Logo */
+body.theme-newyear .brand h1 {
+    background: linear-gradient(110deg, #fbbf24 30%, #fff 40%, #fff 50%, #fbbf24 60%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 5s infinite linear;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Countdown Widget (In Background) */
+#ny-countdown {
+    margin-top: 10px;
+    font-family: 'Outfit', sans-serif;
+    color: #fbbf24;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.countdown-val {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.countdown-label {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Magic Gold Click Particle */
+.gold-particle {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    background: #fbbf24;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 10px #fbbf24;
+    animation: particle-pop 0.8s ease-out forwards;
+}
+
+@keyframes particle-pop {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(var(--mx), var(--my)) scale(0);
+        opacity: 0;
+    }
+}

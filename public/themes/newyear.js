@@ -1,30 +1,120 @@
 function startNewyearTheme() {
-    console.log('🎆 Starting New Year Theme: Simple Mode');
+    console.log('🎆 Starting New Year Theme: Premium Enhancements');
 
     // 1. Start Fireworks Background Immediately
     initFireworks();
 
-    // 2. Add transparency classes to container for visibility
-    const container = document.querySelector('.container');
-    if (container) {
-        // Ensure container is glass-like so fireworks show through
-        // The CSS handles the base style, but we reinforce transparency here if needed
-        // or rely on the CSS update we are about to make.
+    // 2. Prepare Splash Screen with COPY & COUNTDOWN
+    let splash = document.getElementById('ny-splash-screen');
+    if (!splash) {
+        splash = document.createElement('div');
+        splash.id = 'ny-splash-screen';
+        splash.innerHTML = `
+            <div class="ny-title">
+                HAPPY<br>NEW YEAR
+                <span style="display:block; font-size: 0.5em; color: white;">2026</span>
+            </div>
+            <!-- Countdown Widget -->
+            <div id="ny-countdown">
+                <div class="countdown-unit"><span class="countdown-val" id="cd-d">00</span><span class="countdown-label">Days</span></div>
+                <div class="countdown-unit"><span class="countdown-val" id="cd-h">00</span><span class="countdown-label">Hrs</span></div>
+                <div class="countdown-unit"><span class="countdown-val" id="cd-m">00</span><span class="countdown-label">Min</span></div>
+                <div class="countdown-unit"><span class="countdown-val" id="cd-s">00</span><span class="countdown-label">Sec</span></div>
+            </div>
+            
+            <div id="ny-splash-fireworks" style="position: absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
+        `;
+        document.body.appendChild(splash);
+
+        // Make it transparent immediately as per previous "Simple Mode" request
+        // so fireworks are visible
+        splash.style.background = 'transparent';
     }
 
-    // 3. Trigger initial confetti burst for celebration
+    // 3. Start Countdowns & Event Listeners
+    startCountdown();
+    document.addEventListener('click', handleGoldClick);
+
+    // 4. Trigger initial celebration
     triggerGoldConfetti();
 }
 
 function stopNewyearTheme() {
     console.log('🛑 Stopping New Year Theme');
 
+    // Cleanup Intervals
+    if (window.nyCountdownInterval) clearInterval(window.nyCountdownInterval);
+
+    // Cleanup Events
+    document.removeEventListener('click', handleGoldClick);
+
+    // Cleanup DOM
+    const splash = document.getElementById('ny-splash-screen');
+    if (splash) splash.remove();
+
     const canvas = document.getElementById('fireworks-canvas');
     if (canvas) {
         canvas.style.display = 'none';
     }
+}
 
-    // Initial cleanup if switching away (though standard theme engine handles basics)
+// --- Logic: Countdown ---
+function startCountdown() {
+    const targetDate = new Date('January 1, 2026 00:00:00').getTime();
+
+    function update() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+            // Happy New Year!
+            const cd = document.getElementById('ny-countdown');
+            if (cd) cd.innerHTML = "🎉 IT'S TIME! 🎉";
+            clearInterval(window.nyCountdownInterval);
+            return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        if (document.getElementById('cd-d')) document.getElementById('cd-d').innerText = days;
+        if (document.getElementById('cd-h')) document.getElementById('cd-h').innerText = hours;
+        if (document.getElementById('cd-m')) document.getElementById('cd-m').innerText = minutes;
+        if (document.getElementById('cd-s')) document.getElementById('cd-s').innerText = seconds;
+    }
+
+    update(); // Initial call
+    window.nyCountdownInterval = setInterval(update, 1000);
+}
+
+// --- Logic: Magic Gold Click ---
+function handleGoldClick(e) {
+    const particleCount = 8;
+    for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('div');
+        p.classList.add('gold-particle');
+        document.body.appendChild(p);
+
+        // Position at click
+        const x = e.clientX;
+        const y = e.clientY;
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+
+        // Random direction
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 60 + 20; // Spread distance
+        const mx = Math.cos(angle) * velocity;
+        const my = Math.sin(angle) * velocity;
+
+        p.style.setProperty('--mx', `${mx}px`);
+        p.style.setProperty('--my', `${my}px`);
+
+        // Cleanup
+        setTimeout(() => p.remove(), 800);
+    }
 }
 
 // --- Logic ---
