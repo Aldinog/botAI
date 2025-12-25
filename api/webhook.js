@@ -15,8 +15,11 @@ const { isAllowedGroup } = require("../src/utils/groupControl");
 const { fetchHarga } = require('../src/utils/harga');
 const { generateReview } = require('../src/utils/review');
 
-const DEFAULT_CANDLES = 50;
-const bot = new Telegraf(process.env.TELEGRAM_TOKEN);
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
+if (!TELEGRAM_TOKEN) {
+  console.error("CRITICAL: TELEGRAM_TOKEN is missing in environment variables!");
+}
+const bot = new Telegraf(TELEGRAM_TOKEN || "dummy_token");
 
 // =========================
 // Dynamic import "marked"
