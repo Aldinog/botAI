@@ -6,7 +6,9 @@ const {
     analyzeProxyBrokerActivity,
     formatProxyBrokerActivity,
     fetchFundamentals,
-    formatFundamentals
+    formatFundamentals,
+    fetchProfile,
+    formatProfile
 } = require('../src/utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
 const jwt = require('jsonwebtoken');
@@ -237,36 +239,13 @@ module.exports = async (req, res) => {
         let result = '';
 
         switch (action) {
-            case 'price':
-                result = await fetchHarga(symbol);
-                break;
-
-            case 'indicators':
-                const analysis = await analyzeStock(symbol);
-                result = analysis.text || analysis.error;
-                break;
-
-            case 'analysis':
-                // Replicating /analisa logic
-                const candles = await fetchHistorical(symbol, { limit: 50 });
-                if (!candles || candles.length === 0) {
-                    result = `❌ Data ${symbol} tidak tersedia.`;
-                } else {
-                    const indicators = computeIndicators(candles);
-                    const prompt = formatIndicatorsForPrompt(symbol, indicators);
-                    result = await analyzeWithAI(prompt);
-                }
-                break;
-
-            case 'proxy':
-                // Replicating /proxy logic
-                const candlesProxy = await fetchHistorical(symbol, { limit: 120 });
-                const activity = analyzeProxyBrokerActivity(candlesProxy);
-                result = formatProxyBrokerActivity(symbol, activity);
+            case 'price': // Replaced by Profile
+            case 'profile':
+                const profileData = await fetchProfile(symbol);
+                result = formatProfile(profileData);
                 break;
 
             case 'fundamental':
-            case 'profile':
                 const fundData = await fetchFundamentals(symbol);
                 result = formatFundamentals(fundData);
                 break;

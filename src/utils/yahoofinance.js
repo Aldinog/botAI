@@ -163,6 +163,53 @@ function formatProxyBrokerActivity(symbol, activity) {
 }
 
 
+async function fetchProfile(symbol) {
+    let query = symbol;
+    if (!query.endsWith(".JK") && !query.includes(".")) {
+        query = `${query}.JK`;
+    }
+
+    try {
+        const result = await yahooFinance.quoteSummary(query, {
+            modules: ["assetProfile", "price", "summaryProfile"]
+        });
+
+        if (!result) return null;
+
+        const profile = result.assetProfile || result.summaryProfile || {};
+        const price = result.price || {};
+
+        return {
+            symbol: query,
+            name: price.longName || price.shortName,
+            sector: profile.sector,
+            industry: profile.industry,
+            summary: profile.longBusinessSummary || profile.description || "N/A",
+            website: profile.website,
+            city: profile.city,
+            country: profile.country,
+            employees: profile.fullTimeEmployees
+        };
+    } catch (err) {
+        console.error(`YF Profile Error for ${query}:`, err.message);
+        return null;
+    }
+}
+
+function formatProfile(data) {
+    if (!data) return "❌ Profil emiten tidak ditemukan.";
+
+    return `🏢 <b>Profil Emiten: ${data.name} (${data.symbol.replace('.JK', '')})</b>\n\n` +
+        `<b>Sektor:</b> ${data.sector || '-'}\n` +
+        `<b>Industri:</b> ${data.industry || '-'}\n` +
+        `<b>Lokasi:</b> ${data.city || '-'}, ${data.country || '-'}\n` +
+        `<b>Karyawan:</b> ${data.employees ? data.employees.toLocaleString() : '-'}\n` +
+        `<b>Website:</b> ${data.website || '-'}\n\n` +
+        `<b>Tentang Perusahaan:</b>\n` +
+        `<i>${data.summary.slice(0, 1000)}${data.summary.length > 1000 ? '...' : ''}</i>\n\n` +
+        `<i>Data by Yahoo Finance</i>`;
+}
+
 module.exports = {
     fetchHistorical,
     fetchBrokerSummaryWithFallback,
@@ -170,7 +217,9 @@ module.exports = {
     formatProxyBrokerActivity,
     fetchQuote,
     fetchFundamentals,
-    formatFundamentals
+    formatFundamentals,
+    fetchProfile,
+    formatProfile
 };
 
 async function fetchQuote(symbol) {
