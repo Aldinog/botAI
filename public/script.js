@@ -34,23 +34,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('aston_session_token', sessionToken);
                 authOverlay.classList.add('hidden');
 
-                // --- Seasonal Theme Logic (via Engine) ---
-                const activeTheme = data.user.active_theme || 'default';
-                if (window.themeEngine) {
-                    await window.themeEngine.applyTheme(activeTheme);
-                } else {
-                    console.warn('ThemeEngine not loaded');
-                }
-
-                // --- Maintenance & Admin Logic ---
                 const user = data.user;
                 const adminBtn = document.getElementById('admin-toggle-btn');
                 const maintenanceOverlay = document.getElementById('maintenance-overlay');
-                const mtStatusText = document.getElementById('mt-status-text');
-                const toggleMtBtn = document.getElementById('toggle-mt-btn');
                 const statusBadge = document.getElementById('app-status-badge');
                 const statusText = document.getElementById('status-text');
 
+                // Helper for Status Badge
                 const updateStatusBadge = (isMt) => {
                     if (isMt) {
                         statusBadge.classList.add('maintenance-active');
@@ -60,11 +50,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                         statusText.innerText = 'Online';
                     }
                 };
-
-                // Initial Status
                 updateStatusBadge(user.is_maintenance);
 
-                // 1. Show admin button if admin
+                // --- Logic Gate: Maintenance vs Access ---
+
+                // 1. Is Maintenance ON and User is NOT Admin? -> BLOCK EVERYTHING
+                if (user.is_maintenance && !user.is_admin) {
+                    maintenanceOverlay.classList.remove('hidden');
+                    // Do NOT apply custom theme. Force Default to hide any "surprise" themes.
+                    console.log('Maintenance Active: Blocking Theme & Access');
+                    if (window.themeEngine) window.themeEngine.applyTheme('default');
+
+                    // Optional: Disable interactions or hide main content
+                    document.querySelector('.container').style.filter = 'blur(10px)';
+                    document.querySelector('.container').style.pointerEvents = 'none';
+                    return; // Stop execution here
+                }
+
+                // 2. Normal Access (Admin or Maintenance OFF)
+
+                // Show Admin Button if applicable
                 if (user.is_admin) {
                     adminBtn.classList.remove('hidden');
                     adminBtn.onclick = () => {
@@ -73,9 +78,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     };
                 }
 
-                // 2. Block if Maintenance is ON and NOT Admin
-                if (user.is_maintenance && !user.is_admin) {
-                    maintenanceOverlay.classList.remove('hidden');
+                // Apply Seasonal Theme for authorized users
+                const activeTheme = data.user.active_theme || 'default';
+                if (window.themeEngine) {
+                    await window.themeEngine.applyTheme(activeTheme);
+                } else {
+                    console.warn('ThemeEngine not loaded');
                 }
 
                 if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');

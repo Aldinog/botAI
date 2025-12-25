@@ -1,31 +1,210 @@
-/* --- 🎆 NEW YEAR THEME --- */
+/* --- 🎆 NEW YEAR THEME: MIDNIGHT GOLD --- */
+
+/* 1. Global Variables Override */
 body.theme-newyear {
-    /* Slightly darker/gold tint? */
+    --bg-dark: #020617;
+    /* Deep Midnight Blue */
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+
+    /* Gold & Silver Accents */
+    --accent-gold: #fbbf24;
+    --accent-gold-glow: #f59e0b;
+    --accent-silver: #e2e8f0;
+
+    /* Gradient for Primary Actions */
+    --accent-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+
+    background-color: var(--bg-dark) !important;
+    color: var(--text-primary);
 }
 
-/* Fireworks Canvas Visibility */
+/* 2. Explicitly Hide Christmas Logic (Safety) */
+body.theme-newyear .christmas-text,
+body.theme-newyear .christmas-tree,
+body.theme-newyear .snowflake,
+body.theme-newyear #snow-container {
+    display: none !important;
+}
+
+/* 3. Background: Deep Space & Fireworks */
+body.theme-newyear .ambient-glow {
+    /* Subtle Gold/Purple Haze */
+    background:
+        radial-gradient(circle at 10% 10%, rgba(251, 191, 36, 0.1), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(124, 58, 237, 0.1), transparent 40%);
+}
+
 body.theme-newyear #fireworks-canvas {
     display: block !important;
+    opacity: 0.8;
 }
 
+/* 4. Glass Cards: Midnight Gold Edition */
+body.theme-newyear .glass-card {
+    background: rgba(2, 6, 23, 0.7);
+    /* Darker base */
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    /* Gold border */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4),
+        0 0 15px rgba(251, 191, 36, 0.1);
+    /* Subtle gold glow */
+    backdrop-filter: blur(20px);
+    transition: all 0.4s ease;
+}
+
+body.theme-newyear .glass-card:hover {
+    border-color: rgba(251, 191, 36, 0.6);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5),
+        0 0 25px rgba(251, 191, 36, 0.2);
+}
+
+/* Header Tweaks */
+body.theme-newyear .logo-icon {
+    background: linear-gradient(135deg, #fbbf24, #b45309);
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+}
+
+body.theme-newyear .brand h1 {
+    background: linear-gradient(to right, #fff, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+/* 5. Inputs & Forms */
+body.theme-newyear #ticker-input,
+body.theme-newyear .modal-body input {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+    /* Gold Text */
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 2px;
+}
+
+body.theme-newyear #ticker-input:focus {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
+}
+
+/* 6. Buttons: Premium Styles */
+body.theme-newyear .primary-btn,
+body.theme-newyear .highlight-btn {
+    background: linear-gradient(to bottom right, #fbbf24, #b45309);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+}
+
+body.theme-newyear .primary-btn:hover,
+body.theme-newyear .highlight-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+    filter: brightness(1.1);
+}
+
+body.theme-newyear .glass-btn:not(.highlight-btn) {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.theme-newyear .glass-btn:not(.highlight-btn):hover {
+    border-color: rgba(251, 191, 36, 0.5);
+    background: rgba(251, 191, 36, 0.05);
+}
+
+body.theme-newyear .glass-btn .btn-icon {
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4));
+}
+
+/* 7. Loading Screen Overhaul: The Golden Countdown */
+
+/* Hide Default Spinner style */
+body.theme-newyear .spinner {
+    border: 3px solid rgba(251, 191, 36, 0.1);
+    border-top-color: #fbbf24;
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+    position: relative;
+    /* We'll add a ring effect */
+}
+
+body.theme-newyear .spinner::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #f59e0b;
+    animation: spin 3s linear infinite reverse;
+}
+
+body.theme-newyear .loading,
+body.theme-newyear .loading-content,
+body.theme-newyear #auth-overlay .auth-box {
+    background: rgba(2, 6, 23, 0.9) !important;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.15);
+}
+
+/* Custom Text Typography */
 body.theme-newyear .newyear-text {
     display: block !important;
     font-family: 'Outfit', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 800;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    /* Gold Gradient Text */
+    background: linear-gradient(to bottom, #fff 0%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
+    animation: title-float 3s ease-in-out infinite;
 }
 
 body.theme-newyear .newyear-text span {
-    font-size: 0.8em;
-    color: #facc15;
-    /* Gold */
+    display: block;
+    margin-top: 5px;
+    font-size: 2rem !important;
+    color: #fbbf24 !important;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
 }
 
-/* Explicitly Hide Christmas Logic */
-body.theme-newyear .christmas-text,
-body.theme-newyear .christmas-tree {
-    display: none !important;
+@keyframes title-float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Pulse Animation for Borders */
+@keyframes gold-pulse {
+    0% {
+        border-color: rgba(251, 191, 36, 0.3);
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+    }
+
+    50% {
+        border-color: rgba(251, 191, 36, 0.8);
+        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
+    }
+
+    100% {
+        border-color: rgba(251, 191, 36, 0.3);
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+    }
 }

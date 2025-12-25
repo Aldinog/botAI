@@ -1,33 +1,31 @@
-/**
- * New Year Theme Logic
- */
+function startNewyearTheme() {
+    console.log('🎆 Starting New Year Theme: Midnight Gold');
 
-let fireworksInterval;
-let animationFrameId;
-
-window.startNewyearTheme = function () {
+    // 1. Start Fireworks Background
     initFireworks();
 
-    const authStatus = document.getElementById('auth-status');
-    if (authStatus && authStatus.innerText.includes('Authenticating')) {
-        authStatus.innerText = 'Happy New Year! Processing... 🎆';
-    }
-    console.log('New Year Theme Started 🎆');
-};
+    // 2. Add specific celebratory classes (optional, handled mostly by CSS)
+    document.body.classList.add('celebration-mode');
 
-window.stopNewyearTheme = function () {
-    clearInterval(fireworksInterval);
-    cancelAnimationFrame(animationFrameId);
+    // 3. Trigger initial confetti burst for "Wow" factor
+    triggerGoldConfetti();
+}
+
+function stopNewyearTheme() {
+    console.log('🛑 Stopping New Year Theme');
+
+    // 1. Stop Fireworks
     const canvas = document.getElementById('fireworks-canvas');
     if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
         canvas.style.display = 'none';
-        // Force hide style if controlled by css also
-        canvas.style.display = '';
+        // Only clear canvas context if we want to stop animation loop completely?
+        // For now, hidden is enough. CSS handles display:none.
     }
-    console.log('New Year Theme Stopped');
-};
+
+    document.body.classList.remove('celebration-mode');
+}
+
+// --- Logic ---
 
 function initFireworks() {
     const canvas = document.getElementById('fireworks-canvas');
@@ -35,32 +33,36 @@ function initFireworks() {
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // Visiblity handled by start/CSS, but ensure canvas prop
+
+    // We rely on CSS to show it
+    // canvas.style.display = 'block'; 
 
     let particles = [];
-    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#FFA500'];
+    // Gold, Silver, White, Red
+    const colors = ['#fbbf24', '#f59e0b', '#e2e8f0', '#ffffff', '#ef4444'];
 
     function createParticle(x, y) {
-        const particleCount = 30;
+        const particleCount = 40; // Dense explosion
         for (let i = 0; i < particleCount; i++) {
             particles.push({
                 x: x,
                 y: y,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                radius: Math.random() * 3 + 1,
+                radius: Math.random() * 2 + 1,
                 velocity: {
-                    x: (Math.random() - 0.5) * 6,
-                    y: (Math.random() - 0.5) * 6
+                    x: (Math.random() - 0.5) * 8, // Faster spread
+                    y: (Math.random() - 0.5) * 8
                 },
                 alpha: 1,
-                decay: Math.random() * 0.015 + 0.01
+                decay: Math.random() * 0.02 + 0.01
             });
         }
     }
 
     function loop() {
+        // Trail effect
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; // Slower fade for longer trails
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalCompositeOperation = 'lighter';
 
@@ -68,7 +70,7 @@ function initFireworks() {
             if (p.alpha <= 0) {
                 particles.splice(index, 1);
             } else {
-                p.velocity.y += 0.05;
+                p.velocity.y += 0.04; // Gravity
                 p.x += p.velocity.x;
                 p.y += p.velocity.y;
                 p.alpha -= p.decay;
@@ -80,12 +82,37 @@ function initFireworks() {
                 ctx.fill();
             }
         });
-        animationFrameId = requestAnimationFrame(loop);
+
+        if (document.body.classList.contains('theme-newyear')) {
+            requestAnimationFrame(loop);
+        }
     }
 
     loop();
 
-    fireworksInterval = setInterval(() => {
-        createParticle(Math.random() * canvas.width, Math.random() * canvas.height / 2);
-    }, 800);
+    // Auto launch fireworks randomly
+    // Prevent multiple intervals just in case
+    if (window.fireworksInterval) clearInterval(window.fireworksInterval);
+
+    window.fireworksInterval = setInterval(() => {
+        if (!document.body.classList.contains('theme-newyear')) {
+            clearInterval(window.fireworksInterval);
+            return;
+        }
+        createParticle(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
+    }, 1200); // Slightly more frequent
 }
+
+function triggerGoldConfetti() {
+    // Re-use the existing confetti canvas if available, or just use fireworks
+    // This is a quick burst
+    const canvas = document.getElementById('fireworks-canvas');
+    if (!canvas) return;
+
+    // Just force a few big explosions in the center
+    setTimeout(() => initFireworks(), 100);
+}
+
+// Attach to window for ThemeEngine
+window.startNewyearTheme = startNewyearTheme;
+window.stopNewyearTheme = stopNewyearTheme;
