@@ -210,6 +210,7 @@ module.exports = async (req, res) => {
                 username: targetUser.telegram_username,
                 expires_at: targetUser.expires_at,
                 is_maintenance: maintenanceMode,
+                maintenance_end_time: maintenanceEndTime, // Added for Admin Dashboard Countdown
                 is_admin: isAdmin,
                 active_theme: activeTheme
             }

@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Update selector to match
                 document.getElementById('theme-selector').value = activeTheme;
 
-                updateMTUI(data.user.is_maintenance);
+                updateMTUI(data.user.is_maintenance, data.user.maintenance_end_time);
                 loadWatchlist();
             } else {
                 authStatus.innerHTML = '<span style="color:#ef4444">Akses Ditolak: Khusus Admin</span>';
@@ -153,12 +153,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // --- 3. System Actions ---
-    const updateMTUI = (isOn) => {
+    let mtInterval;
+
+    const updateMTUI = (isOn, endTime) => {
         isMaintenanceActive = isOn;
         statusBadge.classList.toggle('maintenance-active', isOn);
         statusText.innerText = isOn ? 'Maintenance' : 'Online';
         mtBtnText.innerText = `Maintenance: ${isOn ? 'ON' : 'OFF'}`;
         toggleMtBtn.classList.toggle('active', isOn);
+
+        const countdownEl = document.getElementById('admin-mt-countdown');
+        const timerEl = document.getElementById('amt-timer');
+
+        if (mtInterval) clearInterval(mtInterval);
+
+        if (isOn && endTime) {
+            countdownEl.style.display = 'block';
+            const end = new Date(endTime).getTime();
+
+            mtInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const diff = end - now;
+
+                if (diff < 0) {
+                    clearInterval(mtInterval);
+                    timerEl.innerText = "00:00:00 (Finishing...)";
+                    setTimeout(() => location.reload(), 2000);
+                    return;
+                }
+
+                const h = Math.floor(diff / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+        } else {
+            countdownEl.style.display = 'none';
+        }
     };
 
     // --- Maintenance Logic ---
@@ -237,7 +269,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await res.json();
             if (data.success) {
                 isMaintenanceActive = data.is_maintenance; // Sync state
-                updateMTUI(data.is_maintenance);
+                // Pass the requested endTime since backend might not return it in this specific endpoint yet
+                updateMTUI(data.is_maintenance, endTime);
             }
         } catch (e) { console.error('MT Error', e); }
     };
