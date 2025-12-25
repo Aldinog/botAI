@@ -128,6 +128,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return false; // Not Maintained
     };
 
+    const syncTheme = (data) => {
+        if (data && data.active_theme && window.themeEngine) {
+            if (data.active_theme !== window.themeEngine.activeTheme) {
+                console.log('🔄 Theme Sync: Switching to', data.active_theme);
+                window.themeEngine.applyTheme(data.active_theme);
+            }
+        }
+    };
+
     const login = async () => {
         if (!tg || !tg.initData) {
             authStatus.innerHTML = '<span style="color: #ef4444;">Please open this app inside Telegram.</span>';
@@ -340,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (await handleMaintenance(response.clone())) return;
 
                 const data = await response.json();
+                syncTheme(data); // Sync theme on every action
                 if (response.ok && data.success) {
                     showResult(data.data);
                 } else {
@@ -413,6 +423,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (await handleMaintenance(response.clone())) return;
 
                 const data = await response.json();
+                syncTheme(data); // Sync theme on every action
 
                 if (response.ok && data.success) {
                     showResult(data.data);

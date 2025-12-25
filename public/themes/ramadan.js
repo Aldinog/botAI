@@ -21,6 +21,9 @@ function stopRamadanTheme() {
     document.querySelectorAll('.ramadan-lantern').forEach(el => el.remove());
     document.querySelectorAll('.ramadan-moon').forEach(el => el.remove());
     document.querySelectorAll('.ramadan-star').forEach(el => el.remove());
+
+    // Ensure styles are cleaned up if engine doesn't handle classes perfectly
+    document.body.classList.remove('theme-ramadan');
 }
 
 // --- Logic ---

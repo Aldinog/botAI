@@ -215,13 +215,61 @@ body.theme-ramadan .highlight-btn:hover {
 }
 
 /* Loading Screen */
-body.theme-ramadan .loading-content {
-    background: rgba(6, 78, 59, 0.95);
+body.theme-ramadan .loading-content,
+body.theme-ramadan #auth-overlay .auth-box {
+    background: rgba(2, 44, 34, 0.95) !important;
     border: 2px solid #fbbf24;
-    box-shadow: 0 0 50px rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 50px rgba(16, 185, 129, 0.3),
+        0 0 20px rgba(251, 191, 36, 0.1);
+    backdrop-filter: blur(20px);
 }
 
 body.theme-ramadan .spinner {
-    border-color: rgba(16, 185, 129, 0.2);
+    border: 3px solid rgba(16, 185, 129, 0.2);
     border-top-color: #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+}
+
+body.theme-ramadan .ramadan-text {
+    display: block !important;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #fbbf24, #fff, #fbbf24);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s infinite linear, title-float 3s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+/* Explicitly hide other theme texts */
+body.theme-ramadan .christmas-text,
+body.theme-ramadan .newyear-text {
+    display: none !important;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% center;
+    }
+
+    100% {
+        background-position: -200% center;
+    }
+}
+
+@keyframes title-float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
 }

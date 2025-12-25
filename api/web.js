@@ -72,19 +72,20 @@ module.exports = async (req, res) => {
         const user = session.users;
         const isAdmin = user.telegram_user_id.toString() === (process.env.ADMIN_ID || '');
 
-        // --- Maintenance Mode Guard ---
-        const { data: maintenanceData } = await supabase
+        // --- Maintenance & Theme Logic ---
+        const { data: appData } = await supabase
             .from('app_settings')
             .select('key, value')
-            .in('key', ['maintenance_mode', 'maintenance_end_time']);
+            .in('key', ['maintenance_mode', 'maintenance_end_time', 'active_theme']);
 
         const settingsMap = {};
-        if (maintenanceData) {
-            maintenanceData.forEach(item => settingsMap[item.key] = item.value);
+        if (appData) {
+            appData.forEach(item => settingsMap[item.key] = item.value);
         }
 
         let isMaintenance = settingsMap['maintenance_mode'] || false;
         let maintenanceEndTime = settingsMap['maintenance_end_time'];
+        const activeTheme = settingsMap['active_theme'] || 'default';
 
         // Auto-Disable Logic
         if (isMaintenance && maintenanceEndTime) {
@@ -331,7 +332,8 @@ module.exports = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            data: htmlOutput
+            data: htmlOutput,
+            active_theme: activeTheme // Added for real-time theme sync
         });
 
     } catch (error) {

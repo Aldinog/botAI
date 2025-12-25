@@ -98,13 +98,15 @@ body.theme-christmas .christmas-text {
     font-size: 1.1rem;
     background: linear-gradient(to right, #ef4444, #facc15, #22c55e);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 15px;
     animation: text-glow 2s infinite alternate;
 }
 
-/* Explicitly Hide New Year Logic */
-body.theme-christmas .newyear-text {
+/* Explicitly Hide Other Theme Logic */
+body.theme-christmas .newyear-text,
+body.theme-christmas .ramadan-text {
     display: none !important;
 }
 
