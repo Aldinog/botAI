@@ -20,6 +20,83 @@ if (activeTheme === 'christmas') {
     if (tree) tree.classList.remove('hidden');
     const text = document.getElementById('christmas-text');
     if (text) text.classList.remove('hidden');
+} else if (activeTheme === 'newyear') {
+    document.body.classList.add('theme-newyear');
+    // We can reuse initFireworks from script.js if it's imported, 
+    // BUT usually chart.js is separate. We need to duplicate or expose initFireworks.
+    // Given the structure, likely need to copy logic or make it global. 
+    // For now, let's assume we copy the logic or keep it simple if script.js isn't loaded here.
+    // Based on file list, chart.html loads chart.js. Does it load script.js? 
+    // Reviewing chart.html in previous steps: only chart.js is loaded at the bottom.
+    // So we MUST duplicate initFireworks here or create a shared 'theme.js'.
+    // Decision: Duplicate for now to keep it isolated and quick.
+    initFireworks();
+    const text = document.getElementById('newyear-text');
+    if (text) text.classList.remove('hidden');
+}
+
+let fireworksInterval;
+let animationFrameId;
+
+function initFireworks() {
+    const canvas = document.getElementById('fireworks-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+
+    let particles = [];
+    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#FFA500'];
+
+    function createParticle(x, y) {
+        const particleCount = 30;
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: x,
+                y: y,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                radius: Math.random() * 3 + 1,
+                velocity: {
+                    x: (Math.random() - 0.5) * 6,
+                    y: (Math.random() - 0.5) * 6
+                },
+                alpha: 1,
+                decay: Math.random() * 0.015 + 0.01
+            });
+        }
+    }
+
+    function loop() {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'lighter';
+
+        particles.forEach((p, index) => {
+            if (p.alpha <= 0) {
+                particles.splice(index, 1);
+            } else {
+                p.velocity.y += 0.05;
+                p.x += p.velocity.x;
+                p.y += p.velocity.y;
+                p.alpha -= p.decay;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fill();
+            }
+        });
+        animationFrameId = requestAnimationFrame(loop);
+    }
+
+    loop();
+
+    fireworksInterval = setInterval(() => {
+        createParticle(Math.random() * canvas.width, Math.random() * canvas.height / 2);
+    }, 800);
 }
 
 // Initialization

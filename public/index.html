@@ -16,6 +16,10 @@
 
 <body class="premium-theme">
     <div class="snow-container" id="snow-container"></div>
+    <canvas id="fireworks-canvas"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; display:none;"></canvas>
+    <canvas id="confetti-canvas"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2000; display:none;"></canvas>
     <!-- Auth Overlay -->
     <div id="auth-overlay" class="modal-overlay">
         <div class="auth-box glass-card">
@@ -41,6 +45,9 @@
             </div>
             <!-- Christmas Text -->
             <div id="christmas-text" class="christmas-text hidden">Selamat Natal</div>
+            <!-- New Year Text -->
+            <div id="newyear-text" class="newyear-text hidden">Selamat Tahun Baru<br><span
+                    style="font-size:0.8em; color:#facc15">2026</span></div>
 
             <div class="spinner"></div>
             <p id="auth-status">Authenticating with Telegram...</p>

@@ -51,6 +51,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const text = document.getElementById('christmas-text');
                         if (text) text.classList.remove('hidden');
                         if (authStatus) authStatus.innerText = 'Merry Christmas! Prossesing... 🎄';
+                    } else if (activeTheme === 'newyear') {
+                        initFireworks();
+                        const text = document.getElementById('newyear-text');
+                        if (text) text.classList.remove('hidden');
+                        if (authStatus) authStatus.innerText = 'Happy New Year! Processing... 🎆';
                     }
                 }
 
@@ -126,6 +131,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tree = document.getElementById('christmas-tree');
             if (tree) tree.classList.remove('hidden');
             const text = document.getElementById('christmas-text');
+            if (text) text.classList.remove('hidden');
+        } else if (persistedTheme === 'newyear') {
+            initFireworks();
+            const text = document.getElementById('newyear-text');
             if (text) text.classList.remove('hidden');
         }
     }
@@ -354,4 +363,131 @@ function clearChristmasTheme() {
     // Clear snowflakes
     const container = document.getElementById('snow-container');
     if (container) container.innerHTML = '';
+}
+
+function clearNewYearTheme() {
+    document.body.classList.remove('theme-newyear');
+    const text = document.getElementById('newyear-text');
+    if (text) text.classList.add('hidden');
+    stopFireworks();
+}
+
+let fireworksInterval;
+let animationFrameId;
+
+function initFireworks() {
+    const canvas = document.getElementById('fireworks-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+
+    let particles = [];
+    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#FFA500'];
+
+    function createParticle(x, y) {
+        const particleCount = 30;
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: x,
+                y: y,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                radius: Math.random() * 3 + 1,
+                velocity: {
+                    x: (Math.random() - 0.5) * 6,
+                    y: (Math.random() - 0.5) * 6
+                },
+                alpha: 1,
+                decay: Math.random() * 0.015 + 0.01
+            });
+        }
+    }
+
+    function loop() {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Trail effect
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'lighter';
+
+        particles.forEach((p, index) => {
+            if (p.alpha <= 0) {
+                particles.splice(index, 1);
+            } else {
+                p.velocity.y += 0.05; // Gravity
+                p.x += p.velocity.x;
+                p.y += p.velocity.y;
+                p.alpha -= p.decay;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.fill();
+            }
+        });
+        animationFrameId = requestAnimationFrame(loop);
+    }
+
+    loop();
+
+    // Spawn fireworks randomly
+    fireworksInterval = setInterval(() => {
+        createParticle(Math.random() * canvas.width, Math.random() * canvas.height / 2);
+    }, 800);
+}
+
+function stopFireworks() {
+    clearInterval(fireworksInterval);
+    cancelAnimationFrame(animationFrameId);
+    const canvas = document.getElementById('fireworks-canvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.display = 'none';
+    }
+}
+
+// Simple Confetti for Analysis Success
+function triggerConfetti() {
+    const canvas = document.getElementById('confetti-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+
+    let confetti = [];
+    const colors = ['#fde132', '#009bde', '#ff6b00'];
+
+    for (let i = 0; i < 100; i++) {
+        confetti.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height - canvas.height,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * 10 + 5,
+            speed: Math.random() * 5 + 2,
+            angle: Math.random() * 6.2
+        });
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+        confetti.forEach(c => {
+            c.y += c.speed;
+            c.angle += 0.1;
+            ctx.save();
+            ctx.translate(c.x, c.y);
+            ctx.rotate(c.angle);
+            ctx.fillStyle = c.color;
+            ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+            ctx.restore();
+            if (c.y < canvas.height) active = true;
+        });
+
+        if (active) requestAnimationFrame(animate);
+        else canvas.style.display = 'none';
+    }
+    animate();
 }

@@ -798,3 +798,59 @@ body.theme-christmas .christmas-text {
         text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
     }
 }
+
+/* --- New Year Theme --- */
+body.theme-newyear {
+    background: linear-gradient(to bottom, #020617, #1e1b4b);
+    color: #fff;
+}
+
+body.theme-newyear .loading {
+    background: rgba(15, 23, 42, 0.4) !important;
+    backdrop-filter: blur(8px);
+}
+
+.newyear-text {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 1.4rem;
+    /* Slightly larger */
+    text-align: center;
+    background: linear-gradient(to right, #fbfb04, #ffffff, #facc15);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 15px;
+    display: none;
+    line-height: 1.2;
+    animation: shimmer 3s infinite linear;
+}
+
+body.theme-newyear .newyear-text {
+    display: block;
+}
+
+body.theme-newyear #fireworks-canvas {
+    display: block !important;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% center;
+    }
+
+    100% {
+        background-position: 200% center;
+    }
+}
+
+/* Ensure canvas is behind UI but visible */
+#fireworks-canvas {
+    z-index: 0;
+}
+
+/* Ensure Confetti is Topmost */
+#confetti-canvas {
+    z-index: 9999;
+}
