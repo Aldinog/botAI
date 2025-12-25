@@ -28,56 +28,68 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ initData: tg.initData })
             });
 
-            // Handle non-JSON responses (Server Crash/Vercel Error)
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                const text = await response.text();
-                throw new Error(`Server Error (${response.status}): ${text.slice(0, 100)}`);
-            }
-
-            const data = await response.json();
-
             // 1. Maintenance Check (Priority)
-            if (response.status === 503 && data.code === 'MAINTENANCE_MODE') {
+            if (response.status === 503) {
+                let endTime = null;
+                try {
+                    const data = await response.json();
+                    if (data.end_time) endTime = data.end_time;
+                } catch (e) {
+                    console.warn('Maintenance 503 received but not JSON. Using default overlay.');
+                }
+
                 authOverlay.classList.add('hidden'); // HIDE LOADING SCREEN
                 maintenanceOverlay.classList.remove('hidden');
 
                 // Countdown Logic if end_time is provided
-                if (data.end_time) {
+                if (endTime) {
                     const statusParams = document.getElementById('mt-status-params');
                     if (statusParams) {
-                        const endTime = new Date(data.end_time).getTime();
+                        const targetTime = new Date(endTime).getTime();
 
-                        // Render Premium Countdown HTML structure
+                        // Render Premium Countdown HTML structure - GOLD THEME
                         statusParams.innerHTML = `
                             <div style="text-align:center; animation: fadeIn 1s ease;">
-                                <p style="font-size: 1.1em; color: #fbbf24; margin-bottom: 15px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">
-                                    System is upgrading
-                                </p>
-                                <div id="mt-countdown" style="
-                                    display: flex; gap: 10px; justify-content: center; 
-                                    background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px;
-                                    border: 1px solid rgba(251, 191, 36, 0.3); backdrop-filter: blur(5px);
-                                    margin-bottom: 10px;
-                                ">
-                                    <div class="mt-unit"><span id="mt-h" style="font-size:1.5em; font-weight:bold; color:white;">00</span><span style="font-size:0.7em; color:#94a3b8; display:block;">HRS</span></div>
-                                    <div style="font-size:1.5em; color:#fbbf24; padding-top:2px;">:</div>
-                                    <div class="mt-unit"><span id="mt-m" style="font-size:1.5em; font-weight:bold; color:white;">00</span><span style="font-size:0.7em; color:#94a3b8; display:block;">MIN</span></div>
-                                    <div style="font-size:1.5em; color:#fbbf24; padding-top:2px;">:</div>
-                                    <div class="mt-unit"><span id="mt-s" style="font-size:1.5em; font-weight:bold; color:white;">00</span><span style="font-size:0.7em; color:#94a3b8; display:block;">SEC</span></div>
+                                <div style="margin-bottom:20px;">
+                                    <h2 style="font-size:1.8em; font-weight:800; color:#fbbf24; text-transform:uppercase; letter-spacing:2px; margin:0; text-shadow:0 0 20px rgba(251,191,36,0.3);">
+                                        System Upgrade
+                                    </h2>
+                                    <p style="color:#94a3b8; font-size:0.9em; margin-top:5px;">We are improving your experience</p>
                                 </div>
-                                <div style="font-size: 0.8em; color: #94a3b8;">Kami akan kembali segera</div>
+
+                                <div id="mt-countdown" style="
+                                    display: inline-flex; gap: 15px; justify-content: center; 
+                                    background: rgba(15, 23, 42, 0.6); padding: 20px 30px; border-radius: 20px;
+                                    border: 1px solid rgba(251, 191, 36, 0.2); backdrop-filter: blur(10px);
+                                    margin-bottom: 25px; box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+                                ">
+                                    <div class="mt-unit">
+                                        <span id="mt-h" style="font-size:2.5em; font-weight:700; color:#fff; line-height:1;">00</span>
+                                        <span style="font-size:0.7em; color:#fbbf24; text-transform:uppercase; letter-spacing:1px; display:block; margin-top:5px;">Hours</span>
+                                    </div>
+                                    <div style="font-size:2.5em; color:#fbbf24; padding-top:0px; opacity:0.5;">:</div>
+                                    <div class="mt-unit">
+                                        <span id="mt-m" style="font-size:2.5em; font-weight:700; color:#fff; line-height:1;">00</span>
+                                        <span style="font-size:0.7em; color:#fbbf24; text-transform:uppercase; letter-spacing:1px; display:block; margin-top:5px;">Mins</span>
+                                    </div>
+                                    <div style="font-size:2.5em; color:#fbbf24; padding-top:0px; opacity:0.5;">:</div>
+                                    <div class="mt-unit">
+                                        <span id="mt-s" style="font-size:2.5em; font-weight:700; color:#fff; line-height:1;">00</span>
+                                        <span style="font-size:0.7em; color:#fbbf24; text-transform:uppercase; letter-spacing:1px; display:block; margin-top:5px;">Secs</span>
+                                    </div>
+                                </div>
+                                <div style="font-size: 0.9em; color: rgba(255,255,255,0.5); font-style:italic;">Estimated completion time.</div>
                             </div>
                         `;
 
                         // Start Interval
                         const interval = setInterval(() => {
                             const now = new Date().getTime();
-                            const distance = endTime - now;
+                            const distance = targetTime - now;
 
                             if (distance < 0) {
                                 clearInterval(interval);
-                                statusParams.innerHTML = '<div style="color:#10b981; font-weight:bold; font-size:1.2em;">System Online! Reloading...</div>';
+                                statusParams.innerHTML = '<div style="color:#10b981; font-weight:bold; font-size:1.5em; animation:fadeIn 0.5s;">System Online! Reloading...</div>';
                                 setTimeout(() => location.reload(), 2000);
                                 return;
                             }
@@ -93,15 +105,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
 
-                // Do NOT apply custom theme. Force Default to hide any "surprise" themes.
-                console.log('Maintenance Active: Blocking Theme & Access');
+                // Do NOT apply custom theme. Force Default.
                 if (window.themeEngine) window.themeEngine.applyTheme('default');
-
-                // Optional: Disable interactions or hide main content
                 document.querySelector('.container').style.filter = 'blur(10px)';
                 document.querySelector('.container').style.pointerEvents = 'none';
-                return; // Stop execution here
+                return; // Stop execution
             }
+
+            // Valid JSON check for success/other errors
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                throw new Error(`Server Error (${response.status})`);
+            }
+
+            const data = await response.json();
 
             // 2. Success Check
             if (response.ok && data.success) {
@@ -111,7 +129,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 authOverlay.classList.add('hidden');
 
                 const user = data.user;
-                const adminBtn = document.getElementById('admin-toggle-btn');
                 const maintenanceOverlay = document.getElementById('maintenance-overlay'); // Ensure this is defined or already global
 
                 // Status Badge Logic
@@ -130,10 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 updateStatusBadge(user.is_maintenance);
 
                 // 2. Normal Access (Admin or Maintenance OFF)
-
-                // --- Logic Gate: Maintenance vs Access ---
-
-                // Show Admin Button if applicable
+                const adminBtn = document.getElementById('admin-toggle-btn');
                 if (user.is_admin === true) {
                     console.log('Admin Access Granted');
                     adminBtn.classList.remove('hidden');
