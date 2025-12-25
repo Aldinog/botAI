@@ -28,10 +28,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ initData: tg.initData })
             });
 
+            // Handle non-JSON responses (Server Crash/Vercel Error)
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                throw new Error(`Server Error (${response.status}): ${text.slice(0, 100)}`);
+            }
+
             const data = await response.json();
 
             // 1. Maintenance Check (Priority)
             if (response.status === 503 && data.code === 'MAINTENANCE_MODE') {
+                authOverlay.classList.add('hidden'); // HIDE LOADING SCREEN
                 maintenanceOverlay.classList.remove('hidden');
 
                 // Countdown Logic if end_time is provided
@@ -168,7 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (err) {
             console.error('Login error:', err);
             authStatus.innerHTML = `
-                <div style="color: #ef4444; margin-bottom: 10px;">Network or Server Error</div>
+                <div style="color: #ef4444; margin-bottom: 10px; font-size:0.85em;">Error: ${err.message}</div>
                 <button class="glass-btn" onclick="location.reload()" style="padding: 10px 20px; font-size: 0.8rem;">Retry</button>
             `;
         }
