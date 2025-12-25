@@ -23,3 +23,9 @@ body.theme-newyear .newyear-text span {
     color: #facc15;
     /* Gold */
 }
+
+/* Explicitly Hide Christmas Logic */
+body.theme-newyear .christmas-text,
+body.theme-newyear .christmas-tree {
+    display: none !important;
+}

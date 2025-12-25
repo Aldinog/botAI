@@ -103,6 +103,11 @@ body.theme-christmas .christmas-text {
     animation: text-glow 2s infinite alternate;
 }
 
+/* Explicitly Hide New Year Logic */
+body.theme-christmas .newyear-text {
+    display: none !important;
+}
+
 @keyframes tree-pulse {
     0% {
         transform: scale(1);
