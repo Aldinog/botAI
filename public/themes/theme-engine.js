@@ -8,6 +8,16 @@ class ThemeEngine {
         this.activeTheme = localStorage.getItem('active_theme') || 'default';
         this.loadedStyles = new Set();
         this.loadedScripts = new Set();
+
+        // Registry of available themes
+        this.THEMES = ['default', 'christmas', 'newyear', 'ramadan'];
+
+        this.themePaths = {
+            'default': { css: 'themes/default.css' },
+            'christmas': { css: 'themes/christmas.css', js: 'themes/christmas.js' },
+            'newyear': { css: 'themes/newyear.css', js: 'themes/newyear.js' },
+            'ramadan': { css: 'themes/ramadan.css', js: 'themes/ramadan.js' }
+        };
     }
 
     init() {

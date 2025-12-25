@@ -1,0 +1,80 @@
+function startRamadanTheme() {
+    console.log('🌙 Starting Ramadan Theme: Emerald Nights');
+
+    // 1. Inject Decorations (Lanterns)
+    createLanterns();
+
+    // 2. Inject Moon
+    createMoon();
+
+    // 3. Inject Stars Background
+    createStars();
+}
+
+function stopRamadanTheme() {
+    console.log('🛑 Stopping Ramadan Theme');
+
+    // Remove all injected elements
+    document.querySelectorAll('.ramadan-lantern').forEach(el => el.remove());
+    document.querySelectorAll('.ramadan-moon').forEach(el => el.remove());
+    document.querySelectorAll('.ramadan-star').forEach(el => el.remove());
+}
+
+// --- Logic ---
+
+function createLanterns() {
+    // Simple SVG Lantern representation
+    const lanternSVG = `
+    <svg viewBox="0 0 50 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M25 0V10" stroke="#fbbf24" stroke-width="2"/> 
+        <path d="M15 10H35L40 25H10L15 10Z" fill="#047857" stroke="#fbbf24" stroke-width="1"/>
+        <rect x="10" y="25" width="30" height="40" rx="5" fill="#fbbf24" fill-opacity="0.3" stroke="#fbbf24" stroke-width="1"/>
+        <path d="M10 65H40L25 85L10 65Z" fill="#047857" stroke="#fbbf24" stroke-width="1"/>
+        <circle cx="25" cy="45" r="5" fill="#fbbf24" filter="blur(2px)"/>
+    </svg>
+    `;
+
+    const positions = ['left', 'center', 'right'];
+
+    positions.forEach(pos => {
+        const div = document.createElement('div');
+        div.classList.add('ramadan-lantern', pos);
+        div.innerHTML = lanternSVG;
+        document.body.appendChild(div);
+    });
+}
+
+function createMoon() {
+    const moon = document.createElement('div');
+    moon.classList.add('ramadan-moon');
+    document.body.appendChild(moon);
+}
+
+function createStars() {
+    const starCount = 30;
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.classList.add('ramadan-star');
+
+        // Random Position
+        const x = Math.random() * 100;
+        const y = Math.random() * 60; // Top 60% only
+
+        star.style.left = `${x}vw`;
+        star.style.top = `${y}vh`;
+
+        // Random Size
+        const size = Math.random() * 3 + 1;
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+
+        // Random Delay
+        star.style.animationDelay = `${Math.random() * 3}s`;
+
+        document.body.appendChild(star);
+    }
+}
+
+// Attach Global
+window.startRamadanTheme = startRamadanTheme;
+window.stopRamadanTheme = stopRamadanTheme;
