@@ -250,6 +250,30 @@ module.exports = async (req, res) => {
                 result = formatFundamentals(fundData);
                 break;
 
+            case 'indicators':
+                const analysis = await analyzeStock(symbol);
+                result = analysis.text || analysis.error;
+                break;
+
+            case 'analysis':
+                // Replicating /analisa logic
+                const candles = await fetchHistorical(symbol, { limit: 50 });
+                if (!candles || candles.length === 0) {
+                    result = `❌ Data ${symbol} tidak tersedia.`;
+                } else {
+                    const indicators = computeIndicators(candles);
+                    const prompt = formatIndicatorsForPrompt(symbol, indicators);
+                    result = await analyzeWithAI(prompt);
+                }
+                break;
+
+            case 'proxy':
+                // Replicating /proxy logic
+                const candlesProxy = await fetchHistorical(symbol, { limit: 120 });
+                const activity = analyzeProxyBrokerActivity(candlesProxy);
+                result = formatProxyBrokerActivity(symbol, activity);
+                break;
+
             case 'chart':
                 // Dynamic import to keep init fast
                 const { getChartData } = require('../src/utils/charting');
