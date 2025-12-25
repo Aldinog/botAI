@@ -87,6 +87,21 @@ body.theme-newyear #ticker-input:focus {
     box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
 }
 
+#ny-splash-screen .ny-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    background: linear-gradient(110deg, #fbbf24 30%, #fff 40%, #fff 50%, #fbbf24 60%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.4));
+    animation: zoomIn 1s ease-out, shimmer 6s infinite linear;
+    line-height: 1.1;
+}
+
 body.theme-newyear .primary-btn,
 body.theme-newyear .highlight-btn {
     background: linear-gradient(to bottom right, #fbbf24, #b45309);
