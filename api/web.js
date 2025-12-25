@@ -105,7 +105,7 @@ module.exports = async (req, res) => {
             });
             const status = memberCheck.data.result.status;
             if (!['creator', 'administrator', 'member'].includes(status)) {
-                return res.status(403).json({ error: 'Silahkan Join Aston Group untuk melanjutkan' });
+                return res.status(403).json({ error: 'Jika sudah join silahkan buka ulang App' });
             }
         } catch (e) {
             console.error('Group check failed in middleware:', e.message);
