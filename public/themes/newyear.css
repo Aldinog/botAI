@@ -6,20 +6,16 @@ body.theme-newyear {
     /* Deep Midnight Blue */
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
-
-    /* Gold & Silver Accents */
     --accent-gold: #fbbf24;
     --accent-gold-glow: #f59e0b;
     --accent-silver: #e2e8f0;
-
-    /* Gradient for Primary Actions */
     --accent-gradient: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
 
     background-color: var(--bg-dark) !important;
     color: var(--text-primary);
 }
 
-/* 2. Explicitly Hide Christmas Logic (Safety) */
+/* 2. Explicitly Hide Christmas Logic */
 body.theme-newyear .christmas-text,
 body.theme-newyear .christmas-tree,
 body.theme-newyear .snowflake,
@@ -27,9 +23,8 @@ body.theme-newyear #snow-container {
     display: none !important;
 }
 
-/* 3. Background: Deep Space & Fireworks */
+/* 3. Background & Fireworks */
 body.theme-newyear .ambient-glow {
-    /* Subtle Gold/Purple Haze */
     background:
         radial-gradient(circle at 10% 10%, rgba(251, 191, 36, 0.1), transparent 40%),
         radial-gradient(circle at 90% 90%, rgba(124, 58, 237, 0.1), transparent 40%);
@@ -40,15 +35,12 @@ body.theme-newyear #fireworks-canvas {
     opacity: 0.8;
 }
 
-/* 4. Glass Cards: Midnight Gold Edition */
+/* 4. Glass Cards */
 body.theme-newyear .glass-card {
     background: rgba(2, 6, 23, 0.7);
-    /* Darker base */
     border: 1px solid rgba(251, 191, 36, 0.3);
-    /* Gold border */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4),
         0 0 15px rgba(251, 191, 36, 0.1);
-    /* Subtle gold glow */
     backdrop-filter: blur(20px);
     transition: all 0.4s ease;
 }
@@ -59,7 +51,6 @@ body.theme-newyear .glass-card:hover {
         0 0 25px rgba(251, 191, 36, 0.2);
 }
 
-/* Header Tweaks */
 body.theme-newyear .logo-icon {
     background: linear-gradient(135deg, #fbbf24, #b45309);
     box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
@@ -72,13 +63,11 @@ body.theme-newyear .brand h1 {
     font-weight: 700;
 }
 
-/* 5. Inputs & Forms */
 body.theme-newyear #ticker-input,
 body.theme-newyear .modal-body input {
     background: rgba(15, 23, 42, 0.6);
     border-color: rgba(251, 191, 36, 0.2);
     color: #fbbf24;
-    /* Gold Text */
     font-family: 'Outfit', sans-serif;
     letter-spacing: 2px;
 }
@@ -88,7 +77,6 @@ body.theme-newyear #ticker-input:focus {
     box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
 }
 
-/* 6. Buttons: Premium Styles */
 body.theme-newyear .primary-btn,
 body.theme-newyear .highlight-btn {
     background: linear-gradient(to bottom right, #fbbf24, #b45309);
@@ -116,13 +104,7 @@ body.theme-newyear .glass-btn:not(.highlight-btn):hover {
     background: rgba(251, 191, 36, 0.05);
 }
 
-body.theme-newyear .glass-btn .btn-icon {
-    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.4));
-}
-
-/* 7. Loading Screen Overhaul: The Golden Countdown */
-
-/* Hide Default Spinner style */
+/* Loading Screen */
 body.theme-newyear .spinner {
     border: 3px solid rgba(251, 191, 36, 0.1);
     border-top-color: #fbbf24;
@@ -130,7 +112,6 @@ body.theme-newyear .spinner {
     height: 60px;
     box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
     position: relative;
-    /* We'll add a ring effect */
 }
 
 body.theme-newyear .spinner::before {
@@ -154,7 +135,6 @@ body.theme-newyear #auth-overlay .auth-box {
     box-shadow: 0 0 50px rgba(251, 191, 36, 0.15);
 }
 
-/* Custom Text Typography */
 body.theme-newyear .newyear-text {
     display: block !important;
     font-family: 'Outfit', sans-serif;
@@ -162,7 +142,6 @@ body.theme-newyear .newyear-text {
     font-weight: 800;
     text-align: center;
     margin-bottom: 24px;
-    /* Gold Gradient Text */
     background: linear-gradient(to bottom, #fff 0%, #fbbf24 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -191,9 +170,10 @@ body.theme-newyear .newyear-text span {
     }
 }
 
-/* Pulse Animation for Borders */
 @keyframes gold-pulse {
-    0% {
+
+    0%,
+    100% {
         border-color: rgba(251, 191, 36, 0.3);
         box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
     }
@@ -202,16 +182,10 @@ body.theme-newyear .newyear-text span {
         border-color: rgba(251, 191, 36, 0.8);
         box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
     }
-
-    100% {
-        border-color: rgba(251, 191, 36, 0.3);
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
-    }
 }
 
-/* --- 🚀 ROCKET LAUNCH ANIMATION --- */
+/* --- 🚀 ROCKET LAUNCH ANIMATION START --- */
 
-/* 1. Splash Screen Layer (Behind Main) */
 #ny-splash-screen {
     position: fixed;
     top: 0;
@@ -219,9 +193,7 @@ body.theme-newyear .newyear-text span {
     width: 100%;
     height: 100%;
     background: #020617;
-    /* Deepest Blue */
     z-index: 1000;
-    /* High but below Rocket-Container interaction */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -239,14 +211,11 @@ body.theme-newyear .newyear-text span {
     animation: zoomIn 1s ease-out;
 }
 
-/* 2. Rocket Element */
 .theme-rocket {
     position: absolute;
     top: -100px;
-    /* Above the container */
     left: 50%;
     transform: translateX(-50%) rotate(0deg);
-    /* Start upright but allow rotation */
     font-size: 4rem;
     color: #fff;
     filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
@@ -274,25 +243,24 @@ body.theme-newyear .newyear-text span {
     animation: flame-flicker 0.1s infinite;
 }
 
-/* 3. Launch States for Main Container */
+/* Animation Fix: Only apply transition when launching */
 body.theme-newyear .container {
-    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1);
-    /* Heavy lift ease */
     background: var(--bg-dark);
-    /* Ensure it covers splash */
     min-height: 100vh;
     z-index: 1500;
-    /* Above splash */
 }
 
-/* Initial State: Hidden Down */
+/* Initial: Hidden (No Transition to prevent jump) */
 body.theme-newyear.launch-ready .container {
     transform: translateY(100vh);
+    opacity: 0;
 }
 
-/* Active State: Launching Up */
+/* Active: Launching (With Transition) */
 body.theme-newyear.launching .container {
     transform: translateY(0);
+    opacity: 1;
+    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.5s ease;
 }
 
 @keyframes rocket-shake {
@@ -312,7 +280,9 @@ body.theme-newyear.launching .container {
 }
 
 @keyframes flame-flicker {
-    0% {
+
+    0%,
+    100% {
         transform: translateX(-50%) scale(1);
         opacity: 1;
     }
@@ -320,11 +290,6 @@ body.theme-newyear.launching .container {
     50% {
         transform: translateX(-50%) scale(1.2);
         opacity: 0.8;
-    }
-
-    100% {
-        transform: translateX(-50%) scale(0.9);
-        opacity: 1;
     }
 }
 

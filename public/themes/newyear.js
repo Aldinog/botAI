@@ -1,7 +1,7 @@
 function startNewyearTheme() {
     console.log('🚀 Starting New Year Theme: Rocket Launch Sequence');
 
-    // 1. Prepare Splash Screen (Only if not already present)
+    // 1. Prepare Splash Screen
     if (!document.getElementById('ny-splash-screen')) {
         const splash = document.createElement('div');
         splash.id = 'ny-splash-screen';
@@ -18,7 +18,7 @@ function startNewyearTheme() {
     // 2. Prepare Main Container & Rocket
     const container = document.querySelector('.container');
     if (container) {
-        // Add Ready State (Hidden Down)
+        // Add Ready State IMMEDIATELY (Hidden Down)
         document.body.classList.add('launch-ready');
 
         // Add Rocket
@@ -27,7 +27,7 @@ function startNewyearTheme() {
             rocket.id = 'theme-rocket';
             rocket.className = 'theme-rocket';
             rocket.innerHTML = '<i class="fas fa-rocket"></i>';
-            container.appendChild(rocket); // Attach to container so it moves with it
+            container.appendChild(rocket);
         }
     }
 
@@ -40,12 +40,12 @@ function startNewyearTheme() {
         // Ignite!
         document.body.classList.add('rocket-ignited');
 
-        // Play Sound? (Optional, maybe later)
-
         // Launch (Move Container Up)
         requestAnimationFrame(() => {
-            document.body.classList.add('launching');
+            // Remove 'launch-ready' (which forces translateY(100vh))
+            // Add 'launching' (which has transition + translateY(0))
             document.body.classList.remove('launch-ready');
+            document.body.classList.add('launching');
         });
 
         // Cleanup after transition (2.5s matched CSS)
@@ -65,6 +65,8 @@ function startNewyearTheme() {
 
             // Trigger Confetti Celebration (Arrival)
             triggerGoldConfetti();
+
+            // NOTE: Fireworks Loop continues in background as requested
         }, 2500);
 
     }, 2000);
@@ -73,29 +75,23 @@ function startNewyearTheme() {
 function stopNewyearTheme() {
     console.log('🛑 Stopping New Year Theme');
 
-    // Cleanup Splash
     const splash = document.getElementById('ny-splash-screen');
     if (splash) splash.remove();
 
-    // Cleanup Rocket
     const rocket = document.getElementById('theme-rocket');
     if (rocket) rocket.remove();
 
-    // Reset Classes
     document.body.classList.remove('launch-ready', 'launching', 'rocket-ignited');
 
-    // Stop Fireworks
     const canvas = document.getElementById('fireworks-canvas');
     if (canvas) {
         canvas.style.display = 'none';
     }
 }
 
-// --- Logic (Shared with previous version) ---
+// --- Logic (Shared) ---
 
 function initFireworks() {
-    // Re-using main canvas or splash specific if needed
-    // For simplicity, we use the global canvas which is fixed overlay
     const canvas = document.getElementById('fireworks-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -166,11 +162,9 @@ function initFireworks() {
 }
 
 function triggerGoldConfetti() {
-    const canvas = document.getElementById('fireworks-canvas');
-    if (!canvas) return;
     setTimeout(() => initFireworks(), 100);
 }
 
-// Attach to window for ThemeEngine
+// Attach Global
 window.startNewyearTheme = startNewyearTheme;
 window.stopNewyearTheme = stopNewyearTheme;
