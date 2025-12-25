@@ -286,12 +286,17 @@ module.exports = async (req, res) => {
       try {
         const setUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${fullUrl}`;
         console.log(`🛰 Setting webhook to: ${fullUrl}`);
-        const response = await axios.get(setUrl);
+        const setRes = await axios.get(setUrl);
+
+        // Re-fetch info to show current state
+        const infoUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo`;
+        const infoRes = await axios.get(infoUrl);
+
         return res.status(200).json({
           message: "Webhook set attempt finished",
-          telegram_response: response.data,
+          telegram_response: setRes.data,
           target_url: fullUrl,
-          current_info_after_set: webhookInfo
+          webhook_info_now: infoRes.data
         });
       } catch (err) {
         console.error("❌ setWebhook Error:", err.message);
