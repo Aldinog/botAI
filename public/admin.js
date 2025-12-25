@@ -161,21 +161,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Maintenance Logic ---
     let isMaintenanceActive = false; // State tracker
 
+    const mtModal = document.getElementById('mt-modal');
+    const mtTitle = mtModal.querySelector('h3');
+    const mtDesc = mtModal.querySelector('p');
+    const mtInputGroup = mtModal.querySelector('.input-group');
+    const confirmBtn = document.getElementById('confirm-mt-btn');
+    const cancelBtn = document.getElementById('cancel-mt-btn');
+
     toggleMtBtn.onclick = () => {
+        mtModal.classList.remove('hidden');
+
         if (isMaintenanceActive) {
-            // Turning OFF: No modal needed
-            toggleMaintenanceAPI(null);
+            // UI for Turning OFF
+            mtTitle.innerText = 'Matikan Maintenance?';
+            mtDesc.innerText = 'User akan bisa kembali mengakses aplikasi.';
+            mtInputGroup.classList.add('hidden');
+            confirmBtn.innerText = 'Matikan Sekarang';
+            confirmBtn.classList.remove('primary-btn');
+            confirmBtn.style.backgroundColor = '#ef4444'; // Red for stop
+            confirmBtn.style.borderColor = '#ef4444';
         } else {
-            // Turning ON: Show Modal
-            document.getElementById('mt-modal').classList.remove('hidden');
+            // UI for Turning ON
+            mtTitle.innerText = 'Maintenance Mode';
+            mtDesc.innerText = 'Aktifkan mode maintenance? User biasa tidak akan bisa login.';
+            mtInputGroup.classList.remove('hidden');
+            confirmBtn.innerText = 'Aktifkan';
+            confirmBtn.classList.add('primary-btn');
+            confirmBtn.style.backgroundColor = ''; // Reset
+            confirmBtn.style.borderColor = '';
         }
     };
 
-    document.getElementById('cancel-mt-btn').onclick = () => {
-        document.getElementById('mt-modal').classList.add('hidden');
+    cancelBtn.onclick = () => {
+        mtModal.classList.add('hidden');
     };
 
     document.getElementById('confirm-mt-btn').onclick = () => {
+        // If Active -> Turn Off
+        if (isMaintenanceActive) {
+            toggleMaintenanceAPI(null); // Send null to deactivate
+            document.getElementById('mt-modal').classList.add('hidden');
+            return;
+        }
+
+        // If Inactive -> Turn On logic
         const timeInput = document.getElementById('mt-time-input').value;
         let endTimeISO = null;
 

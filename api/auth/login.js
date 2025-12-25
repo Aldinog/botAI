@@ -145,12 +145,45 @@ module.exports = async (req, res) => {
         }
 
         // 5. Fetch Global Settings
-        const { data: mData } = await supabase.from('app_settings').select('value').eq('key', 'maintenance_mode').single();
-        const { data: tData } = await supabase.from('app_settings').select('value').eq('key', 'active_theme').single();
+        // 5. Fetch Global Settings
+        const { data: appSettings } = await supabase
+            .from('app_settings')
+            .select('key, value')
+            .in('key', ['maintenance_mode', 'maintenance_end_time', 'active_theme']);
 
-        const maintenanceMode = mData ? mData.value : false;
-        const activeTheme = tData ? tData.value : 'default';
+        const settingsMap = {};
+        if (appSettings) {
+            appSettings.forEach(item => settingsMap[item.key] = item.value);
+        }
+
+        let maintenanceMode = settingsMap['maintenance_mode'] || false;
+        let maintenanceEndTime = settingsMap['maintenance_end_time'];
+        const activeTheme = settingsMap['active_theme'] || 'default';
         const isAdmin = targetUser.telegram_user_id.toString() === (process.env.ADMIN_ID || '');
+
+        // Auto-Disable Logic (Sync with web.js)
+        if (maintenanceMode && maintenanceEndTime) {
+            const now = new Date();
+            const end = new Date(maintenanceEndTime);
+            if (now >= end) {
+                // Auto Turn Off
+                await supabase.from('app_settings').upsert([
+                    { key: 'maintenance_mode', value: false },
+                    { key: 'maintenance_end_time', value: null }
+                ]);
+                maintenanceMode = false;
+                maintenanceEndTime = null;
+            }
+        }
+
+        // BLOCKING LOGIC: If Maintenance is ON and NOT Admin
+        if (maintenanceMode && !isAdmin) {
+            return res.status(503).json({
+                error: 'Mohon maaf APP masih maintenance',
+                code: 'MAINTENANCE_MODE',
+                end_time: maintenanceEndTime // Return time for countdown
+            });
+        }
 
         // 6. Generate Session Token (JWT)
         const token = jwt.sign(
