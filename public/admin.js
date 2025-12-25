@@ -268,7 +268,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ action: 'toggle-maintenance', endTime })
             });
             const data = await res.json();
-            const data = await res.json();
             if (data.success) {
                 isMaintenanceActive = data.is_maintenance; // Sync state
                 // Use backend returned time, or fallback to input
