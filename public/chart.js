@@ -131,8 +131,9 @@ async function loadData(interval) {
     spinner.style.opacity = '1';
 
     if (candlestickSeries) {
-        candlestickSeries.setData([]);
-        candlestickSeries.setMarkers([]);
+        // Don't clear data/markers yet for blurred background effect
+        // candlestickSeries.setData([]); 
+        // candlestickSeries.setMarkers([]);
     }
     clearAutoFeatures();
 

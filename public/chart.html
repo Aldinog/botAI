@@ -94,8 +94,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.4);
+            /* More transparent for blur */
+            backdrop-filter: blur(8px);
             display: none;
             /* Controlled by JS */
             flex-direction: column;
@@ -251,7 +252,9 @@
         }
 
         body.theme-christmas .loading {
-            background: rgba(15, 23, 18, 0.8) !important;
+            background: rgba(6, 18, 10, 0.6) !important;
+            /* Greenish tint for Christmas */
+            backdrop-filter: blur(8px);
         }
 
         .snow-container {
@@ -324,6 +327,42 @@
 
             100% {
                 transform: translateX(-50%) scale(1);
+            }
+        }
+
+        /* Christmas Text */
+        .christmas-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            background: linear-gradient(to right, #ef4444, #facc15, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            display: none;
+            animation: text-glow 2s infinite alternate;
+        }
+
+        body.theme-christmas .christmas-text {
+            display: block;
+        }
+
+        /* Ensure STRICT hiding for default theme */
+        body:not(.theme-christmas) .christmas-text {
+            display: none !important;
+        }
+
+        body:not(.theme-christmas) .christmas-tree {
+            display: none !important;
+        }
+
+        @keyframes text-glow {
+            from {
+                text-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
+            }
+
+            to {
+                text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
             }
         }
     </style>
