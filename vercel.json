@@ -10,6 +10,14 @@
       ]
     },
     {
+      "src": "/api/webhook",
+      "dest": "api/webhook.js",
+      "methods": [
+        "POST",
+        "GET"
+      ]
+    },
+    {
       "src": "/api/web",
       "dest": "api/web.js",
       "methods": [
