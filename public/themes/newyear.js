@@ -1,7 +1,7 @@
 function startNewyearTheme() {
     console.log('🚀 Starting New Year Theme: Rocket Launch Sequence');
 
-    // 1. Prepare Splash Screen
+    // 1. Prepare Splash Screen (Only if not already present)
     if (!document.getElementById('ny-splash-screen')) {
         const splash = document.createElement('div');
         splash.id = 'ny-splash-screen';
@@ -10,6 +10,7 @@ function startNewyearTheme() {
                 HAPPY<br>NEW YEAR
                 <span style="display:block; font-size: 0.5em; color: white;">2026</span>
             </div>
+            <!-- Fireworks container exists but empty initially -->
             <div id="ny-splash-fireworks" style="position: absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
         `;
         document.body.appendChild(splash);
@@ -31,11 +32,11 @@ function startNewyearTheme() {
         }
     }
 
-    // 3. Start Fireworks on Splash
-    initFireworks();
+    // 3. DO NOT Start Fireworks yet. Wait for "Login/Load" simulation.
+    // initFireworks(); <--- REMOVED
 
     // 4. THE LAUNCH SEQUENCE
-    // Wait for user to admire splash (2 seconds)
+    // Wait for user to admire splash (2 seconds) simulating "Login Process" completion
     setTimeout(() => {
         // Ignite!
         document.body.classList.add('rocket-ignited');
@@ -63,10 +64,10 @@ function startNewyearTheme() {
 
             document.body.classList.remove('rocket-ignited');
 
-            // Trigger Confetti Celebration (Arrival)
+            // Trigger Confetti & Start Fireworks Background NOW
             triggerGoldConfetti();
+            initFireworks(); // <--- Moved here (Only after animation done)
 
-            // NOTE: Fireworks Loop continues in background as requested
         }, 2500);
 
     }, 2000);
@@ -86,6 +87,7 @@ function stopNewyearTheme() {
     const canvas = document.getElementById('fireworks-canvas');
     if (canvas) {
         canvas.style.display = 'none';
+        // Stop the loop if needed? Logic handles it via class check
     }
 }
 
@@ -162,7 +164,11 @@ function initFireworks() {
 }
 
 function triggerGoldConfetti() {
-    setTimeout(() => initFireworks(), 100);
+    // Just ensure fireworks are running (initFireworks handles it)
+    // or trigger extra burst
+    const canvas = document.getElementById('fireworks-canvas');
+    if (!canvas) return;
+    // We can assume loop is running after initFireworks called
 }
 
 // Attach Global
