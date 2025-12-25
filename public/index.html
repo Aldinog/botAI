@@ -12,6 +12,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Theme Engine initialized here -->
+    <script src="themes/theme-engine.js"></script>
 </head>
 
 <body class="premium-theme">
@@ -57,7 +59,6 @@
     <div class="ambient-glow"></div>
     <div class="glow-1"></div>
     <div class="glow-2"></div>
-    <!-- <div class="glow-3"></div> Removed as per CSS simplification -->
 
     <div class="container">
         <header class="app-header">
@@ -78,7 +79,7 @@
                 <div class="status-badge" id="app-status-badge">
                     <span class="status-dot"></span> <span id="status-text">Online</span>
                 </div>
-                <!-- Admin Access Button (Hidden by default) -->
+                <!-- Admin Access Button -->
                 <button id="admin-toggle-btn" class="admin-badge-btn hidden">
                     <i class="fas fa-user-shield"></i>
                     <span>Admin</span>
@@ -132,11 +133,6 @@
                 </div>
             </div>
 
-
-
-            <!-- Output Area (Unified Terminal) -->
-            <!-- Tab contents removed to simplify UI -->
-
             <div class="glass-card output-card hidden" id="terminal-card">
                 <div class="card-header">
                     <h3>Analysis Result</h3>
@@ -181,8 +177,6 @@
             </div>
         </div>
     </div>
-
-
 
     <!-- Maintenance Overlay (Popup) -->
     <div id="maintenance-overlay" class="modal-overlay hidden" style="z-index: 9999; backdrop-filter: blur(20px);">

@@ -34,29 +34,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 localStorage.setItem('aston_session_token', sessionToken);
                 authOverlay.classList.add('hidden');
 
-                // --- Seasonal Theme Logic ---
-                // --- Seasonal Theme Logic ---
+                // --- Seasonal Theme Logic (via Engine) ---
                 const activeTheme = data.user.active_theme || 'default';
-                localStorage.setItem('active_theme', activeTheme); // Persist theme
-
-                // Clear previous theme first
-                clearChristmasTheme();
-
-                if (activeTheme !== 'default') {
-                    document.body.classList.add(`theme-${activeTheme}`);
-                    if (activeTheme === 'christmas') {
-                        initSnowflakes();
-                        const tree = document.getElementById('christmas-tree');
-                        if (tree) tree.classList.remove('hidden');
-                        const text = document.getElementById('christmas-text');
-                        if (text) text.classList.remove('hidden');
-                        if (authStatus) authStatus.innerText = 'Merry Christmas! Prossesing... 🎄';
-                    } else if (activeTheme === 'newyear') {
-                        initFireworks();
-                        const text = document.getElementById('newyear-text');
-                        if (text) text.classList.remove('hidden');
-                        if (authStatus) authStatus.innerText = 'Happy New Year! Processing... 🎆';
-                    }
+                if (window.themeEngine) {
+                    await window.themeEngine.applyTheme(activeTheme);
+                } else {
+                    console.warn('ThemeEngine not loaded');
                 }
 
                 // --- Maintenance & Admin Logic ---
@@ -120,24 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
     };
-
-    // Load persisted theme immediately
-    const persistedTheme = localStorage.getItem('active_theme');
-    if (persistedTheme && persistedTheme !== 'default') {
-        document.body.classList.add(`theme-${persistedTheme}`);
-        if (persistedTheme === 'christmas') {
-            initSnowflakes();
-            // Show tree & text immediately
-            const tree = document.getElementById('christmas-tree');
-            if (tree) tree.classList.remove('hidden');
-            const text = document.getElementById('christmas-text');
-            if (text) text.classList.remove('hidden');
-        } else if (persistedTheme === 'newyear') {
-            initFireworks();
-            const text = document.getElementById('newyear-text');
-            if (text) text.classList.remove('hidden');
-        }
-    }
 
     // Auto-login on start
     await login();
@@ -321,132 +286,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Close Terminal Logic - REMOVED as requested
-    // closeTerminalBtn.addEventListener('click', () => {
-    //     terminalCard.classList.add('hidden');
-    // });
-
-
     // Input Focus Effect
     tickerInput.addEventListener('input', () => {
         tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)';
     });
 });
-
-function initSnowflakes() {
-    const container = document.getElementById('snow-container');
-    if (!container) return;
-
-    const count = 20; // Reduced number of flakes for subtle effect
-    const symbols = ['❄', '❅', '❆', '✧'];
-
-    for (let i = 0; i < count; i++) {
-        const flake = document.createElement('div');
-        flake.className = 'snowflake';
-        flake.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-        flake.style.left = Math.random() * 100 + 'vw';
-        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
-        flake.style.opacity = Math.random();
-        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
-        flake.style.animationDelay = Math.random() * 5 + 's';
-        container.appendChild(flake);
-    }
-}
-
-function clearChristmasTheme() {
-    document.body.classList.remove('theme-christmas');
-    const tree = document.getElementById('christmas-tree');
-    if (tree) tree.classList.add('hidden');
-    const text = document.getElementById('christmas-text');
-    if (text) text.classList.add('hidden');
-
-    // Clear snowflakes
-    const container = document.getElementById('snow-container');
-    if (container) container.innerHTML = '';
-}
-
-function clearNewYearTheme() {
-    document.body.classList.remove('theme-newyear');
-    const text = document.getElementById('newyear-text');
-    if (text) text.classList.add('hidden');
-    stopFireworks();
-}
-
-let fireworksInterval;
-let animationFrameId;
-
-function initFireworks() {
-    const canvas = document.getElementById('fireworks-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvas.style.display = 'block';
-
-    let particles = [];
-    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#FFA500'];
-
-    function createParticle(x, y) {
-        const particleCount = 30;
-        for (let i = 0; i < particleCount; i++) {
-            particles.push({
-                x: x,
-                y: y,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                radius: Math.random() * 3 + 1,
-                velocity: {
-                    x: (Math.random() - 0.5) * 6,
-                    y: (Math.random() - 0.5) * 6
-                },
-                alpha: 1,
-                decay: Math.random() * 0.015 + 0.01
-            });
-        }
-    }
-
-    function loop() {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Trail effect
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = 'lighter';
-
-        particles.forEach((p, index) => {
-            if (p.alpha <= 0) {
-                particles.splice(index, 1);
-            } else {
-                p.velocity.y += 0.05; // Gravity
-                p.x += p.velocity.x;
-                p.y += p.velocity.y;
-                p.alpha -= p.decay;
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.alpha;
-                ctx.fill();
-            }
-        });
-        animationFrameId = requestAnimationFrame(loop);
-    }
-
-    loop();
-
-    // Spawn fireworks randomly
-    fireworksInterval = setInterval(() => {
-        createParticle(Math.random() * canvas.width, Math.random() * canvas.height / 2);
-    }, 800);
-}
-
-function stopFireworks() {
-    clearInterval(fireworksInterval);
-    cancelAnimationFrame(animationFrameId);
-    const canvas = document.getElementById('fireworks-canvas');
-    if (canvas) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        canvas.style.display = 'none';
-    }
-}
 
 // Simple Confetti for Analysis Success
 function triggerConfetti() {

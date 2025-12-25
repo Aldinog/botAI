@@ -1,0 +1,25 @@
+/* --- 🎆 NEW YEAR THEME --- */
+body.theme-newyear {
+    /* Slightly darker/gold tint? */
+}
+
+/* Fireworks Canvas Visibility */
+body.theme-newyear #fireworks-canvas {
+    display: block !important;
+}
+
+body.theme-newyear .newyear-text {
+    display: block !important;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+body.theme-newyear .newyear-text span {
+    font-size: 0.8em;
+    color: #facc15;
+    /* Gold */
+}

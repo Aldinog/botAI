@@ -1,16 +1,4 @@
-:root {
-    --bg-dark: #0f172a;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --accent-blue: #6366f1;
-    --accent-violet: #8b5cf6;
-    --accent-gradient: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --card-radius: 20px;
-    --font-heading: 'Outfit', sans-serif;
-    --font-body: 'Inter', sans-serif;
-}
+/* :root Variables moved to themes/default.css */
 
 * {
     box-sizing: border-box;
@@ -20,8 +8,7 @@
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-primary);
+    /* Background color handled by theme css */
     font-family: var(--font-body);
     min-height: 100vh;
     overflow-x: hidden;
@@ -31,10 +18,6 @@ body {
 }
 
 /* Ambient Background Glows */
-/* Ambient Background Glows */
-/* Ambient Background Glows */
-/* Ambient Background Glows */
-/* Static Premium Background */
 .ambient-glow {
     position: fixed;
     top: 0;
@@ -59,8 +42,6 @@ body {
     display: none;
 }
 
-
-
 /* Layout */
 .container {
     max-width: 500px;
@@ -68,7 +49,6 @@ body {
     padding: 24px;
     width: 100%;
     z-index: 10;
-    /* Ensure strictly above background */
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -129,9 +109,7 @@ body {
 
 /* Glass Cards */
 .glass-card {
-    /* More substantial background to pop against vibrant waves */
     background: rgba(15, 23, 42, 0.65);
-    /* Darker, higher opacity */
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(16px);
     border-radius: var(--card-radius);
@@ -189,8 +167,6 @@ body {
     gap: 16px;
 }
 
-/* Removed span 2 rule to allow side-by-side layout for 6 items */
-
 .glass-btn {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--glass-border);
@@ -213,7 +189,6 @@ body {
     position: relative;
 }
 
-/* Shine Animation */
 .highlight-btn::after {
     content: '';
     position: absolute;
@@ -316,8 +291,6 @@ body {
     font-weight: 600;
 }
 
-/* ... existing output css ... */
-
 /* Modal Inputs */
 .modal-body input {
     width: 100%;
@@ -407,7 +380,6 @@ body {
     }
 }
 
-/* Restored Modal Styles */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -428,7 +400,6 @@ body {
     display: none;
 }
 
-/* Close Button */
 #close-review {
     position: absolute;
     top: -15px;
@@ -457,7 +428,6 @@ body {
     color: var(--accent-blue);
 }
 
-/* Updated Info Card (Powered By) */
 .info-card {
     margin-top: auto;
     padding-top: 30px;
@@ -473,7 +443,6 @@ body {
     text-transform: uppercase;
 }
 
-/* Loading Spinner */
 .loading-pulse {
     display: flex;
     flex-direction: column;
@@ -516,10 +485,8 @@ body {
     }
 }
 
-/* Ensure Modal Content is Relative for Absolute Positioned Close Button */
 .modal-content {
     position: relative;
-    /* ... existing styles ... */
     width: 100%;
     max-width: 400px;
     background: rgba(15, 23, 42, 0.9);
@@ -527,7 +494,6 @@ body {
     border-radius: var(--card-radius);
     padding: 24px;
     overflow: visible;
-    /* modification to allow button to hang out if needed, or stick to edges */
 }
 
 .modal-body {
@@ -536,19 +502,6 @@ body {
     gap: 16px;
 }
 
-.primary-btn {
-    width: 100%;
-    justify-content: center;
-    background: var(--accent-blue);
-    font-weight: 600;
-    margin-top: 8px;
-}
-
-.primary-btn:hover {
-    background: var(--accent-violet);
-}
-
-/* Admin Badge Button Refined */
 .admin-badge-btn {
     font-size: 0.75rem;
     font-weight: 700;
@@ -557,7 +510,6 @@ body {
     align-items: center;
     gap: 8px;
     background: rgba(139, 92, 246, 0.2);
-    /* Tinted Purple Glass */
     border: 1px solid rgba(139, 92, 246, 0.3);
     padding: 6px 14px;
     border-radius: 20px;
@@ -579,7 +531,6 @@ body {
 .admin-badge-btn i {
     font-size: 0.8rem;
     color: #f59e0b;
-    /* Golden Shield */
 }
 
 #admin-toggle-btn.hidden {
@@ -614,14 +565,12 @@ body {
     padding-bottom: 15px;
 }
 
-/* Toggle Switch Styling for MT */
 #toggle-mt-btn.active {
     background: #ef4444;
     color: white;
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
 }
 
-/* Blinking Maintenance Status */
 .maintenance-active .status-dot {
     background-color: #f59e0b;
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
@@ -642,215 +591,4 @@ body {
     50% {
         opacity: 0.3;
     }
-}
-
-/* =========================================
-   SEASONAL THEMES
-   ========================================= */
-
-/* --- 🎄 CHRISTMAS THEME --- */
-body.theme-christmas {
-    background-color: #06120a;
-    /* Dark Forest Green */
-}
-
-body.theme-christmas .ambient-glow {
-    background: radial-gradient(circle at 20% 20%, rgba(239, 68, 68, 0.15), transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.15), transparent 40%);
-}
-
-body.theme-christmas .glass-card {
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    background: rgba(15, 23, 18, 0.7);
-}
-
-body.theme-christmas .glass-card::before {
-    content: '🎄';
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    font-size: 1.2rem;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
-}
-
-body.theme-christmas .primary-btn,
-body.theme-christmas .highlight-btn {
-    background: linear-gradient(135deg, #ef4444, #b91c1c);
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-}
-
-/* Snowflake System */
-.snow-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1000;
-    display: none;
-}
-
-body.theme-christmas .snow-container {
-    display: block;
-}
-
-.snowflake {
-    position: absolute;
-    top: -10px;
-    color: #fff;
-    font-size: 1em;
-    user-select: none;
-    z-index: 1000;
-    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
-    animation: fall linear infinite;
-    opacity: 0.4;
-}
-
-@keyframes fall {
-    0% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(110vh) rotate(360deg);
-        opacity: 0.3;
-    }
-}
-
-/* Christmas Loading Adjustments */
-body.theme-christmas .spinner {
-    border-top-color: #ef4444;
-    position: relative;
-}
-
-body.theme-christmas .spinner::after {
-    content: '🎅';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.5rem;
-}
-
-/* Christmas Tree */
-.christmas-tree {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    pointer-events: none;
-    animation: tree-pulse 2s infinite;
-    z-index: 500;
-    margin-bottom: 10px;
-    display: none;
-}
-
-body.theme-christmas .christmas-tree {
-    display: block;
-}
-
-/* Christmas Text */
-.christmas-text {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 1.1rem;
-    background: linear-gradient(to right, #ef4444, #facc15, #22c55e);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 15px;
-    display: none;
-    animation: text-glow 2s infinite alternate;
-}
-
-body.theme-christmas .christmas-text {
-    display: block;
-}
-
-.christmas-tree.hidden {
-    display: none !important;
-}
-
-.christmas-text.hidden {
-    display: none !important;
-}
-
-@keyframes tree-pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes text-glow {
-    from {
-        text-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
-    }
-
-    to {
-        text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
-    }
-}
-
-/* --- New Year Theme --- */
-body.theme-newyear {
-    background: linear-gradient(to bottom, #020617, #1e1b4b);
-    color: #fff;
-}
-
-body.theme-newyear .loading {
-    background: rgba(15, 23, 42, 0.4) !important;
-    backdrop-filter: blur(8px);
-}
-
-.newyear-text {
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 1.4rem;
-    /* Slightly larger */
-    text-align: center;
-    background: linear-gradient(to right, #fbfb04, #ffffff, #facc15);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 15px;
-    display: none;
-    line-height: 1.2;
-    animation: shimmer 3s infinite linear;
-}
-
-body.theme-newyear .newyear-text {
-    display: block;
-}
-
-body.theme-newyear #fireworks-canvas {
-    display: block !important;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: -200% center;
-    }
-
-    100% {
-        background-position: 200% center;
-    }
-}
-
-/* Ensure canvas is behind UI but visible */
-#fireworks-canvas {
-    z-index: 0;
-}
-
-/* Ensure Confetti is Topmost */
-#confetti-canvas {
-    z-index: 9999;
 }
