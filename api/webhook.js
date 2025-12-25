@@ -11,7 +11,7 @@ const { fetchFundamentals, formatFundamentals } = require("../src/utils/yahoofin
 const { computeIndicators, formatIndicatorsForPrompt } = require("../src/utils/indicators");
 const { analyzeWithAI } = require("../src/utils/ai");
 const { analyzeStock } = require("../src/utils/analisys");
-const { isAllowedGroup } = require("../src/utils/groupControl");
+const { isAllowedGroup, allowedGroups } = require("../src/utils/groupControl");
 const { fetchHarga } = require('../src/utils/harga');
 const { generateReview } = require('../src/utils/review');
 

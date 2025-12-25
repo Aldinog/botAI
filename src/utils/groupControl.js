@@ -7,4 +7,4 @@ function isAllowedGroup(chatId) {
   return allowedGroups.includes(chatId.toString());
 }
 
-module.exports = { isAllowedGroup };
+module.exports = { isAllowedGroup, allowedGroups };
