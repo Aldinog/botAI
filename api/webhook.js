@@ -248,33 +248,71 @@ bot.help((ctx) => {
 bot.command(["indikator", "harga", "broksum", "proxy", "review", "signal", "analisa", "fundamental", "profile"], bot_reply_redirect);
 
 // =========================
+// CATCH-ALL LOGGING
+// =========================
+bot.on('text', (ctx) => {
+  console.log(`🤖 Bot received text: "${ctx.message.text}" from @${ctx.from?.username || ctx.from?.first_name || 'unknown'}`);
+});
+
+// =========================
 // WEBHOOK (Vercel Friendly)
 // =========================
 module.exports = async (req, res) => {
-  // Diagnostic for root URL
+  const protocol = req.headers['x-forwarded-proto'] || 'http';
+  const host = req.headers['host'];
+  const fullUrl = `${protocol}://${host}${req.url.split('?')[0]}`;
+
+  // 🔹 Diagnostic for GET requests
   if (req.method === "GET") {
+    const { set } = req.query;
+
+    // Optional: Auto-set webhook if ?set=true is passed
+    if (set === "true" && TELEGRAM_TOKEN) {
+      try {
+        const setUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${fullUrl}`;
+        const response = await axios.get(setUrl);
+        return res.status(200).json({
+          message: "Webhook set attempt finished",
+          telegram_response: response.data,
+          target_url: fullUrl
+        });
+      } catch (err) {
+        return res.status(500).json({ error: "Failed to set webhook", detail: err.message });
+      }
+    }
+
     return res.status(200).json({
       status: "Bot Running",
       token_configured: !!TELEGRAM_TOKEN,
+      token_sample: TELEGRAM_TOKEN ? TELEGRAM_TOKEN.slice(0, 5) + "..." : "NONE",
       allowed_groups_count: allowedGroups.length,
-      mode: "Webhook"
+      current_path: req.url,
+      full_webhook_url: fullUrl,
+      tip: "Visit this URL with ?set=true to automatically register this webhook with Telegram."
     });
   }
 
+  // 🔹 Handle POST from Telegram
   if (req.method === "POST") {
     try {
       if (!req.body || Object.keys(req.body).length === 0) {
-        console.warn("⚠️ Webhook received empty body");
+        console.warn("⚠️ Webhook received empty body (Check if Vercel body-parser is enabled)");
         return res.status(200).send("EMPTY_BODY");
       }
 
-      console.log(`📩 Webhook update received: ${req.body.update_id}`);
+      const updateId = req.body.update_id;
+      const type = Object.keys(req.body).find(k => k !== 'update_id');
+      const text = req.body.message?.text || "non-text";
+      const from = req.body.message?.from?.username || "unknown";
+
+      console.log(`📩 [Update ${updateId}] From: @${from} | Type: ${type} | Text: ${text}`);
 
       await bot.handleUpdate(req.body);
+
+      console.log(`✅ [Update ${updateId}] Processed successfully`);
       return res.status(200).send("OK");
     } catch (err) {
       console.error("❌ Webhook Handling Error:", err.message);
-      // We still return 200 to prevent Telegram from hammering the endpoint with retries
       return res.status(200).send("OK_WITH_ERROR");
     }
   }
