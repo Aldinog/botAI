@@ -156,6 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let mtInterval;
 
     const updateMTUI = (isOn, endTime) => {
+        console.log('UpdateMTUI called. Active:', isOn, 'EndTime:', endTime);
         isMaintenanceActive = isOn;
         statusBadge.classList.toggle('maintenance-active', isOn);
         statusText.innerText = isOn ? 'Maintenance' : 'Online';
@@ -267,10 +268,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 body: JSON.stringify({ action: 'toggle-maintenance', endTime })
             });
             const data = await res.json();
+            const data = await res.json();
             if (data.success) {
                 isMaintenanceActive = data.is_maintenance; // Sync state
-                // Pass the requested endTime since backend might not return it in this specific endpoint yet
-                updateMTUI(data.is_maintenance, endTime);
+                // Use backend returned time, or fallback to input
+                const finalTime = data.maintenance_end_time || endTime;
+                console.log('MT Toggle Success. State:', isMaintenanceActive, 'Time:', finalTime);
+                updateMTUI(data.is_maintenance, finalTime);
             }
         } catch (e) { console.error('MT Error', e); }
     };

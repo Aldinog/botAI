@@ -154,7 +154,14 @@ module.exports = async (req, res) => {
             }
 
             await supabase.from('app_settings').upsert(updates);
-            return res.status(200).json({ success: true, is_maintenance: newState });
+
+            // Return the new end_time so frontend can update immediately
+            const returnedEndTime = newState ? endTime : null;
+            return res.status(200).json({
+                success: true,
+                is_maintenance: newState,
+                maintenance_end_time: returnedEndTime
+            });
         }
 
         if (action === 'watchlist/list') {
