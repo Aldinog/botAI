@@ -62,7 +62,9 @@ function startNewyearTheme() {
             document.body.classList.remove('rocket-ignited');
 
             // User Request: Keep Splash visible behind. 
-            // So we DO NOT remove splash.
+            // So we DO NOT remove splash. But we must make it transparent so we can see the fireworks (z-index 0) behind it.
+            const splash = document.getElementById('ny-splash-screen');
+            if (splash) splash.style.background = 'transparent';
 
             // Make container semi-transparent glass so we can see the text/fireworks behind
             const container = document.querySelector('.container');
