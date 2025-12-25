@@ -155,25 +155,49 @@ async function markdownToTelegramHTML(md) {
 }
 
 // =========================
+// REDIRECT LOGIC
+// =========================
+const MINI_APP_URL = "https://t.me/astonaicbot/astonmology";
+
+const bot_reply_redirect = async (ctx) => {
+  return ctx.reply("<b>Halo,,,Silahkan buka App AstonAI untuk menggunakan bot ini.</b>", {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🚀 Buka App", url: MINI_APP_URL }]
+      ]
+    }
+  });
+};
+
+// =========================
 // VALIDASI GROUP
 // =========================
 bot.use(async (ctx, next) => {
   const chatId = ctx.chat?.id;
-  const chatUser = ctx.chat?.username;
+  const chatType = ctx.chat?.type;
+  const chatUser = ctx.from?.username || ctx.from?.first_name || "Unknown";
+
   if (!chatId) return next();
 
+  // 🔹 ALLOW PRIVATE CHATS (Direct Message)
+  if (chatType === 'private') {
+    return next();
+  }
+
+  // 🔹 CHECK ALLOWED GROUPS
   if (!isAllowedGroup(chatId)) {
-    console.log(`❌User pakai Bot ${chatId} (${chatUser})`);
-    // Hanya balas jika itu adalah pesan teks/perintah dari user
-    // Jangan balas update membership (misal bot dikick) karena akan 403
-    if (ctx.message) {
+    console.log(`🚫 Unauthorized Group/Channel: ${chatId} (User: ${chatUser})`);
+
+    // Only reply to actual messages/commands
+    if (ctx.message && ctx.message.text) {
       try {
-        await ctx.reply("Halo,,,Silahkan buka App AstonAI untuk menggunakan bot ini.");
+        return bot_reply_redirect(ctx);
       } catch (err) {
         console.error("Gagal mengirim pesan penolakan group:", err.message);
       }
     }
-    return; // Berhenti di sini, jangan lanjut ke next()
+    return; // Block
   }
 
   return next();
@@ -185,7 +209,7 @@ bot.use(async (ctx, next) => {
 bot.start((ctx) => {
   const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
   console.log(`${user} menggunakan start`);
-  return ctx.reply("🤖 Bot aktif");
+  return bot_reply_redirect(ctx);
 });
 
 bot.command("cekchatid", (ctx) => {
@@ -193,18 +217,6 @@ bot.command("cekchatid", (ctx) => {
   const userId = ctx.from.id;
   return ctx.reply(`🆔 <b>Chat Info</b>\n\n• Chat ID: <code>${chatId}</code>\n• User ID: <code>${userId}</code>`, { parse_mode: "HTML" });
 });
-const MINI_APP_URL = "https://t.me/astonaicbot/astonmology";
-
-const bot_reply_redirect = async (ctx) => {
-  return ctx.reply("🤖 <b>Silakan gunakan App Astonmology untuk fitur ini.</b>", {
-    parse_mode: "HTML",
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: "🚀 Buka App", url: MINI_APP_URL }]
-      ]
-    }
-  });
-};
 
 bot.help((ctx) => {
   const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
