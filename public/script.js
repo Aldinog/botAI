@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     document.body.classList.add(`theme-${activeTheme}`);
                     if (activeTheme === 'christmas') {
                         initSnowflakes();
+                        const tree = document.getElementById('christmas-tree');
+                        if (tree) tree.classList.remove('hidden');
+                        const text = document.getElementById('christmas-text');
+                        if (text) text.classList.remove('hidden');
                         if (authStatus) authStatus.innerText = 'Merry Christmas! Prossesing... 🎄';
                     }
                 }
@@ -118,9 +122,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.body.classList.add(`theme-${persistedTheme}`);
         if (persistedTheme === 'christmas') {
             initSnowflakes();
-            // Show tree immediately if overlay is visible
+            // Show tree & text immediately
             const tree = document.getElementById('christmas-tree');
             if (tree) tree.classList.remove('hidden');
+            const text = document.getElementById('christmas-text');
+            if (text) text.classList.remove('hidden');
         }
     }
 
@@ -342,7 +348,9 @@ function clearChristmasTheme() {
     document.body.classList.remove('theme-christmas');
     const tree = document.getElementById('christmas-tree');
     if (tree) tree.classList.add('hidden');
-    
+    const text = document.getElementById('christmas-text');
+    if (text) text.classList.add('hidden');
+
     // Clear snowflakes
     const container = document.getElementById('snow-container');
     if (container) container.innerHTML = '';

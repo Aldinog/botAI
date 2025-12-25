@@ -736,21 +736,65 @@ body.theme-christmas .spinner::after {
 
 /* Christmas Tree */
 .christmas-tree {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 80px;
+    position: relative;
+    width: 60px;
+    height: 60px;
     pointer-events: none;
     animation: tree-pulse 2s infinite;
     z-index: 500;
+    margin-bottom: 10px;
+    display: none;
 }
 
-.christmas-tree.hidden { display: none; }
+body.theme-christmas .christmas-tree {
+    display: block;
+}
+
+/* Christmas Text */
+.christmas-text {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.1rem;
+    background: linear-gradient(to right, #ef4444, #facc15, #22c55e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 15px;
+    display: none;
+    animation: text-glow 2s infinite alternate;
+}
+
+body.theme-christmas .christmas-text {
+    display: block;
+}
+
+.christmas-tree.hidden {
+    display: none !important;
+}
+
+.christmas-text.hidden {
+    display: none !important;
+}
 
 @keyframes tree-pulse {
-    0% { transform: translateX(-50%) scale(1); }
-    50% { transform: translateX(-50%) scale(1.1); }
-    100% { transform: translateX(-50%) scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes text-glow {
+    from {
+        text-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
+    }
+
+    to {
+        text-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
+    }
 }
