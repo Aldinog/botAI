@@ -168,27 +168,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (mtInterval) clearInterval(mtInterval);
 
-        if (isOn && endTime) {
+        if (isOn) {
             countdownEl.style.display = 'block';
-            const end = new Date(endTime).getTime();
 
-            mtInterval = setInterval(() => {
-                const now = new Date().getTime();
-                const diff = end - now;
+            if (endTime) {
+                const end = new Date(endTime).getTime();
 
-                if (diff < 0) {
-                    clearInterval(mtInterval);
-                    timerEl.innerText = "00:00:00 (Finishing...)";
-                    setTimeout(() => location.reload(), 2000);
-                    return;
-                }
+                // Immediate update
+                const updateTimer = () => {
+                    const now = new Date().getTime();
+                    const diff = end - now;
 
-                const h = Math.floor(diff / (1000 * 60 * 60));
-                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    if (diff < 0) {
+                        clearInterval(mtInterval);
+                        timerEl.innerText = "00:00:00 (Finishing...)";
+                        setTimeout(() => location.reload(), 2000);
+                        return;
+                    }
 
-                timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-            }, 1000);
+                    const h = Math.floor(diff / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                };
+
+                updateTimer(); // Run immediately
+                mtInterval = setInterval(updateTimer, 1000);
+            } else {
+                timerEl.innerText = "Manual Mode (No Timer)";
+            }
         } else {
             countdownEl.style.display = 'none';
         }
