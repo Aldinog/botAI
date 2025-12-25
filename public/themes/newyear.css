@@ -84,234 +84,248 @@ body.theme-newyear .modal-body input {
 
 body.theme-newyear #ticker-input:focus {
     border-color: #fbbf24;
-    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.15);
-}
 
-#ny-splash-screen .ny-title {
-    font-size: 3.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 5px;
-    background: linear-gradient(110deg, #fbbf24 30%, #fff 40%, #fff 50%, #fbbf24 60%);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.4));
-    animation: zoomIn 1s ease-out, shimmer 6s infinite linear;
-    line-height: 1.1;
-}
-
-body.theme-newyear .primary-btn,
-body.theme-newyear .highlight-btn {
-    background: linear-gradient(to bottom right, #fbbf24, #b45309);
-    border: none;
-    color: #fff;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
-}
-
-body.theme-newyear .primary-btn:hover,
-body.theme-newyear .highlight-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
-    filter: brightness(1.1);
-}
-
-body.theme-newyear .glass-btn:not(.highlight-btn) {
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-body.theme-newyear .glass-btn:not(.highlight-btn):hover {
-    border-color: rgba(251, 191, 36, 0.5);
-    background: rgba(251, 191, 36, 0.05);
-}
-
-/* Loading Screen */
-body.theme-newyear .spinner {
-    border: 3px solid rgba(251, 191, 36, 0.1);
-    border-top-color: #fbbf24;
-    width: 60px;
-    height: 60px;
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
-    position: relative;
-}
-
-body.theme-newyear .spinner::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    border-top-color: #f59e0b;
-    animation: spin 3s linear infinite reverse;
-}
-
-body.theme-newyear .loading,
-body.theme-newyear .loading-content,
-body.theme-newyear #auth-overlay .auth-box {
-    background: rgba(2, 6, 23, 0.9) !important;
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    box-shadow: 0 0 50px rgba(251, 191, 36, 0.15);
-}
-
-body.theme-newyear .newyear-text {
-    display: block !important;
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.5rem;
-    font-weight: 800;
-    text-align: center;
-    margin-bottom: 24px;
-    background: linear-gradient(to bottom, #fff 0%, #fbbf24 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
-    animation: title-float 3s ease-in-out infinite;
-}
-
-body.theme-newyear .newyear-text span {
-    display: block;
-    margin-top: 5px;
-    font-size: 2rem !important;
-    color: #fbbf24 !important;
-    letter-spacing: 4px;
-    text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
-}
-
-@keyframes title-float {
-
-    0%,
-    100% {
-        transform: translateY(0);
+    /* Sub Text (Below Countdown) */
+    #ny-sub-text {
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 3px;
+        margin-bottom: 20px;
+        background: linear-gradient(to right, #fff, #fbbf24, #fff);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 4s infinite linear;
     }
 
-    50% {
-        transform: translateY(-5px);
-    }
-}
-
-@keyframes gold-pulse {
-
-    0%,
-    100% {
-        border-color: rgba(251, 191, 36, 0.3);
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
-    }
-
-    50% {
-        border-color: rgba(251, 191, 36, 0.8);
-        box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
-    }
-}
-
-/* --- 5. ✨ Enhancements: Shimmer, Countdown, Clicks --- */
-
-/* Shimmer Effect for Logo */
-body.theme-newyear .brand h1 {
-    background: linear-gradient(110deg, #fbbf24 30%, #fff 40%, #fff 50%, #fbbf24 60%);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 5s infinite linear;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: 200% 0;
+    /* Countdown Widget (In-App Premium) */
+    #ny-countdown {
+        margin: 0 0 10px 0;
+        /* Reduced bottom margin */
+        padding: 15px;
+        background: rgba(2, 6, 23, 0.4);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 16px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        animation: slideDown 0.5s ease-out;
     }
 
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* Countdown Widget (In-App Premium) */
-#ny-countdown {
-    margin: 0 0 20px 0;
-    padding: 15px;
-    background: rgba(2, 6, 23, 0.4);
-    border: 1px solid rgba(251, 191, 36, 0.2);
-    border-radius: 16px;
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    animation: slideDown 0.5s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
+    body.theme-newyear .highlight-btn {
+        background: linear-gradient(to bottom right, #fbbf24, #b45309);
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.countdown-unit {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 45px;
-}
-
-.countdown-val {
-    font-size: 1.5rem;
-    font-weight: 700;
-    background: linear-gradient(to bottom, #fff, #fbbf24);
-    -webkit-background-clip: text;
-    background-clip: text;
-    /* Standard property */
-    -webkit-text-fill-color: transparent;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.2;
-}
-
-.countdown-label {
-    font-size: 0.65rem;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 2px;
-}
-
-.countdown-separator {
-    font-size: 1.5rem;
-    color: rgba(251, 191, 36, 0.5);
-    margin-top: -12px;
-}
-
-/* Magic Gold Click Particle */
-.gold-particle {
-    position: fixed;
-    width: 6px;
-    height: 6px;
-    background: #fbbf24;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    box-shadow: 0 0 10px #fbbf24;
-    animation: particle-pop 0.8s ease-out forwards;
-}
-
-@keyframes particle-pop {
-    0% {
-        transform: scale(1);
-        opacity: 1;
+    body.theme-newyear .primary-btn:hover,
+    body.theme-newyear .highlight-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+        filter: brightness(1.1);
     }
 
-    100% {
-        transform: translate(var(--mx), var(--my)) scale(0);
-        opacity: 0;
+    body.theme-newyear .glass-btn:not(.highlight-btn) {
+        border-color: rgba(255, 255, 255, 0.1);
     }
-}
+
+    body.theme-newyear .glass-btn:not(.highlight-btn):hover {
+        border-color: rgba(251, 191, 36, 0.5);
+        background: rgba(251, 191, 36, 0.05);
+    }
+
+    /* Loading Screen */
+    body.theme-newyear .spinner {
+        border: 3px solid rgba(251, 191, 36, 0.1);
+        border-top-color: #fbbf24;
+        width: 60px;
+        height: 60px;
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+        position: relative;
+    }
+
+    body.theme-newyear .spinner::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        border-top-color: #f59e0b;
+        animation: spin 3s linear infinite reverse;
+    }
+
+    body.theme-newyear .loading,
+    body.theme-newyear .loading-content,
+    body.theme-newyear #auth-overlay .auth-box {
+        background: rgba(2, 6, 23, 0.9) !important;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        box-shadow: 0 0 50px rgba(251, 191, 36, 0.15);
+    }
+
+    body.theme-newyear .newyear-text {
+        display: block !important;
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 24px;
+        background: linear-gradient(to bottom, #fff 0%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.4));
+        animation: title-float 3s ease-in-out infinite;
+    }
+
+    body.theme-newyear .newyear-text span {
+        display: block;
+        margin-top: 5px;
+        font-size: 2rem !important;
+        color: #fbbf24 !important;
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+    }
+
+    @keyframes title-float {
+
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+
+    @keyframes gold-pulse {
+
+        0%,
+        100% {
+            border-color: rgba(251, 191, 36, 0.3);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+        }
+
+        50% {
+            border-color: rgba(251, 191, 36, 0.8);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
+        }
+    }
+
+    /* --- 5. ✨ Enhancements: Shimmer, Countdown, Clicks --- */
+
+    /* Shimmer Effect for Logo */
+    body.theme-newyear .brand h1 {
+        background: linear-gradient(110deg, #fbbf24 30%, #fff 40%, #fff 50%, #fbbf24 60%);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmer 5s infinite linear;
+    }
+
+    @keyframes shimmer {
+        0% {
+            background-position: 200% 0;
+        }
+
+        100% {
+            background-position: -200% 0;
+        }
+    }
+
+    /* Countdown Widget (In-App Premium) */
+    #ny-countdown {
+        margin: 0 0 20px 0;
+        padding: 15px;
+        background: rgba(2, 6, 23, 0.4);
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        border-radius: 16px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        animation: slideDown 0.5s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .countdown-unit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 45px;
+    }
+
+    .countdown-val {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(to bottom, #fff, #fbbf24);
+        -webkit-background-clip: text;
+        background-clip: text;
+        /* Standard property */
+        -webkit-text-fill-color: transparent;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.2;
+    }
+
+    .countdown-label {
+        font-size: 0.65rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 2px;
+    }
+
+    .countdown-separator {
+        font-size: 1.5rem;
+        color: rgba(251, 191, 36, 0.5);
+        margin-top: -12px;
+    }
+
+    /* Magic Gold Click Particle */
+    .gold-particle {
+        position: fixed;
+        width: 6px;
+        height: 6px;
+        background: #fbbf24;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        box-shadow: 0 0 10px #fbbf24;
+        animation: particle-pop 0.8s ease-out forwards;
+    }
+
+    @keyframes particle-pop {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        100% {
+            transform: translate(var(--mx), var(--my)) scale(0);
+            opacity: 0;
+        }
+    }

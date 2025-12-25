@@ -4,17 +4,12 @@ function startNewyearTheme() {
     // 1. Start Fireworks Background Immediately
     initFireworks();
 
-    // 2. Prepare Splash Screen with COPY ONLY (Countdown moved to App)
+    // 2. Prepare Splash Screen (Fireworks Container Only)
     let splash = document.getElementById('ny-splash-screen');
     if (!splash) {
         splash = document.createElement('div');
         splash.id = 'ny-splash-screen';
         splash.innerHTML = `
-            <div class="ny-title">
-                HAPPY<br>NEW YEAR
-                <span style="display:block; font-size: 0.5em; color: white;">2026</span>
-            </div>
-            
             <div id="ny-splash-fireworks" style="position: absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
         `;
         document.body.appendChild(splash);
@@ -23,23 +18,29 @@ function startNewyearTheme() {
         splash.style.background = 'transparent';
     }
 
-    // 3. Inject Countdown into Main App (Below Header, Above Card)
+    // 3. Inject Countdown & Text into Main App (Below Header, Above Card)
     if (!document.getElementById('ny-countdown')) {
-        const cdContainer = document.createElement('div');
-        cdContainer.id = 'ny-countdown';
-        cdContainer.innerHTML = `
-            <div class="countdown-unit"><span class="countdown-val" id="cd-d">00</span><span class="countdown-label">Days</span></div>
-            <div class="countdown-separator">:</div>
-            <div class="countdown-unit"><span class="countdown-val" id="cd-h">00</span><span class="countdown-label">Hrs</span></div>
-            <div class="countdown-separator">:</div>
-            <div class="countdown-unit"><span class="countdown-val" id="cd-m">00</span><span class="countdown-label">Min</span></div>
-            <div class="countdown-separator">:</div>
-            <div class="countdown-unit"><span class="countdown-val" id="cd-s">00</span><span class="countdown-label">Sec</span></div>
-        `;
-
-        // Insert at top of content-area
         const contentArea = document.querySelector('.content-area');
         if (contentArea) {
+
+            // A. Create Text (Will be Bottom)
+            const copyText = document.createElement('div');
+            copyText.id = 'ny-sub-text';
+            copyText.innerHTML = 'HAPPY NEW YEAR 2026';
+            contentArea.prepend(copyText);
+
+            // B. Create Countdown (Will be Top)
+            const cdContainer = document.createElement('div');
+            cdContainer.id = 'ny-countdown';
+            cdContainer.innerHTML = `
+                <div class="countdown-unit"><span class="countdown-val" id="cd-d">00</span><span class="countdown-label">Days</span></div>
+                <div class="countdown-separator">:</div>
+                <div class="countdown-unit"><span class="countdown-val" id="cd-h">00</span><span class="countdown-label">Hrs</span></div>
+                <div class="countdown-separator">:</div>
+                <div class="countdown-unit"><span class="countdown-val" id="cd-m">00</span><span class="countdown-label">Min</span></div>
+                <div class="countdown-separator">:</div>
+                <div class="countdown-unit"><span class="countdown-val" id="cd-s">00</span><span class="countdown-label">Sec</span></div>
+            `;
             contentArea.prepend(cdContainer);
         }
     }
@@ -67,6 +68,9 @@ function stopNewyearTheme() {
 
     const cd = document.getElementById('ny-countdown');
     if (cd) cd.remove();
+
+    const subText = document.getElementById('ny-sub-text');
+    if (subText) subText.remove();
 
     const canvas = document.getElementById('fireworks-canvas');
     if (canvas) {
