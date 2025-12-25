@@ -316,7 +316,7 @@ body.theme-newyear .brand h1 {
     background: #fbbf24;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 9999;
+    z-index: 9998;
     box-shadow: 0 0 10px #fbbf24;
     animation: particle-pop 0.8s ease-out forwards;
 }
