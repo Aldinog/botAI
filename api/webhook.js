@@ -14,6 +14,7 @@ const { analyzeStock } = require("../src/utils/analisys");
 const { isAllowedGroup, allowedGroups } = require("../src/utils/groupControl");
 const { fetchHarga } = require('../src/utils/harga');
 const { generateReview } = require('../src/utils/review');
+const axios = require('axios');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 if (!TELEGRAM_TOKEN) {
