@@ -85,9 +85,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await res.json();
             if (data.success) {
                 renderWatchlist(data.data);
+            } else {
+                console.error('Watchlist Error:', data.error);
+                watchlistBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#ef4444;">Error: ${data.error || 'Gagal memuat data'}</td></tr>`;
             }
         } catch (err) {
             console.error('Load Watchlist Error:', err);
+            watchlistBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#ef4444;">Connection Error. Check Console.</td></tr>`;
         }
     };
 
