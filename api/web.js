@@ -46,6 +46,7 @@ module.exports = async (req, res) => {
     }
 
     const { action, symbol } = req.body;
+    let activeTheme = 'default';
 
     // --- Authentication Middleware ---
     const authHeader = req.headers.authorization;
@@ -85,7 +86,7 @@ module.exports = async (req, res) => {
 
         let isMaintenance = settingsMap['maintenance_mode'] || false;
         let maintenanceEndTime = settingsMap['maintenance_end_time'];
-        const activeTheme = settingsMap['active_theme'] || 'default';
+        activeTheme = settingsMap['active_theme'] || 'default';
 
         // Auto-Disable Logic
         if (isMaintenance && maintenanceEndTime) {
