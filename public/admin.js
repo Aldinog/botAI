@@ -11,9 +11,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toggleMtBtn = document.getElementById('toggle-mt-btn');
 
     // --- 1. Admin Verification ---
+    // --- 1. Admin Verification ---
     const verifyAdmin = async () => {
         if (!sessionToken) {
             window.location.href = 'index.html';
+            return;
+        }
+
+        // Safety Check for Telegram Environment
+        if (!tg || !tg.initData) {
+            authStatus.innerHTML = `
+                <span style="color:#ef4444">Akses Ditolak: Invalid Environment</span><br>
+                <span style="font-size:0.8em; opacity:0.7">Buka melalui Telegram App</span>
+            `;
+            // Optional: Redirect for safety
+            setTimeout(() => window.location.href = 'index.html', 3000);
             return;
         }
 
@@ -24,6 +36,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ initData: tg.initData })
             });
+
+            // Handle non-JSON responses (e.g. 404 HTML from Vercel/Localhost)
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Server returned non-JSON response. API might be down.");
+            }
+
             const data = await res.json();
 
             if (res.ok && data.user && data.user.is_admin) {
@@ -46,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } catch (err) {
             console.error(err);
-            authStatus.innerText = 'Gagal verifikasi admin.';
+            authStatus.innerHTML = `<span style="color:#ef4444">Gagal Verifikasi: ${err.message}</span>`;
         }
     };
 
@@ -193,13 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // Update initial state check
-    const updateMTUI = (isOn) => {
-        isMaintenanceActive = isOn;
-        statusBadge.classList.toggle('maintenance-active', isOn);
-        statusText.innerText = isOn ? 'Maintenance' : 'Online';
-        mtBtnText.innerText = `Maintenance: ${isOn ? 'ON' : 'OFF'}`;
-        toggleMtBtn.classList.toggle('active', isOn);
-    };
+
 
     document.getElementById('update-theme-btn').onclick = async () => {
         const theme = document.getElementById('theme-selector').value;

@@ -122,12 +122,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // 2. Normal Access (Admin or Maintenance OFF)
 
                 // Show Admin Button if applicable
-                if (user.is_admin) {
+                if (user.is_admin === true) {
+                    console.log('Admin Access Granted');
                     adminBtn.classList.remove('hidden');
                     adminBtn.onclick = () => {
                         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
                         window.location.href = 'admin.html';
                     };
+                } else {
+                    // Ensure hidden if not admin
+                    adminBtn.classList.add('hidden');
+                    adminBtn.onclick = null;
                 }
 
                 // Apply Seasonal Theme for authorized users
