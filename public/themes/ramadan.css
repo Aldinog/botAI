@@ -222,28 +222,105 @@ body.theme-ramadan #auth-overlay .auth-box {
     box-shadow: 0 0 50px rgba(16, 185, 129, 0.3),
         0 0 20px rgba(251, 191, 36, 0.1);
     backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
 }
 
 body.theme-ramadan .spinner {
-    border: 3px solid rgba(16, 185, 129, 0.2);
-    border-top-color: #fbbf24;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 50%;
+    position: relative;
+    background: transparent;
+    box-shadow: none;
+    animation: crescent-spin 3s linear infinite;
+}
+
+/* Creating a Crescent Moon Spinner */
+body.theme-ramadan .spinner::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow: -12px 12px 0 0 #fbbf24;
+    transform: rotate(-45deg);
+    filter: drop-shadow(0 0 10px rgba(251, 191, 36, 0.6));
+}
+
+@keyframes crescent-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 body.theme-ramadan .ramadan-text {
     display: block !important;
     font-family: 'Outfit', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.6rem;
+    font-weight: 800;
     text-align: center;
-    margin-bottom: 20px;
-    background: linear-gradient(to right, #fbbf24, #fff, #fbbf24);
-    background-size: 200% auto;
+    margin-bottom: 24px;
+    background: linear-gradient(to bottom, #fbbf24 0%, #fff 50%, #fbbf24 100%);
+    background-size: auto 200%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shimmer 4s infinite linear, title-float 3s ease-in-out infinite;
-    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+    animation: gold-shimmer 3s ease-in-out infinite, title-float 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.4));
+}
+
+.spiritual-tip {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    margin-top: 15px;
+    opacity: 0.8;
+    max-width: 250px;
+    margin-left: auto;
+    margin-right: auto;
+    min-height: 3em;
+    animation: fadeIn 1s ease;
+    line-height: 1.4;
+}
+
+/* Mosque Silhouette Footer */
+.mosque-silhouette {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(to top, rgba(2, 44, 34, 0.8), transparent);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.3;
+    mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 120" xmlns="http://www.w3.org/2000/svg"><path d="M0,120 L1000,120 L1000,80 C950,80 940,40 900,40 C860,40 850,80 800,80 C750,80 740,20 700,20 C660,20 650,80 600,80 C550,80 540,60 500,60 C460,60 450,20 400,20 C350,20 340,80 290,80 C240,80 230,40 190,40 C150,40 140,80 90,80 C40,80 30,100 0,100 Z" fill="black"/></svg>');
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 120" xmlns="http://www.w3.org/2000/svg"><path d="M0,120 L1000,120 L1000,80 C950,80 940,40 900,40 C860,40 850,80 800,80 C750,80 740,20 700,20 C660,20 650,80 600,80 C550,80 540,60 500,60 C460,60 450,20 400,20 C350,20 340,80 290,80 C240,80 230,40 190,40 C150,40 140,80 90,80 C40,80 30,100 0,100 Z" fill="black"/></svg>');
+    mask-size: cover;
+    -webkit-mask-size: cover;
+}
+
+/* Arabesque Pattern Overlay for Cards */
+body.theme-ramadan .glass-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* Explicitly hide other theme texts */
@@ -252,13 +329,15 @@ body.theme-ramadan .newyear-text {
     display: none !important;
 }
 
-@keyframes shimmer {
-    0% {
-        background-position: 200% center;
+@keyframes gold-shimmer {
+
+    0%,
+    100% {
+        background-position: 0% 0%;
     }
 
-    100% {
-        background-position: -200% center;
+    50% {
+        background-position: 0% 100%;
     }
 }
 
@@ -271,5 +350,17 @@ body.theme-ramadan .newyear-text {
 
     50% {
         transform: translateY(-5px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 0.8;
+        transform: translateY(0);
     }
 }
