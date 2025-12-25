@@ -51,9 +51,6 @@ function startNewyearTheme() {
 
         // Cleanup after transition (2.5s matched CSS)
         setTimeout(() => {
-            const splash = document.getElementById('ny-splash-screen');
-            if (splash) splash.remove();
-
             const rocket = document.getElementById('theme-rocket');
             if (rocket) {
                 // Rocket flies off screen
@@ -63,6 +60,16 @@ function startNewyearTheme() {
             }
 
             document.body.classList.remove('rocket-ignited');
+
+            // User Request: Keep Splash visible behind. 
+            // So we DO NOT remove splash.
+
+            // Make container semi-transparent glass so we can see the text/fireworks behind
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.background = 'rgba(2, 6, 23, 0.6)'; // Semi-transparent
+                container.style.backdropFilter = 'blur(8px)'; // Blur effect
+            }
 
             // Trigger Confetti & Start Fireworks Background NOW
             triggerGoldConfetti();
