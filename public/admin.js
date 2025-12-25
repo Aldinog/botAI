@@ -96,6 +96,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const renderWatchlist = (list) => {
+        if (!list || list.length === 0) {
+            watchlistBody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:rgba(255,255,255,0.5); font-style:italic;">Belum ada emiten yang dipantau.</td></tr>`;
+            return;
+        }
         watchlistBody.innerHTML = list.map(item => `
             <tr>
                 <td style="font-weight: 600;">${item.symbol.replace('.JK', '')}</td>
@@ -160,50 +164,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     let mtInterval;
 
     const updateMTUI = (isOn, endTime) => {
-        console.log('UpdateMTUI called. Active:', isOn, 'EndTime:', endTime);
+        console.log('UpdateMTUI:', isOn, endTime);
         isMaintenanceActive = isOn;
         statusBadge.classList.toggle('maintenance-active', isOn);
         statusText.innerText = isOn ? 'Maintenance' : 'Online';
+        const mtBtnText = document.getElementById('toggle-mt-btn').querySelector('span'); // Assuming mtBtnText is inside toggleMtBtn
         mtBtnText.innerText = `Maintenance: ${isOn ? 'ON' : 'OFF'}`;
         toggleMtBtn.classList.toggle('active', isOn);
 
-        const countdownEl = document.getElementById('admin-mt-countdown');
-        const timerEl = document.getElementById('amt-timer');
+        const countdownContainer = document.getElementById('admin-mt-countdown');
+        const timerText = document.getElementById('amt-timer');
+        const labelText = document.getElementById('mt-label');
 
         if (mtInterval) clearInterval(mtInterval);
 
         if (isOn) {
-            countdownEl.style.display = 'block';
+            countdownContainer.style.display = 'block';
 
             if (endTime) {
                 const end = new Date(endTime).getTime();
+                labelText.innerText = "Maintenance Auto-OFF in:";
 
-                // Immediate update
-                const updateTimer = () => {
+                const tick = () => {
                     const now = new Date().getTime();
-                    const diff = end - now;
+                    const distance = end - now;
 
-                    if (diff < 0) {
+                    if (distance < 0) {
                         clearInterval(mtInterval);
-                        timerEl.innerText = "00:00:00 (Finishing...)";
+                        timerText.innerText = "Done! Reloading...";
                         setTimeout(() => location.reload(), 2000);
                         return;
                     }
 
-                    const h = Math.floor(diff / (1000 * 60 * 60));
-                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    const h = Math.floor(distance / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
 
-                    timerEl.innerText = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    timerText.innerText = `${h}h ${m}m ${s}s`;
                 };
-
-                updateTimer(); // Run immediately
-                mtInterval = setInterval(updateTimer, 1000);
+                tick();
+                mtInterval = setInterval(tick, 1000);
             } else {
-                timerEl.innerText = "Manual Mode (No Timer)";
+                labelText.innerText = "Status:";
+                timerText.innerText = "Manual Mode (Active)";
             }
         } else {
-            countdownEl.style.display = 'none';
+            countdownContainer.style.display = 'none';
         }
     };
 

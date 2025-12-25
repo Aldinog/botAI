@@ -150,6 +150,17 @@
             <!-- System Controls -->
             <div class="glass-card">
                 <h3>System Controls</h3>
+
+                <!-- Admin Maintenance Countdown (Relocated for Visibility) -->
+                <div id="admin-mt-countdown"
+                    style="margin-top:15px; margin-bottom:15px; text-align:center; font-weight:600; color:#fbbf24; background:rgba(251, 191, 36, 0.1); padding:15px; border-radius:12px; border:1px solid rgba(251, 191, 36, 0.3); display:none;">
+                    <i class="fas fa-clock" style="margin-right:8px;"></i> <span id="mt-label">Maintenance Ends
+                        in:</span>
+                    <div id="amt-timer"
+                        style="font-size:1.4em; font-weight:700; color:#fff; margin-top:5px; letter-spacing:1px;">
+                        00:00:00</div>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
                     <button id="force-scan-btn" class="glass-btn highlight-btn">
                         <i class="fas fa-satellite-dish"></i>
@@ -159,12 +170,6 @@
                         <i class="fas fa-tools"></i>
                         <span class="btn-text" id="mt-btn-text">Maintenance: OFF</span>
                     </button>
-                </div>
-                <!-- Admin Maintenance Countdown -->
-                <div id="admin-mt-countdown"
-                    style="margin-top:15px; text-align:center; font-weight:600; color:#fbbf24 !important; background:rgba(251, 191, 36, 0.1); padding:10px; border-radius:8px; border:1px solid rgba(251, 191, 36, 0.2); display:none; position:relative; z-index:10;">
-                    <i class="fas fa-clock" style="margin-right:5px;"></i> Ending in: <span id="amt-timer"
-                        style="color:#fff;">00:00:00</span>
                 </div>
             </div>
 
