@@ -269,6 +269,17 @@ module.exports = async (req, res) => {
     const { set } = req.query;
     console.log("🔍 Diagnostic GET triggered");
 
+    let webhookInfo = null;
+    if (TELEGRAM_TOKEN) {
+      try {
+        const infoUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo`;
+        const infoRes = await axios.get(infoUrl);
+        webhookInfo = infoRes.data;
+      } catch (e) {
+        webhookInfo = { error: e.message };
+      }
+    }
+
     // Optional: Auto-set webhook if ?set=true is passed
     if (set === "true" && TELEGRAM_TOKEN) {
       try {
@@ -278,7 +289,8 @@ module.exports = async (req, res) => {
         return res.status(200).json({
           message: "Webhook set attempt finished",
           telegram_response: response.data,
-          target_url: fullUrl
+          target_url: fullUrl,
+          current_info_after_set: webhookInfo
         });
       } catch (err) {
         console.error("❌ setWebhook Error:", err.message);
@@ -289,11 +301,10 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       status: "Bot Running",
       token_configured: !!TELEGRAM_TOKEN,
-      token_sample: TELEGRAM_TOKEN ? TELEGRAM_TOKEN.slice(0, 5) + "..." : "NONE",
       allowed_groups_count: allowedGroups.length,
-      current_path: req.url,
       full_webhook_url: fullUrl,
-      tip: "Visit this URL with ?set=true to automatically register this webhook with Telegram."
+      telegram_webhook_info: webhookInfo,
+      tip: "If 'last_error_message' is present in 'telegram_webhook_info', that is why the bot isn't responding. Visit with ?set=true to fix it."
     });
   }
 
