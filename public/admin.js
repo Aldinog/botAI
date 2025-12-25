@@ -7,8 +7,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const watchlistBody = document.getElementById('watchlist-body');
     const statusBadge = document.getElementById('app-status-badge');
     const statusText = document.getElementById('status-text');
-    const mtBtnText = document.getElementById('mt-btn-text');
     const toggleMtBtn = document.getElementById('toggle-mt-btn');
+
+    // State Tracker
+    let isMaintenanceActive = false;
 
     // --- 1. Admin Verification ---
     // --- 1. Admin Verification ---
@@ -152,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 3. System Actions ---
     const updateMTUI = (isOn) => {
+        isMaintenanceActive = isOn;
         statusBadge.classList.toggle('maintenance-active', isOn);
         statusText.innerText = isOn ? 'Maintenance' : 'Online';
         mtBtnText.innerText = `Maintenance: ${isOn ? 'ON' : 'OFF'}`;
@@ -159,7 +162,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // --- Maintenance Logic ---
-    let isMaintenanceActive = false; // State tracker
 
     const mtModal = document.getElementById('mt-modal');
     const mtTitle = mtModal.querySelector('h3');
