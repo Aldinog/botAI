@@ -29,16 +29,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (res.ok && data.user && data.user.is_admin) {
                 authOverlay.classList.add('hidden');
 
-                // Seasonal Theme
+                // Seasonal Theme (via Engine)
                 const activeTheme = data.user.active_theme || 'default';
-                if (activeTheme !== 'default') {
-                    document.body.classList.add(`theme-${activeTheme}`);
-                    if (activeTheme === 'christmas') initSnowflakes();
-                    if (activeTheme === 'newyear') initFireworks();
+                if (window.themeEngine) {
+                    await window.themeEngine.applyTheme(activeTheme);
                 }
 
-                updateMTUI(data.user.is_maintenance);
+                // Update selector to match
                 document.getElementById('theme-selector').value = activeTheme;
+
+                updateMTUI(data.user.is_maintenance);
                 loadWatchlist();
             } else {
                 authStatus.innerHTML = '<span style="color:#ef4444">Akses Ditolak: Khusus Admin</span>';
@@ -151,6 +151,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('update-theme-btn').onclick = async () => {
         const theme = document.getElementById('theme-selector').value;
+
+        // Optimistic UI Update
+        if (window.themeEngine) {
+            await window.themeEngine.applyTheme(theme);
+        }
+
         const res = await fetch('/api/web', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
@@ -158,9 +164,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (res.ok) {
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-            alert('Tema berhasil diubah! Silakan reload aplikasi.');
-            // Optional: reload page to see effect immediately in admin
-            // location.reload(); 
+            // alert('Tema berhasil diubah!'); 
+            // No reload needed if UI updates instantly
         }
     };
 
@@ -187,87 +192,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     verifyAdmin();
 });
-
-function initSnowflakes() {
-    const container = document.getElementById('snow-container');
-    if (!container) return;
-
-    const count = 30; // Slightly less for admin page
-    const symbols = ['❄', '❅', '❆', '✧'];
-
-    for (let i = 0; i < count; i++) {
-        const flake = document.createElement('div');
-        flake.className = 'snowflake';
-        flake.innerText = symbols[Math.floor(Math.random() * symbols.length)];
-        flake.style.left = Math.random() * 100 + 'vw';
-        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
-        flake.style.opacity = Math.random();
-        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
-        flake.style.animationDelay = Math.random() * 5 + 's';
-        container.appendChild(flake);
-    }
-}
-
-let fireworksInterval;
-let animationFrameId;
-
-function initFireworks() {
-    const canvas = document.getElementById('fireworks-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvas.style.display = 'block';
-
-    let particles = [];
-    const colors = ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f', '#fff', '#FFA500'];
-
-    function createParticle(x, y) {
-        const particleCount = 30;
-        for (let i = 0; i < particleCount; i++) {
-            particles.push({
-                x: x,
-                y: y,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                radius: Math.random() * 3 + 1,
-                velocity: {
-                    x: (Math.random() - 0.5) * 6,
-                    y: (Math.random() - 0.5) * 6
-                },
-                alpha: 1,
-                decay: Math.random() * 0.015 + 0.01
-            });
-        }
-    }
-
-    function loop() {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = 'lighter';
-
-        particles.forEach((p, index) => {
-            if (p.alpha <= 0) {
-                particles.splice(index, 1);
-            } else {
-                p.velocity.y += 0.05;
-                p.x += p.velocity.x;
-                p.y += p.velocity.y;
-                p.alpha -= p.decay;
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.alpha;
-                ctx.fill();
-            }
-        });
-        animationFrameId = requestAnimationFrame(loop);
-    }
-
-    loop();
-
-    fireworksInterval = setInterval(() => {
-        createParticle(Math.random() * canvas.width, Math.random() * canvas.height / 2);
-    }, 800);
-}
