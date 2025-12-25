@@ -1,106 +1,33 @@
 function startNewyearTheme() {
-    console.log('🚀 Starting New Year Theme: Rocket Launch Sequence');
+    console.log('🎆 Starting New Year Theme: Simple Mode');
 
-    // 1. Prepare Splash Screen (Only if not already present)
-    if (!document.getElementById('ny-splash-screen')) {
-        const splash = document.createElement('div');
-        splash.id = 'ny-splash-screen';
-        splash.innerHTML = `
-            <div class="ny-title">
-                HAPPY<br>NEW YEAR
-                <span style="display:block; font-size: 0.5em; color: white;">2026</span>
-            </div>
-            <!-- Fireworks container exists but empty initially -->
-            <div id="ny-splash-fireworks" style="position: absolute; width:100%; height:100%; top:0; left:0; pointer-events:none;"></div>
-        `;
-        document.body.appendChild(splash);
-    }
+    // 1. Start Fireworks Background Immediately
+    initFireworks();
 
-    // 2. Prepare Main Container & Rocket
+    // 2. Add transparency classes to container for visibility
     const container = document.querySelector('.container');
     if (container) {
-        // Add Ready State IMMEDIATELY (Hidden Down)
-        document.body.classList.add('launch-ready');
-
-        // Add Rocket
-        if (!document.getElementById('theme-rocket')) {
-            const rocket = document.createElement('div');
-            rocket.id = 'theme-rocket';
-            rocket.className = 'theme-rocket';
-            rocket.innerHTML = '<i class="fas fa-rocket"></i>';
-            container.appendChild(rocket);
-        }
+        // Ensure container is glass-like so fireworks show through
+        // The CSS handles the base style, but we reinforce transparency here if needed
+        // or rely on the CSS update we are about to make.
     }
 
-    // 3. DO NOT Start Fireworks yet. Wait for "Login/Load" simulation.
-    // initFireworks(); <--- REMOVED
-
-    // 4. THE LAUNCH SEQUENCE
-    // Wait for user to admire splash (2 seconds) simulating "Login Process" completion
-    setTimeout(() => {
-        // Ignite!
-        document.body.classList.add('rocket-ignited');
-
-        // Launch (Move Container Up)
-        requestAnimationFrame(() => {
-            // Remove 'launch-ready' (which forces translateY(100vh))
-            // Add 'launching' (which has transition + translateY(0))
-            document.body.classList.remove('launch-ready');
-            document.body.classList.add('launching');
-        });
-
-        // Cleanup after transition (2.5s matched CSS)
-        setTimeout(() => {
-            const rocket = document.getElementById('theme-rocket');
-            if (rocket) {
-                // Rocket flies off screen
-                rocket.style.transition = 'transform 1s ease-in';
-                rocket.style.transform = 'translateY(-200vh)';
-                setTimeout(() => rocket.remove(), 1000);
-            }
-
-            document.body.classList.remove('rocket-ignited');
-
-            // User Request: Keep Splash visible behind. 
-            // So we DO NOT remove splash. But we must make it transparent so we can see the fireworks (z-index 0) behind it.
-            const splash = document.getElementById('ny-splash-screen');
-            if (splash) splash.style.background = 'transparent';
-
-            // Make container semi-transparent glass so we can see the text/fireworks behind
-            const container = document.querySelector('.container');
-            if (container) {
-                container.style.background = 'rgba(2, 6, 23, 0.6)'; // Semi-transparent
-                container.style.backdropFilter = 'blur(8px)'; // Blur effect
-            }
-
-            // Trigger Confetti & Start Fireworks Background NOW
-            triggerGoldConfetti();
-            initFireworks(); // <--- Moved here (Only after animation done)
-
-        }, 2500);
-
-    }, 2000);
+    // 3. Trigger initial confetti burst for celebration
+    triggerGoldConfetti();
 }
 
 function stopNewyearTheme() {
     console.log('🛑 Stopping New Year Theme');
 
-    const splash = document.getElementById('ny-splash-screen');
-    if (splash) splash.remove();
-
-    const rocket = document.getElementById('theme-rocket');
-    if (rocket) rocket.remove();
-
-    document.body.classList.remove('launch-ready', 'launching', 'rocket-ignited');
-
     const canvas = document.getElementById('fireworks-canvas');
     if (canvas) {
         canvas.style.display = 'none';
-        // Stop the loop if needed? Logic handles it via class check
     }
+
+    // Initial cleanup if switching away (though standard theme engine handles basics)
 }
 
-// --- Logic (Shared) ---
+// --- Logic ---
 
 function initFireworks() {
     const canvas = document.getElementById('fireworks-canvas');
@@ -173,11 +100,9 @@ function initFireworks() {
 }
 
 function triggerGoldConfetti() {
-    // Just ensure fireworks are running (initFireworks handles it)
-    // or trigger extra burst
     const canvas = document.getElementById('fireworks-canvas');
     if (!canvas) return;
-    // We can assume loop is running after initFireworks called
+    setTimeout(() => initFireworks(), 100);
 }
 
 // Attach Global

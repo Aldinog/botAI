@@ -35,13 +35,23 @@ body.theme-newyear #fireworks-canvas {
     opacity: 0.8;
 }
 
+/* New: Make Container Very Transparent to see fireworks */
+body.theme-newyear .container {
+    background: rgba(2, 6, 23, 0.3) !important;
+    /* Extremely transparent */
+    backdrop-filter: blur(4px);
+    /* Slight blur for readability */
+    min-height: 100vh;
+}
+
 /* 4. Glass Cards */
 body.theme-newyear .glass-card {
-    background: rgba(2, 6, 23, 0.7);
+    background: rgba(2, 6, 23, 0.6);
+    /* Slightly more opaque than container */
     border: 1px solid rgba(251, 191, 36, 0.3);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4),
         0 0 15px rgba(251, 191, 36, 0.1);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(15px);
     transition: all 0.4s ease;
 }
 
@@ -181,126 +191,5 @@ body.theme-newyear .newyear-text span {
     50% {
         border-color: rgba(251, 191, 36, 0.8);
         box-shadow: 0 0 25px rgba(251, 191, 36, 0.3);
-    }
-}
-
-/* --- 🚀 ROCKET LAUNCH ANIMATION START --- */
-
-#ny-splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #020617;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-#ny-splash-screen .ny-title {
-    font-size: 3rem;
-    color: #fbbf24;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 5px;
-    text-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
-    animation: zoomIn 1s ease-out;
-}
-
-.theme-rocket {
-    position: absolute;
-    top: -100px;
-    left: 50%;
-    transform: translateX(-50%) rotate(0deg);
-    font-size: 4rem;
-    color: #fff;
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
-    z-index: 2000;
-    transition: all 0.5s;
-}
-
-.theme-rocket::after {
-    content: '🌟';
-    position: absolute;
-    bottom: -40px;
-    left: 50%;
-    transform: translateX(-50%) rotate(180deg);
-    font-size: 3rem;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.rocket-ignited .theme-rocket {
-    animation: rocket-shake 0.1s infinite;
-}
-
-.rocket-ignited .theme-rocket::after {
-    opacity: 1;
-    animation: flame-flicker 0.1s infinite;
-}
-
-/* Animation Fix: Only apply transition when launching */
-body.theme-newyear .container {
-    background: var(--bg-dark);
-    min-height: 100vh;
-    z-index: 1500;
-}
-
-/* Initial: Hidden (No Transition to prevent jump) */
-body.theme-newyear.launch-ready .container {
-    transform: translateY(100vh);
-    opacity: 0;
-}
-
-/* Active: Launching (With Transition) */
-body.theme-newyear.launching .container {
-    transform: translateY(0);
-    opacity: 1;
-    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 0.5s ease;
-}
-
-@keyframes rocket-shake {
-
-    0%,
-    100% {
-        transform: translateX(-50%) rotate(0deg);
-    }
-
-    25% {
-        transform: translateX(-52%) rotate(-1deg);
-    }
-
-    75% {
-        transform: translateX(-48%) rotate(1deg);
-    }
-}
-
-@keyframes flame-flicker {
-
-    0%,
-    100% {
-        transform: translateX(-50%) scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: translateX(-50%) scale(1.2);
-        opacity: 0.8;
-    }
-}
-
-@keyframes zoomIn {
-    from {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
     }
 }
