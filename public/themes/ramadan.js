@@ -1,13 +1,16 @@
 function startRamadanTheme() {
     console.log('🌙 Starting Ramadan Theme: Emerald Nights');
 
-    // 1. Inject Decorations (Lanterns)
-    createLanterns();
+    // Check if we are on the chart page
+    const isChartPage = window.location.pathname.includes('chart.html');
 
-    // 2. Inject Moon
-    createMoon();
+    // 1. Inject Decorations (Lanterns) - Only if NOT chart page
+    if (!isChartPage) {
+        createLanterns();
+        createMoon();
+    }
 
-    // 3. Inject Stars Background
+    // 3. Inject Stars Background (Global)
     createStars();
 }
 
