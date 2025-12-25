@@ -208,3 +208,134 @@ body.theme-newyear .newyear-text span {
         box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
     }
 }
+
+/* --- 🚀 ROCKET LAUNCH ANIMATION --- */
+
+/* 1. Splash Screen Layer (Behind Main) */
+#ny-splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #020617;
+    /* Deepest Blue */
+    z-index: 1000;
+    /* High but below Rocket-Container interaction */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#ny-splash-screen .ny-title {
+    font-size: 3rem;
+    color: #fbbf24;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    text-shadow: 0 0 30px rgba(251, 191, 36, 0.5);
+    animation: zoomIn 1s ease-out;
+}
+
+/* 2. Rocket Element */
+.theme-rocket {
+    position: absolute;
+    top: -100px;
+    /* Above the container */
+    left: 50%;
+    transform: translateX(-50%) rotate(0deg);
+    /* Start upright but allow rotation */
+    font-size: 4rem;
+    color: #fff;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+    z-index: 2000;
+    transition: all 0.5s;
+}
+
+.theme-rocket::after {
+    content: '🔥';
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg);
+    font-size: 3rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.rocket-ignited .theme-rocket {
+    animation: rocket-shake 0.1s infinite;
+}
+
+.rocket-ignited .theme-rocket::after {
+    opacity: 1;
+    animation: flame-flicker 0.1s infinite;
+}
+
+/* 3. Launch States for Main Container */
+body.theme-newyear .container {
+    transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1);
+    /* Heavy lift ease */
+    background: var(--bg-dark);
+    /* Ensure it covers splash */
+    min-height: 100vh;
+    z-index: 1500;
+    /* Above splash */
+}
+
+/* Initial State: Hidden Down */
+body.theme-newyear.launch-ready .container {
+    transform: translateY(100vh);
+}
+
+/* Active State: Launching Up */
+body.theme-newyear.launching .container {
+    transform: translateY(0);
+}
+
+@keyframes rocket-shake {
+
+    0%,
+    100% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    25% {
+        transform: translateX(-52%) rotate(-1deg);
+    }
+
+    75% {
+        transform: translateX(-48%) rotate(1deg);
+    }
+}
+
+@keyframes flame-flicker {
+    0% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.2);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateX(-50%) scale(0.9);
+        opacity: 1;
+    }
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
