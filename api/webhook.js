@@ -258,6 +258,8 @@ bot.on('text', (ctx) => {
 // WEBHOOK (Vercel Friendly)
 // =========================
 module.exports = async (req, res) => {
+  console.log(`🌐 Incoming Request: ${req.method} ${req.url}`);
+
   const protocol = req.headers['x-forwarded-proto'] || 'http';
   const host = req.headers['host'];
   const fullUrl = `${protocol}://${host}${req.url.split('?')[0]}`;
@@ -265,11 +267,13 @@ module.exports = async (req, res) => {
   // 🔹 Diagnostic for GET requests
   if (req.method === "GET") {
     const { set } = req.query;
+    console.log("🔍 Diagnostic GET triggered");
 
     // Optional: Auto-set webhook if ?set=true is passed
     if (set === "true" && TELEGRAM_TOKEN) {
       try {
         const setUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${fullUrl}`;
+        console.log(`🛰 Setting webhook to: ${fullUrl}`);
         const response = await axios.get(setUrl);
         return res.status(200).json({
           message: "Webhook set attempt finished",
@@ -277,6 +281,7 @@ module.exports = async (req, res) => {
           target_url: fullUrl
         });
       } catch (err) {
+        console.error("❌ setWebhook Error:", err.message);
         return res.status(500).json({ error: "Failed to set webhook", detail: err.message });
       }
     }
@@ -296,7 +301,7 @@ module.exports = async (req, res) => {
   if (req.method === "POST") {
     try {
       if (!req.body || Object.keys(req.body).length === 0) {
-        console.warn("⚠️ Webhook received empty body (Check if Vercel body-parser is enabled)");
+        console.warn("⚠️ Webhook received empty body");
         return res.status(200).send("EMPTY_BODY");
       }
 
@@ -305,14 +310,15 @@ module.exports = async (req, res) => {
       const text = req.body.message?.text || "non-text";
       const from = req.body.message?.from?.username || "unknown";
 
-      console.log(`📩 [Update ${updateId}] From: @${from} | Type: ${type} | Text: ${text}`);
+      console.log(`📩 [Update ${updateId}] From: @${from} | Type: ${type} | Text: "${text}"`);
 
+      // Telegraf handleUpdate
       await bot.handleUpdate(req.body);
 
-      console.log(`✅ [Update ${updateId}] Processed successfully`);
+      console.log(`✅ [Update ${updateId}] Handled successfully`);
       return res.status(200).send("OK");
     } catch (err) {
-      console.error("❌ Webhook Handling Error:", err.message);
+      console.error(`❌ [Update ${req.body?.update_id}] Error:`, err.message);
       return res.status(200).send("OK_WITH_ERROR");
     }
   }
