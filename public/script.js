@@ -35,7 +35,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 authOverlay.classList.add('hidden');
 
                 // --- Seasonal Theme Logic ---
+                // --- Seasonal Theme Logic ---
                 const activeTheme = data.user.active_theme || 'default';
+                localStorage.setItem('active_theme', activeTheme); // Persist theme
+
+                // Clear previous theme first
+                clearChristmasTheme();
+
                 if (activeTheme !== 'default') {
                     document.body.classList.add(`theme-${activeTheme}`);
                     if (activeTheme === 'christmas') {
@@ -105,6 +111,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             `;
         }
     };
+
+    // Load persisted theme immediately
+    const persistedTheme = localStorage.getItem('active_theme');
+    if (persistedTheme && persistedTheme !== 'default') {
+        document.body.classList.add(`theme-${persistedTheme}`);
+        if (persistedTheme === 'christmas') {
+            initSnowflakes();
+            // Show tree immediately if overlay is visible
+            const tree = document.getElementById('christmas-tree');
+            if (tree) tree.classList.remove('hidden');
+        }
+    }
 
     // Auto-login on start
     await login();
@@ -318,4 +336,14 @@ function initSnowflakes() {
         flake.style.animationDelay = Math.random() * 5 + 's';
         container.appendChild(flake);
     }
+}
+
+function clearChristmasTheme() {
+    document.body.classList.remove('theme-christmas');
+    const tree = document.getElementById('christmas-tree');
+    if (tree) tree.classList.add('hidden');
+    
+    // Clear snowflakes
+    const container = document.getElementById('snow-container');
+    if (container) container.innerHTML = '';
 }

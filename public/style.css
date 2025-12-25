@@ -733,3 +733,24 @@ body.theme-christmas .spinner::after {
     transform: translate(-50%, -50%);
     font-size: 1.5rem;
 }
+
+/* Christmas Tree */
+.christmas-tree {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 80px;
+    pointer-events: none;
+    animation: tree-pulse 2s infinite;
+    z-index: 500;
+}
+
+.christmas-tree.hidden { display: none; }
+
+@keyframes tree-pulse {
+    0% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.1); }
+    100% { transform: translateX(-50%) scale(1); }
+}

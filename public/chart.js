@@ -12,6 +12,31 @@ const urlParams = new URLSearchParams(window.location.search);
 const symbol = urlParams.get('symbol') || 'BBCA';
 document.getElementById('chart-title').innerText = symbol;
 
+// --- Christmas Theme Logic ---
+const activeTheme = localStorage.getItem('active_theme');
+if (activeTheme === 'christmas') {
+    document.body.classList.add('theme-christmas');
+    initChartSnowflakes();
+}
+
+function initChartSnowflakes() {
+    const container = document.getElementById('snow-container');
+    if (!container) return;
+    const count = 20;
+    const symbols = ['❄', '❅', '❆', '✧'];
+    for (let i = 0; i < count; i++) {
+        const flake = document.createElement('div');
+        flake.className = 'snowflake';
+        flake.innerText = symbols[Math.floor(Math.random() * symbols.length)];
+        flake.style.left = Math.random() * 100 + 'vw';
+        flake.style.animationDuration = (Math.random() * 3 + 4) + 's';
+        flake.style.opacity = Math.random();
+        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+        flake.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(flake);
+    }
+}
+
 // Initialization
 try {
     const chartContainer = document.getElementById('chart-container');
