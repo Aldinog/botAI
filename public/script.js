@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (data.code === 'NOT_MEMBER') {
                     authStatus.innerHTML = `
                         <div style="color: #ef4444; margin-bottom: 15px; font-weight: 600;">${data.error}</div>
-                        <div style="margin-bottom: 20px; font-size: 0.9em; opacity: 0.8;">Silahkan masuk grup untuk melanjutkan</div>
+                        <div style="margin-bottom: 20px; font-size: 0.9em; opacity: 0.8;">Jika sudah join silahkan buka ulang App</div>
                         <a href="https://t.me/astongrup" target="_blank" class="glass-btn primary-btn" style="text-decoration: none; padding: 12px 24px; display: inline-block;">
                             🚀 Masuk Grup
                         </a>
