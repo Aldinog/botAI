@@ -224,7 +224,7 @@ body.theme-newyear .newyear-text span {
 }
 
 .theme-rocket::after {
-    content: '🔥';
+    content: '🌟';
     position: absolute;
     bottom: -40px;
     left: 50%;
