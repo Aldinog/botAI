@@ -17,6 +17,11 @@ body {
     flex-direction: column;
 }
 
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
 /* Ambient Background Glows */
 .ambient-glow {
     position: fixed;
