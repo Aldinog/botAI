@@ -37,21 +37,21 @@ body.theme-newyear #fireworks-canvas {
 
 /* New: Make Container Very Transparent to see fireworks */
 body.theme-newyear .container {
-    background: rgba(2, 6, 23, 0.3) !important;
+    background: rgba(2, 6, 23, 0.05) !important;
     /* Extremely transparent */
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(2px);
     /* Slight blur for readability */
     min-height: 100vh;
 }
 
 /* 4. Glass Cards */
 body.theme-newyear .glass-card {
-    background: rgba(2, 6, 23, 0.6);
+    background: rgba(2, 6, 23, 0.4);
     /* Slightly more opaque than container */
     border: 1px solid rgba(251, 191, 36, 0.3);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4),
         0 0 15px rgba(251, 191, 36, 0.1);
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(10px);
     transition: all 0.4s ease;
 }
 
