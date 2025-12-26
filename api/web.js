@@ -49,19 +49,25 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { action, symbol } = req.body;
-    let activeTheme = 'default';
-
-    // --- Authentication Middleware ---
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized: Missing token' });
-    }
-
-    const token = authHeader.split(' ')[1];
-
     try {
+        const { action, symbol } = req.body;
+        console.log(`[WEB API] Action: ${action}, Symbol: ${symbol}`);
+
+        let activeTheme = 'default';
+
+        // --- Authentication Middleware ---
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.warn('[WEB API] Unauthorized: Missing token');
+            return res.status(401).json({ error: 'Unauthorized: Missing token' });
+        }
+
+        const token = authHeader.split(' ')[1];
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-aston');
+        console.log(`[WEB API] Token verified for: ${decoded.userId || 'unknown'}`);
+
+        // Check session in DB
 
         // Check session in DB
         const { data: session, error: sessionError } = await supabase
@@ -403,11 +409,11 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Web Context Error:', error);
-        res.status(500).json({
-            error: error.message || 'AI Overload, Cobalagi beberapa saat',
-            details: error.message || error,
-            hint: 'Pastikan OPENROUTER_API_KEY sudah terpasang di Vercel Dashboard.'
+        console.error('[WEB API CRITICAL ERROR]:', error);
+        return res.status(500).json({
+            error: 'Internal Server Error',
+            message: error.message,
+            stack: error.stack?.split('\n').slice(0, 3).join(' | ')
         });
     }
 };

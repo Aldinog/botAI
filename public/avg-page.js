@@ -311,50 +311,68 @@ document.addEventListener('DOMContentLoaded', async () => {
             return alert('Mohon isi data Harga dan Lot yang diperlukan.');
         }
 
-        outputArea.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        if (!sessionToken) {
+            console.error('[SIMULATE] Session token missing!');
+            outputArea.innerHTML = '<div style="color: #f87171; padding: 20px; text-align: center;">⚠ Sesi tidak ditemukan. Silakan buka kembali aplikasi dari bot.</div>';
+            return;
+        }
+
+        const payload = {
+            action: 'avg',
+            symbol,
+            p1, l1, p2,
+            targetAvg: target,
+            l2Input: l2,
+            slPercent: sl,
+            tpPercent: tp,
+            feeBuy: Number(feeB) / 100,
+            feeSell: Number(feeS) / 100
+        };
+
+        console.log('[SIMULATE] Sending request:', payload);
+        outputArea.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div><div style="text-align:center; font-size: 0.7rem; opacity: 0.5;">Memproses simulasi...</div>';
 
         try {
             const response = await fetch('/api/web', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-                body: JSON.stringify({
-                    action: 'avg',
-                    symbol,
-                    p1, l1, p2,
-                    targetAvg: target,
-                    l2Input: l2,
-                    slPercent: sl,
-                    tpPercent: tp,
-                    feeBuy: Number(feeB) / 100,
-                    feeSell: Number(feeS) / 100
-                })
+                body: JSON.stringify(payload)
             });
+
+            console.log('[SIMULATE] Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('[SIMULATE] API Error:', response.status, errorText);
-                throw new Error(`API returned ${response.status}: ${errorText.slice(0, 50)}`);
+                let errMsg = `Server Error ${response.status}`;
+                try {
+                    const errJson = JSON.parse(errorText);
+                    errMsg = errJson.message || errJson.error || errMsg;
+                } catch (e) { }
+                throw new Error(errMsg);
             }
 
             const data = await response.json();
+            console.log('[SIMULATE] Data received:', data);
 
             if (data.success) {
                 outputArea.innerHTML = `<div class="fade-in">${data.data}</div>`;
-
-                // Use the raw data from API for accurate chart lines
                 if (data.raw) {
-                    const r = data.raw;
-                    updatePriceLines(r.p1, r.l1, r.p2, r.l2, r.avgBaru);
+                    updatePriceLines(data.raw.p1, data.raw.l1, data.raw.p2, data.raw.l2, data.raw.avgBaru);
                 }
-
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             } else {
-                outputArea.innerHTML = `<div style="color: #f87171; padding: 20px;">⚠ ${data.error}</div>`;
-                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+                throw new Error(data.error || 'Gagal menghitung data.');
             }
         } catch (error) {
-            outputArea.innerHTML = '<div style="color: #f87171; padding: 20px;">⚠ Koneksi terputus.</div>';
+            console.error('[SIMULATE] Catch Error:', error);
+            outputArea.innerHTML = `
+                <div style="color: #f87171; padding: 20px; text-align: center;">
+                    <div style="font-size: 1.5rem; margin-bottom: 8px;">⚠️</div>
+                    <div style="font-weight: 600;">Gagal Simulasi</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">${error.message || 'Koneksi terputus.'}</div>
+                </div>
+            `;
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
         }
     });
 
