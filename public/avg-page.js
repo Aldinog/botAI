@@ -76,9 +76,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             wickDownColor: '#f87171',
         });
 
-        window.addEventListener('resize', () => {
-            chart.applyOptions({ width: container.clientWidth });
+        // Resize Handler
+        const resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+                    if (chart) {
+                        chart.resize(entry.contentRect.width, entry.contentRect.height);
+                        chart.timeScale().fitContent();
+                    }
+                }
+            }
         });
+        resizeObserver.observe(container);
+    };
+
+    /**
+     * Helper to convert Lightweight Charts time to numerical timestamp
+     */
+    const toTimestamp = (time) => {
+        if (typeof time === 'number') return time;
+        if (typeof time === 'string') return new Date(time).getTime() / 1000;
+        if (time && time.year) return new Date(time.year, time.month - 1, time.day).getTime() / 1000;
+        return 0;
     };
 
     const fetchCandles = async (sym) => {
@@ -104,29 +123,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.log(`[CHART] Data received: ${data.data.candles.length} candles`);
 
                 // 1. Prepare and deduplicate candles (Lightweight Charts requirement)
-                let lastTime = 0;
-                const formatted = data.data.candles
-                    .map(c => ({
-                        time: Number(c.time),
-                        open: Number(c.open),
-                        high: Number(c.high),
-                        low: Number(c.low),
-                        close: Number(c.close)
-                    }))
-                    .sort((a, b) => a.time - b.time)
-                    .filter(c => {
-                        if (c.time > lastTime) {
-                            lastTime = c.time;
-                            return true;
-                        }
-                        return false;
-                    });
+                const uniqueCandles = [];
+                const times = new Set();
 
-                console.log(`[CHART] Formatted & unique candles: ${formatted.length}`);
+                const sorted = data.data.candles.sort((a, b) => {
+                    const tA = toTimestamp(a.time);
+                    const tB = toTimestamp(b.time);
+                    return tA - tB;
+                });
+
+                sorted.forEach(c => {
+                    const ts = toTimestamp(c.time);
+                    if (ts > 0 && !times.has(ts)) {
+                        times.add(ts);
+                        uniqueCandles.push({
+                            time: ts,
+                            open: Number(c.open),
+                            high: Number(c.high),
+                            low: Number(c.low),
+                            close: Number(c.close)
+                        });
+                    }
+                });
+
+                console.log(`[CHART] Formatted & unique candles: ${uniqueCandles.length}`);
 
                 if (candleSeries) {
                     try {
-                        candleSeries.setData(formatted);
+                        candleSeries.setData(uniqueCandles);
                     } catch (chartErr) {
                         console.error('[CHART] setData Error:', chartErr);
                         if (loader) loader.innerText = "Error rendering chart";
@@ -136,7 +160,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.warn('[CHART] candleSeries not initialized!');
                 }
 
-                currentMarketPrice = formatted[formatted.length - 1].close;
+                currentMarketPrice = uniqueCandles[uniqueCandles.length - 1].close;
                 marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
                 marketInfo.innerText = "Realtime H1 (7 Days)";
 

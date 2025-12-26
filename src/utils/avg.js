@@ -11,29 +11,33 @@ function calculateAvg(params) {
         symbol,
         p1,
         l1,
-        p2, // This can be current market price or a manual "buy at" price
+        p2,
         targetAvg,
         l2Input,
-        currentPrice, // Real market price for P/L calculation
+        currentPrice,
         feeBuy = 0.0019,
         feeSell = 0.0029,
-        slPercent = 3, // Default stop loss percent
-        tpPercent = 5  // Default take profit percent
+        slPercent = 3,
+        tpPercent = 5
     } = params;
 
-    const modalAwal = Number(p1) * Number(l1) * 100;
-    const priceMarket = Number(currentPrice || p2); // Fallback to P2 if market price not provided
+    const p1Val = Number(p1) || 0;
+    const l1Val = Number(l1) || 0;
+    const p2Val = Number(p2) || 0;
+    const priceMarket = Number(currentPrice || p2Val) || 0;
+
+    const modalAwal = p1Val * l1Val * 100;
 
     // 1. Current Portfolio Status
-    const totalNilaiSekarang = priceMarket * Number(l1) * 100;
+    const totalNilaiSekarang = priceMarket * l1Val * 100;
     const floatingPlIdr = totalNilaiSekarang - modalAwal;
-    const floatingPlPercent = ((priceMarket - Number(p1)) / Number(p1)) * 100;
+    const floatingPlPercent = p1Val > 0 ? ((priceMarket - p1Val) / p1Val) * 100 : 0;
 
     let result = {
-        symbol,
-        p1: Number(p1),
-        l1: Number(l1),
-        p2: Number(p2),
+        symbol: symbol || "UNKNOWN",
+        p1: p1Val,
+        l1: l1Val,
+        p2: p2Val,
         currentPrice: priceMarket,
         modalAwal,
         floatingPlIdr,

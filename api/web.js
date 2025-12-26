@@ -351,13 +351,23 @@ module.exports = async (req, res) => {
                             feeBuy,
                             feeSell
                         });
-                        const reportHtml = await markdownToTelegramHTML(formatAvgReport(avgData));
-                        return res.json({
-                            success: true,
-                            data: reportHtml,
-                            raw: avgData,
-                            active_theme: activeTheme
-                        });
+                        try {
+                            const reportHtml = await markdownToTelegramHTML(formatAvgReport(avgData));
+                            return res.json({
+                                success: true,
+                                data: reportHtml,
+                                raw: avgData,
+                                active_theme: activeTheme
+                            });
+                        } catch (genErr) {
+                            console.error("Report generation failed:", genErr);
+                            return res.json({
+                                success: true,
+                                data: `<b>Simulasi Selesai</b><br>Kalkulasi berhasil tetapi gagal membangun laporan teks. Cek grafik untuk visualisasi detail.`,
+                                raw: avgData,
+                                active_theme: activeTheme
+                            });
+                        }
                     }
                 }
                 break;
