@@ -311,19 +311,46 @@ module.exports = async (req, res) => {
                 break;
 
             case 'avg':
-                const { p1, l1, p2, targetAvg, l2Input } = req.body;
-                if (!p1 || !l1 || !p2) {
-                    result = "❌ Data harga beli lama, jumlah lot, dan harga baru wajib diisi.";
+                const { p1, l1, p2, targetAvg, l2Input, slPercent, tpPercent, feeBuy, feeSell } = req.body;
+                if (!p1 || !l1) {
+                    result = "❌ Data harga beli lama dan jumlah lot wajib diisi.";
                 } else {
-                    const avgData = calculateAvg({
-                        symbol,
-                        p1: Number(p1),
-                        l1: Number(l1),
-                        p2: Number(p2),
-                        targetAvg: targetAvg ? Number(targetAvg) : null,
-                        l2Input: l2Input ? Number(l2Input) : null
-                    });
-                    result = formatAvgReport(avgData);
+                    // Try to fetch current price for simulation if P2 is not manually provided
+                    let finalP2 = p2;
+                    let currentPrice = null;
+                    try {
+                        const priceData = await fetchHarga(symbol);
+                        // Extract number from and result like "BUVA | 123 | +1%"
+                        // fetchHarga returns a string. We need a numerical price for calculations.
+                        // However, fetchHarga output is formatted for the bot.
+                        // Let's use fetchHistorical or similar for a clean number if possible.
+                        const candles = await fetchHistorical(symbol, { limit: 1 });
+                        if (candles && candles.length > 0) {
+                            currentPrice = candles[0].close;
+                            if (!finalP2) finalP2 = currentPrice;
+                        }
+                    } catch (e) {
+                        console.error("Price fetch failed for avg calculator:", e);
+                    }
+
+                    if (!finalP2) {
+                        result = "❌ Harga beli baru (P2) tidak ditemukan dan tidak diisi secara manual.";
+                    } else {
+                        const avgData = calculateAvg({
+                            symbol,
+                            p1: Number(p1),
+                            l1: Number(l1),
+                            p2: Number(finalP2),
+                            targetAvg: targetAvg ? Number(targetAvg) : null,
+                            l2Input: l2Input ? Number(l2Input) : null,
+                            currentPrice: currentPrice,
+                            slPercent,
+                            tpPercent,
+                            feeBuy,
+                            feeSell
+                        });
+                        result = await markdownToTelegramHTML(formatAvgReport(avgData));
+                    }
                 }
                 break;
 

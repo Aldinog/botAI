@@ -1,5 +1,5 @@
 /**
- * Calculation utility for Average Down/Up
+ * Advanced Calculation utility for Average Down/Up
  */
 
 function formatIDR(num) {
@@ -11,52 +11,97 @@ function calculateAvg(params) {
         symbol,
         p1,
         l1,
-        p2,
+        p2, // This can be current market price or a manual "buy at" price
         targetAvg,
         l2Input,
+        currentPrice, // Real market price for P/L calculation
         feeBuy = 0.0019,
-        feeSell = 0.0029
+        feeSell = 0.0029,
+        slPercent = 3, // Default stop loss percent
+        tpPercent = 5  // Default take profit percent
     } = params;
 
-    const modalAwal = p1 * l1 * 100;
+    const modalAwal = Number(p1) * Number(l1) * 100;
+    const priceMarket = Number(currentPrice || p2); // Fallback to P2 if market price not provided
+
+    // 1. Current Portfolio Status
+    const totalNilaiSekarang = priceMarket * Number(l1) * 100;
+    const floatingPlIdr = totalNilaiSekarang - modalAwal;
+    const floatingPlPercent = ((priceMarket - Number(p1)) / Number(p1)) * 100;
+
     let result = {
         symbol,
-        p1,
-        l1,
-        p2,
+        p1: Number(p1),
+        l1: Number(l1),
+        p2: Number(p2),
+        currentPrice: priceMarket,
         modalAwal,
+        floatingPlIdr,
+        floatingPlPercent,
         feeBuy,
-        feeSell
+        feeSell,
+        advice: "",
+        warning: false
     };
 
+    // 2. Logic to find L2 or Pavg
     if (targetAvg && !l2Input) {
-        // Find L2 to reach targetAvg
-        // Formula: (P1*L1 + P2*X) / (L1 + X) = Pavg
-        // P1*L1 + P2*X = Pavg * (L1 + X)
-        // P1*L1 + P2*X = Pavg*L1 + Pavg*X
-        // P2*X - Pavg*X = Pavg*L1 - P1*L1
-        // X * (P2 - Pavg) = L1 * (Pavg - P1)
-        // X = L1 * (Pavg - P1) / (P2 - Pavg)
+        const tAvg = Number(targetAvg);
+        const pp1 = Number(p1);
+        const pp2 = Number(p2);
 
-        const l2 = (l1 * (targetAvg - p1)) / (p2 - targetAvg);
-        result.l2 = Math.ceil(l2);
-        result.targetAvg = targetAvg;
+        // Validation: Is the targetAvg physically possible?
+        const minPossible = Math.min(pp1, pp2);
+        const maxPossible = Math.max(pp1, pp2);
+
+        if (tAvg < minPossible || tAvg > maxPossible) {
+            result.warning = true;
+            if (pp2 < pp1 && tAvg < pp2) {
+                result.advice = `⚠️ Target avg <b>${tAvg.toLocaleString('id-ID')}</b> tidak mungkin tercapai karena harga beli baru Anda (P2) adalah <b>${pp2.toLocaleString('id-ID')}</b>. Rata-rata terendah yang bisa dicapai adalah mendekati ${pp2}.`;
+            } else if (pp2 > pp1 && tAvg > pp2) {
+                result.advice = `⚠️ Target avg <b>${tAvg.toLocaleString('id-ID')}</b> tidak mungkin tercapai karena harga beli baru Anda (P2) adalah <b>${pp2.toLocaleString('id-ID')}</b>. Rata-rata tertinggi yang bisa dicapai adalah mendekati ${pp2}.`;
+            } else {
+                result.advice = `⚠️ Target avg <b>${tAvg.toLocaleString('id-ID')}</b> tidak logis untuk kondisi harga saat ini.`;
+            }
+            result.l2 = 0;
+            result.targetAvg = tAvg;
+        } else {
+            // Formula: X = L1 * (Pavg - P1) / (P2 - Pavg)
+            const l2Match = (Number(l1) * (tAvg - pp1)) / (pp2 - tAvg);
+            result.l2 = Math.ceil(l2Match);
+            result.targetAvg = tAvg;
+
+            // Re-calculate actual average based on rounded lot
+            const actualTotalLot = Number(l1) + result.l2;
+            const actualTotalModal = modalAwal + (pp2 * result.l2 * 100);
+            const actualAvg = Math.round(actualTotalModal / (actualTotalLot * 100));
+
+            result.advice = `✅ Untuk mencapai target avg <b>${tAvg.toLocaleString('id-ID')}</b>, Anda perlu membeli minimal <b>${result.l2} lot</b> di harga <b>${pp2.toLocaleString('id-ID')}</b>. (Rata-rata baru akan menjadi ${actualAvg.toLocaleString('id-ID')}).`;
+        }
     } else {
         // Calculate Pavg from L2
-        result.l2 = l2Input || 0;
+        result.l2 = Number(l2Input) || 0;
+        result.targetAvg = null;
     }
 
-    const totalLot = l1 + result.l2;
-    const modalTambahan = p2 * result.l2 * 100;
+    // 3. Simulation Results
+    const totalLot = Number(l1) + result.l2;
+    const modalTambahan = Number(p2) * result.l2 * 100;
     const totalModal = modalAwal + modalTambahan;
-    const avgBaru = Math.round(totalModal / (totalLot * 100));
-    const selisihPersen = ((avgBaru - p1) / p1) * 100;
+    const avgBaru = totalLot > 0 ? Math.round(totalModal / (totalLot * 100)) : Number(p1);
+    const selisihPersen = ((avgBaru - Number(p1)) / Number(p1)) * 100;
+
+    // 4. Projections (SL/TP)
+    const newSl = Math.round(avgBaru * (1 - slPercent / 100));
+    const newTp = Math.round(avgBaru * (1 + tpPercent / 100));
 
     result.totalLot = totalLot;
     result.modalTambahan = modalTambahan;
     result.totalModal = totalModal;
     result.avgBaru = avgBaru;
     result.selisihPersen = selisihPersen;
+    result.newSl = newSl;
+    result.newTp = newTp;
 
     return result;
 }
@@ -64,25 +109,33 @@ function calculateAvg(params) {
 function formatAvgReport(data) {
     const status = data.avgBaru < data.p1 ? "Average Down" : "Average Up";
     const arrow = data.avgBaru < data.p1 ? "📉" : "📈";
+    const plSign = data.floatingPlIdr >= 0 ? "+" : "";
+    const plColor = data.floatingPlIdr >= 0 ? "🟢" : "🔴";
 
     return `
-📊 *Simulasi ${status}: ${data.symbol}*
+📊 *Laporan Kalkulator Avg: ${data.symbol}*
 
-1️⃣ *Posisi Awal:*
-• Harga Beli: ${data.p1.toLocaleString('id-ID')}
-• Jumlah Lot: ${data.l1} lot
-• Total Modal: ${formatIDR(data.modalAwal)}
+📉 *Status Portofolio:*
+• Modal Awal: ${formatIDR(data.modalAwal)}
+• Harga Pasar: ${data.currentPrice.toLocaleString('id-ID')}
+• **Floating P/L: ${plColor} ${plSign}${formatIDR(data.floatingPlIdr)} (${data.floatingPlPercent.toFixed(2)}%)**
 
-2️⃣ *Rencana Pembelian:*
-• Harga Baru: ${data.p2.toLocaleString('id-ID')}
-${data.targetAvg ? `• Target Rata-rata: ${data.targetAvg.toLocaleString('id-ID')}\n` : ''}• **Butuh Beli: ${data.l2} lot** (${formatIDR(data.modalTambahan)})
+🎯 *Simulasi Pembelian:*
+• Harga Beli Baru: ${data.p2.toLocaleString('id-ID')}
+• Jumlah Lot Baru: ${data.l2} lot
+• Modal Tambahan: ${formatIDR(data.modalTambahan)}
 
-3️⃣ *Hasil Simulasi (Dibulatkan):*
+✅ *Hasil Rerata Baru:*
 • Total Lot: ${data.totalLot} lot
 • Total Modal: ${formatIDR(data.totalModal)}
 • **Rata-rata Baru: ${data.avgBaru.toLocaleString('id-ID')}** ${arrow} (${data.selisihPersen.toFixed(2)}% dari awal)
 
-> *Catatan:* Perhitungan ini adalah estimasi. Selalu pertimbangkan manajemen risiko.
+🛡 *Proyeksi Manajemen Risiko:*
+• New Stop Loss (3%): ${data.newSl.toLocaleString('id-ID')}
+• New Take Profit (5%): ${data.newTp.toLocaleString('id-ID')}
+
+${data.advice ? `\n💡 *Analisa:* \n${data.advice}\n` : ''}
+> *Catatan:* Perhitungan ini adalah estimasi. Selalu gunakan broker fee yang sesuai untuk akurasi maksimal.
 `.trim();
 }
 

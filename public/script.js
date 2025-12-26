@@ -439,8 +439,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const action = btn.dataset.action;
             const symbol = tickerInput.value.trim().toUpperCase();
 
-            // Special Handler: Avg Modal
-            if (action === 'avg-modal') {
+            // Special Handler: Avg Page
+            if (action === 'avg-page') {
                 if (!symbol) {
                     tickerInput.style.borderColor = '#ef4444';
                     tickerInput.focus();
@@ -448,29 +448,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
                     return;
                 }
-
-                // Try to fetch current price for P2
-                const p2Input = document.getElementById('avg-p2');
-                if (p2Input) {
-                    p2Input.placeholder = "Loading price...";
-                    fetch('/api/web', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${sessionToken}`
-                        },
-                        body: JSON.stringify({ action: 'profile', symbol })
-                    }).then(res => res.json()).then(data => {
-                        if (data.success) {
-                            // Profile output is formatted HTML, we need to extract price if possible
-                            // Or we could have added a specific 'price' action.
-                            // For now, let's just show the modal.
-                        }
-                    }).catch(err => console.error('Price fetch failed:', err));
-                }
-
-                avgModal.classList.remove('hidden');
-                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                window.location.href = `avg.html?symbol=${symbol}`;
                 return;
             }
 
