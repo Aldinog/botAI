@@ -69,26 +69,28 @@ try {
         });
     });
 
-    // Mode Toggle Logic
-    const btnAuto = document.getElementById('btn-auto');
-    const btnClear = document.getElementById('btn-clear');
+    // Mode Toggle Logic (Unified Button)
+    const btnToggle = document.getElementById('btn-mode-toggle');
 
-    btnAuto.addEventListener('click', () => {
-        currentMode = 'analysis';
-        btnAuto.classList.add('active');
-        btnClear.classList.remove('active');
-        renderAutoFeatures(lastResponseData);
-        if (candlestickSeries && lastMarkers) {
-            candlestickSeries.setMarkers(lastMarkers);
+    btnToggle.addEventListener('click', () => {
+        if (currentMode === 'analysis') {
+            // Switch to Clear Mode
+            currentMode = 'clear';
+            btnToggle.innerText = 'Analysis';
+            btnToggle.classList.remove('mode-analysis');
+            btnToggle.classList.add('mode-clear');
+            clearAutoFeatures();
+        } else {
+            // Switch to Analysis Mode
+            currentMode = 'analysis';
+            btnToggle.innerText = 'Clear';
+            btnToggle.classList.remove('mode-clear');
+            btnToggle.classList.add('mode-analysis');
+            renderAutoFeatures(lastResponseData);
+            if (candlestickSeries && lastMarkers) {
+                candlestickSeries.setMarkers(lastMarkers);
+            }
         }
-    });
-
-    btnClear.addEventListener('click', () => {
-        currentMode = 'clear';
-        btnClear.classList.add('active');
-        btnAuto.classList.remove('active');
-        clearAutoFeatures();
-        // Markers stay visible in Clear mode as requested
     });
 
     // Start Data Load
