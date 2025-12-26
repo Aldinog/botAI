@@ -139,8 +139,8 @@ function formatAvgReport(data) {
 • **Rata-rata Baru: ${data.avgBaru.toLocaleString('id-ID')}** ${arrow} (${data.selisihPersen.toFixed(2)}% dari awal)
 
 🛡 *Proyeksi Manajemen Risiko:*
-• New Stop Loss (3%): ${data.newSl.toLocaleString('id-ID')} (Est: ${formatIDR(data.slLossIdr)})
-• New Take Profit (5%): ${data.newTp.toLocaleString('id-ID')} (Est: +${formatIDR(data.tpProfitIdr)})
+• New Stop Loss (3%): ${data.newSl.toLocaleString('id-ID')}\n(Est: ${formatIDR(data.slLossIdr)})
+• New Take Profit (5%): ${data.newTp.toLocaleString('id-ID')}\n(Est: +${formatIDR(data.tpProfitIdr)})
 
 ${data.advice ? `\n💡 *Analisa:* \n${data.advice}\n` : ''}
 > *Catatan:* Perhitungan ini adalah estimasi. Selalu gunakan broker fee yang sesuai untuk akurasi maksimal.

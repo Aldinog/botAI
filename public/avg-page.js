@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lineWidth: 2,
                 lineStyle: LightweightCharts.LineStyle.Solid,
                 axisLabelVisible: true,
-                title: `Entry Awal: ${p1} (${l1} Lot)`,
+                title: `Entry Awal: (${l1} Lot)`,
             });
         }
 
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lineWidth: 2,
                 lineStyle: LightweightCharts.LineStyle.Dashed,
                 axisLabelVisible: true,
-                title: `Entry Baru: ${p2} (${l2} Lot)`,
+                title: `Entry Baru: (${l2} Lot)`,
             });
         }
 
