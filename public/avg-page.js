@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lineWidth: 2,
                 lineStyle: LightweightCharts.LineStyle.Solid,
                 axisLabelVisible: true,
-                title: `P1: ${p1} (${l1} Lot)`,
+                title: `Entry Awal: ${p1} (${l1} Lot)`,
             });
         }
 
@@ -229,18 +229,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lineWidth: 2,
                 lineStyle: LightweightCharts.LineStyle.Dashed,
                 axisLabelVisible: true,
-                title: `P2: ${p2} (${l2} Lot)`,
+                title: `Entry Baru: ${p2} (${l2} Lot)`,
             });
         }
 
         if (avg) {
             priceLines.avg = mainCandleSeries.createPriceLine({
                 price: Number(avg),
-                color: '#fff',
+                color: '#588228ff',
                 lineWidth: 3,
                 lineStyle: LightweightCharts.LineStyle.Solid,
                 axisLabelVisible: true,
-                title: `AVG: ${avg}`,
+                title: `AVG Baru: ${avg}`,
             });
         }
     };
