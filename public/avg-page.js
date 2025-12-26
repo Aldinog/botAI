@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 currentMarketPrice = uniqueCandles[uniqueCandles.length - 1].close;
                 marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
-                marketInfo.innerText = `Realtime ${interval.toUpperCase()} (Success)`;
+                marketInfo.innerText = `Realtime ${interval.toUpperCase()}`;
 
                 if (!inpP2.value) inpP2.value = currentMarketPrice;
                 updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
