@@ -2,11 +2,11 @@ const { fetchHistorical } = require('./yahoofinance');
 const { EMA } = require('technicalindicators');
 const { computeIndicators, detectAdvancedSignal } = require('./indicators');
 
-async function getChartData(symbol, interval = '1d') {
-    console.log(`[CHART] Request: ${symbol} ${interval}`);
+async function getChartData(symbol, interval = '1d', limit = 300) {
+    console.log(`[CHART] Request: ${symbol} ${interval} Limit: ${limit}`);
 
     // 1. Fetch Primary Data
-    const candles = await fetchHistorical(symbol, { interval, limit: 300 });
+    const candles = await fetchHistorical(symbol, { interval, limit });
     if (!candles || candles.length < 30) {
         return { candles: [], markers: [], levels: [] };
     }

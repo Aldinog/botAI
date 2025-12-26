@@ -280,10 +280,11 @@ module.exports = async (req, res) => {
                 // Dynamic import to keep init fast
                 const { getChartData } = require('../src/utils/charting');
                 const interval = req.body.interval || '1d';
-                console.log(`[API] Processing chart request for ${symbol} interval ${interval}`);
+                const limit = req.body.limit || 300;
+                console.log(`[API] Processing chart request for ${symbol} interval ${interval} limit ${limit}`);
 
                 try {
-                    const chartData = await getChartData(symbol, interval);
+                    const chartData = await getChartData(symbol, interval, limit);
                     console.log(`[API] Returning chart data: ${chartData.candles.length} candles, ${chartData.markers.length} markers`);
 
                     // Directly return JSON, bypass HTML formatting logic

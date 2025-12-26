@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/api/web', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-                body: JSON.stringify({ action: 'chart', symbol: sym, interval: '1h' })
+                body: JSON.stringify({ action: 'chart', symbol: sym, interval: '1h', limit: 100 })
             });
             const data = await response.json();
 
@@ -104,8 +104,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 candleSeries.setData(formatted);
                 currentMarketPrice = data.data.candles[data.data.candles.length - 1].close;
                 marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
-                marketInfo.innerText = "Realtime H1";
+                marketInfo.innerText = "Realtime H1 (7 Days)";
                 if (!inpP2.value) inpP2.value = currentMarketPrice;
+
+                // Crucial: Update P/L display once market price is received
+                updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
 
                 chart.timeScale().fitContent();
                 if (loader) loader.style.display = 'none';
