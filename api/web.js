@@ -355,8 +355,8 @@ module.exports = async (req, res) => {
                         return res.json({
                             success: true,
                             data: reportHtml,
-                            raw: avgData, // Send raw data for chart visualization
-                            active_theme: (await supabase.from('user_themes').select('active_theme').eq('session_token', token).maybeSingle()).data?.active_theme
+                            raw: avgData,
+                            active_theme: activeTheme
                         });
                     }
                 }

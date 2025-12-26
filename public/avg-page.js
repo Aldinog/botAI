@@ -320,6 +320,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 })
             });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[SIMULATE] API Error:', response.status, errorText);
+                throw new Error(`API returned ${response.status}: ${errorText.slice(0, 50)}`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
@@ -340,6 +346,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             outputArea.innerHTML = '<div style="color: #f87171; padding: 20px;">⚠ Koneksi terputus.</div>';
         }
     });
+
+    // --- Real-time P/L Updates ---
+    const triggerPlUpdate = () => {
+        const p1 = inpP1.value;
+        const l1 = inpL1.value;
+        if (p1 && l1 && currentMarketPrice) {
+            updatePlDisplay(p1, l1, currentMarketPrice);
+        }
+    };
+
+    inpP1.addEventListener('input', triggerPlUpdate);
+    inpL1.addEventListener('input', triggerPlUpdate);
 
     // Init components
     initChart();
