@@ -9,8 +9,8 @@ let crosshairPosition = null;
 
 // Get URL Params
 const urlParams = new URLSearchParams(window.location.search);
-const symbol = urlParams.get('symbol') || 'BBCA';
-document.getElementById('chart-title').innerText = symbol;
+let currentSymbol = urlParams.get('symbol') || 'BBCA';
+document.getElementById('chart-title').innerText = currentSymbol;
 
 // Initialization
 try {
@@ -93,6 +93,20 @@ try {
     // Start Data Load
     loadData('1d');
 
+    // Ticker Switch Logic
+    const tickerInput = document.getElementById('ticker-switch');
+    if (tickerInput) {
+        tickerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                switchSymbol(tickerInput.value);
+                tickerInput.blur();
+            }
+        });
+
+        // Optional: Sync input with current symbol
+        tickerInput.value = currentSymbol;
+    }
+
 } catch (e) {
     console.error(e);
 }
@@ -110,6 +124,28 @@ function toTimestamp(time) {
 
 // Global so we can re-render on mode switch
 // (declared at top)
+
+async function switchSymbol(newSymbol) {
+    if (!newSymbol) return;
+    const cleanSymbol = newSymbol.toUpperCase().trim();
+    if (cleanSymbol === currentSymbol) return;
+
+    console.log(`[SWITCH] Switching from ${currentSymbol} to ${cleanSymbol}`);
+    currentSymbol = cleanSymbol;
+    document.getElementById('chart-title').innerText = currentSymbol;
+
+    // Clear existing data and features immediately for better UX
+    if (candlestickSeries) candlestickSeries.setData([]);
+    clearAutoFeatures();
+
+    // Trigger data load
+    await loadData('1d');
+
+    // Update URL without refresh (optional, good for bookmarking)
+    const newUrl = new URL(window.location);
+    newUrl.searchParams.set('symbol', currentSymbol);
+    window.history.pushState({}, '', newUrl);
+}
 
 // Load Data Function
 async function loadData(interval) {
@@ -138,7 +174,7 @@ async function loadData(interval) {
             },
             body: JSON.stringify({
                 action: 'chart',
-                symbol: symbol,
+                symbol: currentSymbol,
                 interval: interval
             })
         });
@@ -150,7 +186,7 @@ async function loadData(interval) {
             if (spinnerText) spinnerText.innerText = 'Generating Signals...';
             const { candles, markers, levels, trendlines } = res.data;
 
-            document.getElementById('chart-title').innerText = `${symbol}`;
+            document.getElementById('chart-title').innerText = `${currentSymbol}`;
 
             if (candles.length === 0) {
                 if (spinnerText) spinnerText.innerText = 'No Data Found';

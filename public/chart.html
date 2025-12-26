@@ -249,6 +249,51 @@
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
             cursor: pointer;
         }
+
+        /* Ticker Switch Styling */
+        .header-left {
+            gap: 15px !important;
+        }
+
+        .ticker-switch-container {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 2px 8px;
+            transition: all 0.3s ease;
+        }
+
+        .ticker-switch-container:focus-within {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
+        }
+
+        .ticker-switch-container label {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            font-weight: 700;
+            margin-right: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .ticker-switch-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            width: 70px;
+            outline: none;
+            text-transform: uppercase;
+        }
+
+        .ticker-switch-input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+        }
     </style>
 </head>
 
@@ -259,6 +304,10 @@
         <div class="header-left">
             <button class="back-btn" onclick="history.back()">←</button>
             <h1 id="chart-title">Loading...</h1>
+            <div class="ticker-switch-container">
+                <label>SWITCH</label>
+                <input type="text" id="ticker-switch" class="ticker-switch-input" placeholder="TICKER" maxlength="5">
+            </div>
         </div>
         <div class="controls">
             <div class="mode-toggle">
