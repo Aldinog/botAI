@@ -228,7 +228,7 @@ bot.help((ctx) => {
     "   Sekarang Anda bisa melakukan Analisa, Cek Harga, Signal, dan Review Setup " +
     "lebih mudah melalui Mini App kami.\n\n" +
     "🚀 <b>Buka App untuk fitu lengkap:</b>\n" +
-    "• /harga, /indikator, /analisa\n" +
+    "• /harga, /avg, /analisa\n" +
     "• /proxy, /signal, /review\n" +
     "• /fundamental\n\n" +
     "Mulai sekarang dengan klik tombol di bawah!",
@@ -244,9 +244,41 @@ bot.help((ctx) => {
 });
 
 // =========================
+// COMMAND: AVG (Custom)
+// =========================
+bot.command("avg", (ctx) => {
+  const user = ctx.from?.username || ctx.from?.first_name || "Unknown";
+  console.log(`${user} menggunakan /avg`);
+
+  const usageText =
+    "📊 <b>Kalkulator Average Up/Down</b>\n\n" +
+    "Fitur ini dirancang untuk membantu Anda merencanakan transaksi saham dengan menghitung harga rata-rata baru setelah melakukan penambahan posisi (Average Up) atau penurunan harga rata-rata (Average Down).\n\n" +
+    "📈 <b>Fungsi Utama:</b>\n" +
+    "• Menghitung berapa lot yang perlu dibeli untuk mencapai target harga rata-rata tertentu.\n" +
+    "• Mensimulasikan harga rata-rata baru jika Anda membeli sejumlah lot tertentu.\n" +
+    "• Mengetahui estimasi total modal yang dibutuhkan.\n\n" +
+    "💡 <b>Cara Penggunaan:</b>\n" +
+    "1. Klik tombol <b>🚀 Buka App</b> di bawah.\n" +
+    "2. Masukkan <b>Ticker Saham</b> (contoh: BBCA) di kolom pencarian utama.\n" +
+    "3. Klik tombol <b>📊 KalkulatorAvg UP/DOWN</b>.\n" +
+    "4. Isi data: <i>Harga Beli Lama, Jumlah Lot Lama,</i> dan <i>Harga Beli Baru</i>.\n" +
+    "5. Masukkan <b>Target Rata-rata</b> (untuk mencari jumlah lot) ATAU <b>Lot Baru</b> (untuk mencari rata-rata).\n\n" +
+    "🚀 <b>Klik tombol di bawah untuk mulai simulasi:</b>";
+
+  return ctx.reply(usageText, {
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🚀 Buka App", url: MINI_APP_URL }]
+      ]
+    }
+  });
+});
+
+// =========================
 // COMMAND: REDIRECTS
 // =========================
-bot.command(["indikator", "harga", "broksum", "proxy", "review", "signal", "analisa", "fundamental", "profile"], bot_reply_redirect);
+bot.command(["harga", "broksum", "proxy", "review", "signal", "analisa", "fundamental", "profile"], bot_reply_redirect);
 
 // =========================
 // CATCH-ALL LOGGING

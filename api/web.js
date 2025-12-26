@@ -11,6 +11,7 @@ const {
     formatProfile
 } = require('../src/utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
+const { calculateAvg, formatAvgReport } = require('../src/utils/avg');
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../src/utils/supabase');
 const axios = require('axios');
@@ -301,12 +302,28 @@ module.exports = async (req, res) => {
 
             case 'review':
                 const { generateReview } = await import('../src/utils/review.js');
-                const { entry, sl, mode } = req.body; // mode = BUY/SELL
-                // Check required params
+                const { entry, sl, mode } = req.body;
                 if (!entry || !mode) {
                     result = "❌ Data entry dan action (BUY/SELL) wajib diisi.";
                 } else {
                     result = await generateReview(mode, symbol, entry, sl);
+                }
+                break;
+
+            case 'avg':
+                const { p1, l1, p2, targetAvg, l2Input } = req.body;
+                if (!p1 || !l1 || !p2) {
+                    result = "❌ Data harga beli lama, jumlah lot, dan harga baru wajib diisi.";
+                } else {
+                    const avgData = calculateAvg({
+                        symbol,
+                        p1: Number(p1),
+                        l1: Number(l1),
+                        p2: Number(p2),
+                        targetAvg: targetAvg ? Number(targetAvg) : null,
+                        l2Input: l2Input ? Number(l2Input) : null
+                    });
+                    result = formatAvgReport(avgData);
                 }
                 break;
 

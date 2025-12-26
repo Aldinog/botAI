@@ -128,9 +128,9 @@
                         <span class="btn-icon">🏢</span>
                         <span class="btn-text">Profil Emiten</span>
                     </button>
-                    <button class="glass-btn" data-action="indicators">
+                    <button class="glass-btn" data-action="avg-modal">
                         <span class="btn-icon">📊</span>
-                        <span class="btn-text">Indikator</span>
+                        <span class="btn-text">KalkulatorAvg UP/DOWN</span>
                     </button>
                 </div>
             </div>
@@ -175,6 +175,44 @@
                 </div>
                 <button class="glass-btn primary-btn" id="submit-review">
                     Analyze Setup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Price Modal -->
+    <div id="avg-modal" class="modal-overlay hidden">
+        <div class="glass-card modal-content">
+            <button class="icon-btn" id="close-avg">✕</button>
+            <div class="card-header">
+                <h3>Avg Price Calculator</h3>
+            </div>
+            <div class="modal-body">
+                <div class="input-wrapper">
+                    <label>HARGA BELI LAMA</label>
+                    <input type="number" id="avg-p1" placeholder="e.g. 1395">
+                </div>
+                <div class="input-wrapper">
+                    <label>JUMLAH LOT LAMA</label>
+                    <input type="number" id="avg-l1" placeholder="e.g. 5">
+                </div>
+                <!-- Input Divider added for visual separation -->
+                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0;"></div>
+                <div class="input-wrapper">
+                    <label>HARGA BELI BARU</label>
+                    <input type="number" id="avg-p2" placeholder="e.g. 1230">
+                </div>
+                <div class="input-wrapper">
+                    <label>TARGET AVG PRICE (Optional)</label>
+                    <input type="number" id="avg-target" placeholder="e.g. 1286">
+                </div>
+                <div class="input-wrapper">
+                    <label>ATAU JUMLAH LOT BARU</label>
+                    <input type="number" id="avg-l2" placeholder="e.g. 10">
+                </div>
+
+                <button class="glass-btn primary-btn" id="submit-avg">
+                    Calculate Simulation
                 </button>
             </div>
         </div>

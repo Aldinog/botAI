@@ -263,6 +263,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toggleBtns = document.querySelectorAll('.toggle-btn');
     let reviewAction = 'BUY'; // Default
 
+    // Average Modal Elements
+    const avgModal = document.getElementById('avg-modal');
+    const closeAvgBtn = document.getElementById('close-avg');
+    const submitAvgBtn = document.getElementById('submit-avg');
+
     // --- Helper Functions ---
 
     const showLoading = (text) => {
@@ -362,16 +367,116 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // --- Average Modal Logic ---
+
+    const closeAvg = () => {
+        avgModal.classList.add('hidden');
+    };
+
+    if (closeAvgBtn) closeAvgBtn.addEventListener('click', closeAvg);
+    if (avgModal) avgModal.addEventListener('click', (e) => {
+        if (e.target === avgModal) closeAvg();
+    });
+
+    if (submitAvgBtn) {
+        submitAvgBtn.addEventListener('click', async () => {
+            const symbol = tickerInput.value.trim().toUpperCase();
+            const p1 = document.getElementById('avg-p1').value;
+            const l1 = document.getElementById('avg-l1').value;
+            const p2 = document.getElementById('avg-p2').value;
+            const targetAvg = document.getElementById('avg-target').value;
+            const l2Input = document.getElementById('avg-l2').value;
+
+            if (!symbol) {
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                return alert('Please enter a Stock Ticker in the main input first!');
+            }
+            if (!p1 || !l1 || !p2) {
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                return alert('P1, L1, and P2 are required!');
+            }
+
+            closeAvg();
+            showLoading(`Calculating Avg for ${symbol}`);
+
+            try {
+                const response = await fetch('/api/web', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({
+                        action: 'avg',
+                        symbol,
+                        p1,
+                        l1,
+                        p2,
+                        targetAvg,
+                        l2Input
+                    })
+                });
+
+                if (await handleMaintenance(response.clone())) return;
+
+                const data = await response.json();
+                syncTheme(data);
+                if (response.ok && data.success) {
+                    showResult(data.data);
+                } else {
+                    showError(data.error || 'Calculation Failed');
+                }
+            } catch (err) {
+                console.error(err);
+                showError('Network Connectivity Error');
+            }
+        });
+    }
+
     // --- Main Action Buttons Logic ---
     buttons.forEach(btn => {
         btn.addEventListener('click', async () => {
             const action = btn.dataset.action;
             const symbol = tickerInput.value.trim().toUpperCase();
 
+            // Special Handler: Avg Modal
+            if (action === 'avg-modal') {
+                if (!symbol) {
+                    tickerInput.style.borderColor = '#ef4444';
+                    tickerInput.focus();
+                    setTimeout(() => tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)', 1000);
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                    return;
+                }
+
+                // Try to fetch current price for P2
+                const p2Input = document.getElementById('avg-p2');
+                if (p2Input) {
+                    p2Input.placeholder = "Loading price...";
+                    fetch('/api/web', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${sessionToken}`
+                        },
+                        body: JSON.stringify({ action: 'profile', symbol })
+                    }).then(res => res.json()).then(data => {
+                        if (data.success) {
+                            // Profile output is formatted HTML, we need to extract price if possible
+                            // Or we could have added a specific 'price' action.
+                            // For now, let's just show the modal.
+                        }
+                    }).catch(err => console.error('Price fetch failed:', err));
+                }
+
+                avgModal.classList.remove('hidden');
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                return;
+            }
+
             // Special Handler: Review Modal
             if (action === 'review-modal') {
                 if (!symbol) {
-                    // Shake Animation
                     tickerInput.style.borderColor = '#ef4444';
                     tickerInput.focus();
                     setTimeout(() => tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)', 1000);
