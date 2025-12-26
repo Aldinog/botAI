@@ -232,18 +232,13 @@ module.exports = async (req, res) => {
             console.log(`${username} menggunakan miniapp ${action}`);
         }
 
-    } catch (err) {
-        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
-    }
-    // --- End Authentication Middleware ---
+        // --- End Authentication Middleware ---
 
 
-    if (!symbol) {
-        return res.status(400).json({ error: 'Symbol is required' });
-    }
+        if (!symbol) {
+            return res.status(400).json({ error: 'Symbol is required' });
+        }
 
-
-    try {
         let result = '';
 
         switch (action) {
