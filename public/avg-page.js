@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (symbolDisplay) symbolDisplay.innerText = `TICKER: ${symbol || '--'}`;
 
     // --- Helpers ---
+    const currentPlPercentEl = document.getElementById('current-pl-percent');
+
     const formatIDR = (num) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
     };
@@ -47,8 +49,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isPositive = plIdr >= 0;
         const sign = isPositive ? '+' : '';
 
-        currentPlEl.innerText = `${sign}${formatIDR(plIdr)} (${plPercent.toFixed(2)}%)`;
+        currentPlEl.innerText = `${sign}${formatIDR(plIdr)}`;
         currentPlEl.className = `stat-value ${isPositive ? 'positive' : 'negative'}`;
+
+        if (currentPlPercentEl) {
+            currentPlPercentEl.innerText = `${sign}${plPercent.toFixed(2)}%`;
+            currentPlPercentEl.className = `stat-sub ${isPositive ? 'positive' : 'negative'}`;
+        }
 
         marketPriceEl.innerText = Number(currentPrice).toLocaleString('id-ID');
         marketPriceEl.className = 'stat-value';

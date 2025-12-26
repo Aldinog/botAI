@@ -22,137 +22,16 @@ if (!TELEGRAM_TOKEN) {
 }
 const bot = new Telegraf(TELEGRAM_TOKEN || "dummy_token");
 
-// =========================
-// Dynamic import "marked"
-// =========================
-let marked;
-async function loadMarked() {
-  if (!marked) marked = (await import("marked")).marked;
-  return marked;
-}
-
-// =========================
-// Split Message Safely
-// =========================
-function splitMessageSafe(text, maxLength = 4000) {
-  const parts = [];
-  let currentPart = "";
-  const openTags = [];
-
-  // Helper to close tags in reverse order
-  const closeTags = (tags) => tags.slice().reverse().map(t => `</${t}>`).join("");
-  // Helper to re-open tags
-  const reopenTags = (tags) => tags.map(t => `<${t}>`).join("");
-
-  // Split by words to avoid breaking words, but we need character-level control for tags if needed.
-  // Using a regex to find tags and words.
-  // This is a simplified parser. For strict Telegram HTML, we care about <b>, <i>, <code>, <pre>.
-  // We'll iterate by tokens (tags or text).
-
-  const regex = /(<\/?(?:b|i|code|pre)>)|([^<]+)/g;
-  let match;
-
-  while ((match = regex.exec(text)) !== null) {
-    const token = match[0];
-    const isTag = !!match[1];
-
-    // Calculate potential length if we add this token
-    // We must also account for the closing tags we might need to add if we split here
-    const closingOverhead = closeTags(openTags).length;
-
-    if (currentPart.length + token.length + closingOverhead > maxLength) {
-      // Must split now
-      parts.push(currentPart + closeTags(openTags));
-      currentPart = reopenTags(openTags);
-    }
-
-    currentPart += token;
-
-    if (isTag) {
-      if (token.startsWith("</")) {
-        // Closing tag - remove from stack
-        const tagName = token.replace(/<\/?|>/g, "");
-        // Only pop if it matches the last opened (simple validation)
-        if (openTags.length > 0 && openTags[openTags.length - 1] === tagName) {
-          openTags.pop();
-        }
-      } else {
-        // Opening tag - add to stack
-        const tagName = token.replace(/<|>/g, "");
-        openTags.push(tagName);
-      }
-    }
-  }
-
-  if (currentPart.trim()) {
-    parts.push(currentPart + closeTags(openTags));
-  }
-
-  return parts;
-}
+const {
+  markdownToTelegramHTML,
+  splitMessageSafe
+} = require("../src/utils/telegram");
 
 async function sendLongMessage(ctx, html) {
   const parts = splitMessageSafe(html);
   for (const part of parts) {
     await ctx.reply(part, { parse_mode: "HTML" });
   }
-}
-
-// =========================
-// Sanitize Telegram HTML
-// =========================
-function sanitizeTelegramHTML(html) {
-  let safe = html
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  const allow = {
-    "&lt;b&gt;": "<b>",
-    "&lt;/b&gt;": "</b>",
-    "&lt;i&gt;": "<i>",
-    "&lt;/i&gt;": "</i>",
-    "&lt;code&gt;": "<code>",
-    "&lt;/code&gt;": "</code>",
-    "&lt;pre&gt;": "<pre>",
-    "&lt;/pre&gt;": "</pre>"
-  };
-
-  for (const [from, to] of Object.entries(allow)) {
-    safe = safe.replace(new RegExp(from, "g"), to);
-  }
-
-  return safe;
-}
-
-// =========================
-// Markdown → Telegram HTML
-// =========================
-async function markdownToTelegramHTML(md) {
-  const markedFn = await loadMarked();
-  let html = markedFn(md);
-
-  html = html.replace(/<\/?(div|span|blockquote|a|img|h[1-6]|table|tr|td|th)[^>]*>/g, "");
-
-  html = html
-    .replace(/<strong>/g, "<b>")
-    .replace(/<\/strong>/g, "</b>")
-    .replace(/<em>/g, "<i>")
-    .replace(/<\/em>/g, "</i>")
-    .replace(/<p>/g, "")
-    .replace(/<\/p>/g, "\n\n")
-    .replace(/<ul>/g, "")
-    .replace(/<\/ul>/g, "")
-    .replace(/<ol>/g, "")
-    .replace(/<\/ol>/g, "")
-    .replace(/<li>/g, "• ")
-    .replace(/<\/li>/g, "\n")
-    .replace(/<hr\s*\/?>/g, "────────────\n")
-    .replace(/<br\s*\/?>/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-
-  return sanitizeTelegramHTML(html);
 }
 
 // =========================

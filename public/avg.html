@@ -26,10 +26,11 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 600px;
             margin: 0 auto;
             padding: 15px;
             box-sizing: border-box;
+            width: 100%;
         }
 
         .back-btn {
@@ -56,55 +57,66 @@
 
         .avg-grid {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
+            grid-template-columns: 1fr;
             gap: 15px;
             width: 100%;
         }
 
-        @media (max-width: 900px) {
-            .avg-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         .stats-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-bottom: 20px;
-            overflow-x: auto;
-            padding-bottom: 5px;
         }
 
         .stat-card {
-            flex: 1;
-            min-width: 140px;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             padding: 12px;
             border-radius: 16px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
         .stat-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .stat-value {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: #fff;
+            width: 100%;
+            overflow-x: auto;
             white-space: nowrap;
+            scrollbar-width: none;
         }
 
-        .stat-value.negative {
+        .stat-value::-webkit-scrollbar {
+            display: none;
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .stat-value.negative,
+        .stat-sub.negative {
             color: #f87171;
         }
 
-        .stat-value.positive {
+        .stat-value.positive,
+        .stat-sub.positive {
             color: #34d399;
         }
 
@@ -266,10 +278,12 @@
                     <div class="stat-card">
                         <div class="stat-label">Market Price</div>
                         <div class="stat-value" id="market-price">--</div>
+                        <div class="stat-sub" id="market-info">Realtime</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Floating P/L</div>
                         <div class="stat-value" id="current-pl">--</div>
+                        <div class="stat-sub" id="current-pl-percent">--</div>
                     </div>
                 </div>
 

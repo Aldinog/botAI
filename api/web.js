@@ -12,6 +12,7 @@ const {
 } = require('../src/utils/yahoofinance');
 const { computeIndicators, formatIndicatorsForPrompt } = require('../src/utils/indicators');
 const { calculateAvg, formatAvgReport } = require('../src/utils/avg');
+const { markdownToTelegramHTML } = require('../src/utils/telegram');
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../src/utils/supabase');
 const axios = require('axios');
