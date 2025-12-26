@@ -118,8 +118,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 0;
     };
 
+    let isFetchingCandles = false;
     const fetchCandles = async (sym, interval = '1h') => {
-        if (!sym) return false;
+        if (!sym || isFetchingCandles) return false;
+        isFetchingCandles = true;
         const loader = document.getElementById('chart-loading');
         if (loader) {
             loader.style.display = 'flex';
@@ -188,6 +190,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 loader.innerText = err.message.includes('API Error') ? err.message : "Connection Refused / CORS Issue";
                 loader.style.color = "#f87171";
             }
+        } finally {
+            isFetchingCandles = false;
         }
         return false;
     };
@@ -320,7 +324,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- Simulation Trigger ---
+    let isSimulating = false;
     btnCalculate.addEventListener('click', async () => {
+        if (isSimulating) return;
         const p1 = inpP1.value;
         const l1 = inpL1.value;
         const p2 = inpP2.value;
@@ -355,9 +361,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         console.log('[SIMULATE] Sending request:', payload);
-        outputArea.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div><div style="text-align:center; font-size: 0.7rem; opacity: 0.5;">Memproses simulasi...</div>';
-
         try {
+            isSimulating = true;
+            btnCalculate.disabled = true;
+            const originalBtnText = btnCalculate.innerHTML;
+            btnCalculate.innerHTML = '<span class="spinner-sm"></span>';
+
             const response = await fetch('/api/web', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
@@ -398,6 +407,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+        } finally {
+            isSimulating = false;
+            btnCalculate.disabled = false;
+            btnCalculate.innerHTML = 'Simulasikan Average';
         }
     });
 

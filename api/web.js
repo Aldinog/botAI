@@ -151,22 +151,38 @@ module.exports = async (req, res) => {
         }
 
         // --- Membership Check (CRITICAL) ---
-        // ... (existing membership check logic)
-        const groupIds = process.env.ALLOWED_GROUP_IDS ? process.env.ALLOWED_GROUP_IDS.split(',') : [];
-        const primaryGroupId = groupIds[0];
+        if (!isAdmin) {
+            const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+            const lastCheck = user.last_membership_check ? new Date(user.last_membership_check).getTime() : 0;
+            const isExpired = (Date.now() - lastCheck) > CACHE_DURATION;
 
-        try {
-            const status = await checkTelegramMembership(user.telegram_user_id, primaryGroupId, process.env.TELEGRAM_TOKEN);
-            if (!['creator', 'administrator', 'member'].includes(status)) {
+            let currentStatus = user.membership_status;
+            const groupIds = process.env.ALLOWED_GROUP_IDS ? process.env.ALLOWED_GROUP_IDS.split(',') : [];
+            const primaryGroupId = groupIds[0];
+
+            if (currentStatus !== 'member' || isExpired) {
+                try {
+                    currentStatus = await checkTelegramMembership(user.telegram_user_id, primaryGroupId, process.env.TELEGRAM_TOKEN);
+
+                    // Update Cache in DB
+                    await supabase.from('users').update({
+                        membership_status: currentStatus,
+                        last_membership_check: new Date().toISOString()
+                    }).eq('id', user.id);
+
+                } catch (e) {
+                    const isTimeout = e.code === 'ETIMEDOUT' || e.message.includes('timeout');
+                    console.error('Group check failed in middleware:', e.message);
+                    return res.status(500).json({
+                        error: isTimeout ? 'Telegram API Timeout. Silakan coba lagi nanti.' : 'Security check failed',
+                        details: e.message
+                    });
+                }
+            }
+
+            if (!['creator', 'administrator', 'member'].includes(currentStatus)) {
                 return res.status(403).json({ error: 'Jika sudah join silahkan buka ulang App' });
             }
-        } catch (e) {
-            const isTimeout = e.code === 'ETIMEDOUT' || e.message.includes('timeout');
-            console.error('Group check failed in middleware:', e.message);
-            return res.status(500).json({
-                error: isTimeout ? 'Telegram API Timeout. Silakan coba lagi nanti.' : 'Security check failed',
-                details: e.message
-            });
         }
 
 
