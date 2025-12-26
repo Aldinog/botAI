@@ -139,6 +139,10 @@ async function switchSymbol(newSymbol) {
     const tickerInput = document.getElementById('ticker-switch');
     if (tickerInput) tickerInput.value = currentSymbol;
 
+    // Reset company name to loading
+    const companyTitle = document.getElementById('company-title');
+    if (companyTitle) companyTitle.innerText = 'Loading...';
+
     // Clear existing data and features immediately for better UX
     if (candlestickSeries) candlestickSeries.setData([]);
     clearAutoFeatures();
@@ -189,10 +193,13 @@ async function loadData(interval) {
         if (res.success && res.data) {
             lastResponseData = res.data;
             if (spinnerText) spinnerText.innerText = 'Generating Signals...';
-            const { candles, markers, levels, trendlines } = res.data;
+            const { candles, markers, levels, trendlines, companyName } = res.data;
 
             const tickerInput = document.getElementById('ticker-switch');
             if (tickerInput) tickerInput.value = currentSymbol;
+
+            const companyTitle = document.getElementById('company-title');
+            if (companyTitle) companyTitle.innerText = companyName || currentSymbol;
 
             if (candles.length === 0) {
                 if (spinnerText) spinnerText.innerText = 'No Data Found';

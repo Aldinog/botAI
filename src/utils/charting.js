@@ -1,4 +1,4 @@
-const { fetchHistorical } = require('./yahoofinance');
+const { fetchHistorical, fetchProfile } = require('./yahoofinance');
 const { EMA } = require('technicalindicators');
 const { computeIndicators, detectAdvancedSignal } = require('./indicators');
 
@@ -7,8 +7,13 @@ async function getChartData(symbol, interval = '1d', limit = 300) {
 
     // 1. Fetch Primary Data
     const candles = await fetchHistorical(symbol, { interval, limit });
+
+    // Fetch profile for name synchronously to keep response unified
+    const profile = await fetchProfile(symbol);
+    const companyName = profile ? profile.name : symbol;
+
     if (!candles || candles.length < 30) {
-        return { candles: [], markers: [], levels: [] };
+        return { candles: [], markers: [], levels: [], companyName };
     }
 
     // 2. Fetch Daily Trend Data (if current interval is intraday)
@@ -89,7 +94,7 @@ async function getChartData(symbol, interval = '1d', limit = 300) {
         }
     }
 
-    return { candles, markers, levels, dailyTrend, trendlines };
+    return { candles, markers, levels, dailyTrend, trendlines, companyName };
 }
 
 /**
