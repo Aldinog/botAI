@@ -44,55 +44,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         const container = document.getElementById('chart-container');
         if (!container || chart) return;
 
-        // Verify library existence
         if (typeof LightweightCharts === 'undefined') {
-            console.error('[CHART] LightweightCharts library not loaded!');
             const loader = document.getElementById('chart-loading');
-            if (loader) {
-                loader.innerText = "Error: Library Chart tidak terminat (Cek Koneksi)";
-                loader.style.color = "#f87171";
-            }
+            if (loader) loader.innerText = "Error: Library Chart tidak termuat";
             return;
         }
 
         try {
             chart = LightweightCharts.createChart(container, {
                 layout: {
-                    background: { color: 'transparent' },
-                    textColor: 'rgba(255, 255, 255, 0.7)',
-                    fontSize: 10,
+                    background: { type: 'solid', color: 'transparent' },
+                    textColor: '#94a3b8',
                 },
                 grid: {
                     vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
                     horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
                 },
-                rightPriceScale: {
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                },
-                timeScale: {
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                    timeVisible: true,
-                },
+                width: container.clientWidth,
+                height: 350,
                 crosshair: {
                     mode: LightweightCharts.CrosshairMode.Normal,
-                    vertLine: { color: '#fbbf24', labelBackgroundColor: '#fbbf24' },
-                    horzLine: { color: '#fbbf24', labelBackgroundColor: '#fbbf24' },
-                }
+                },
+                timeScale: {
+                    timeVisible: true,
+                    secondsVisible: false,
+                },
             });
 
             candleSeries = chart.addCandlestickSeries({
-                upColor: '#34d399',
-                downColor: '#f87171',
+                upColor: '#22c55e',
+                downColor: '#ef4444',
                 borderVisible: false,
-                wickUpColor: '#34d399',
-                wickDownColor: '#f87171',
+                wickUpColor: '#22c55e',
+                wickDownColor: '#ef4444',
             });
+
             // Resize Handler
             const resizeObserver = new ResizeObserver(entries => {
                 for (const entry of entries) {
                     if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
                         if (chart) {
-                            chart.resize(entry.contentRect.width, entry.contentRect.height);
+                            chart.resize(entry.contentRect.width, 350);
                             chart.timeScale().fitContent();
                         }
                     }

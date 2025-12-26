@@ -353,7 +353,10 @@ module.exports = async (req, res) => {
                             feeSell
                         });
                         try {
-                            const reportHtml = await markdownToTelegramHTML(formatAvgReport(avgData));
+                            let reportHtml = await markdownToTelegramHTML(formatAvgReport(avgData));
+                            // Ensure newlines from formatAvgReport survive in browser HTML
+                            reportHtml = reportHtml.replace(/\n/g, '<br>');
+
                             return res.json({
                                 success: true,
                                 data: reportHtml,
