@@ -82,8 +82,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const fetchCandles = async (sym) => {
+        if (!sym) return false;
         const loader = document.getElementById('chart-loading');
-        if (loader) loader.style.display = 'flex';
+        if (loader) {
+            loader.style.display = 'flex';
+            loader.innerText = `Loading ${sym}...`;
+            loader.style.color = '#fbbf24';
+        }
+
+        console.log(`[CHART] Fetching data for ${sym}...`);
 
         try {
             const response = await fetch('/api/web', {
@@ -93,30 +100,62 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             const data = await response.json();
 
-            if (data.success && data.data.candles.length > 0) {
-                const formatted = data.data.candles.map(c => ({
-                    time: c.time, // Use secondary resolution (seconds) directly as backend already format it
-                    open: c.open,
-                    high: c.high,
-                    low: c.low,
-                    close: c.close
-                }));
-                candleSeries.setData(formatted);
-                currentMarketPrice = data.data.candles[data.data.candles.length - 1].close;
+            if (data.success && data.data && data.data.candles && data.data.candles.length > 0) {
+                console.log(`[CHART] Data received: ${data.data.candles.length} candles`);
+
+                // 1. Prepare and deduplicate candles (Lightweight Charts requirement)
+                let lastTime = 0;
+                const formatted = data.data.candles
+                    .map(c => ({
+                        time: Number(c.time),
+                        open: Number(c.open),
+                        high: Number(c.high),
+                        low: Number(c.low),
+                        close: Number(c.close)
+                    }))
+                    .sort((a, b) => a.time - b.time)
+                    .filter(c => {
+                        if (c.time > lastTime) {
+                            lastTime = c.time;
+                            return true;
+                        }
+                        return false;
+                    });
+
+                console.log(`[CHART] Formatted & unique candles: ${formatted.length}`);
+
+                if (candleSeries) {
+                    try {
+                        candleSeries.setData(formatted);
+                    } catch (chartErr) {
+                        console.error('[CHART] setData Error:', chartErr);
+                        if (loader) loader.innerText = "Error rendering chart";
+                        return false;
+                    }
+                } else {
+                    console.warn('[CHART] candleSeries not initialized!');
+                }
+
+                currentMarketPrice = formatted[formatted.length - 1].close;
                 marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
                 marketInfo.innerText = "Realtime H1 (7 Days)";
+
                 if (!inpP2.value) inpP2.value = currentMarketPrice;
 
                 // Crucial: Update P/L display once market price is received
                 updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
 
-                chart.timeScale().fitContent();
+                if (chart) chart.timeScale().fitContent();
+
                 if (loader) loader.style.display = 'none';
                 return true;
+            } else {
+                console.warn('[CHART] Empty or unsuccessful data:', data);
             }
         } catch (err) {
-            console.error('Fetch error:', err);
+            console.error('[CHART] Fetch/Process Error:', err);
         }
+
         if (loader) {
             loader.innerText = "Failed to load data";
             loader.style.color = "#f87171";
@@ -227,15 +266,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             return alert('Harap isi Harga Beli dan Lot Lama.');
         }
 
+        // Fix if symbol is missing (not in URL)
+        if (!symbol) symbol = tickerSwitch.value.trim().toUpperCase();
+        if (!symbol) {
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+            return alert('Silakan isi Market Ticker terlebih dahulu.');
+        }
+
         inpP1.value = p1;
         inpL1.value = l1;
         initialModal.style.display = 'none';
 
-        if (symbol) {
-            await fetchCandles(symbol);
-            updatePlDisplay(p1, l1, currentMarketPrice);
-            updatePriceLines(p1, l1, 0, 0, 0); // Show only P1 initially
-        }
+        console.log(`[INIT] Fetching data for ${symbol}...`);
+        await fetchCandles(symbol);
+        updatePlDisplay(p1, l1, currentMarketPrice);
+        updatePriceLines(p1, l1, 0, 0, 0); // Show only P1 initially
     });
 
     // --- Simulation Trigger ---
