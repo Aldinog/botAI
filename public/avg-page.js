@@ -12,82 +12,105 @@ document.addEventListener('DOMContentLoaded', async () => {
     const symbol = urlParams.get('symbol')?.toUpperCase() || '';
     let sessionToken = localStorage.getItem('aston_session_token');
 
-    const loader = document.getElementById('loader');
+    const initialModal = document.getElementById('initial-modal');
+    const initP1 = document.getElementById('init-p1');
+    const initL1 = document.getElementById('init-l1');
+    const btnContinue = document.getElementById('btn-continue');
+
     const outputArea = document.getElementById('output-area');
-    const activeTicker = document.getElementById('active-ticker');
+    const symbolDisplay = document.getElementById('symbol-display');
     const marketPriceEl = document.getElementById('market-price');
     const currentPlEl = document.getElementById('current-pl');
 
+    const inpP1 = document.getElementById('inp-p1');
+    const inpL1 = document.getElementById('inp-l1');
     const inpP2 = document.getElementById('inp-p2');
     const btnCalculate = document.getElementById('btn-calculate');
 
-    if (activeTicker) activeTicker.innerText = `Symbol: ${symbol || '--'}`;
+    let currentMarketPrice = 0;
+
+    if (symbolDisplay) symbolDisplay.innerText = `TICKER: ${symbol || '--'}`;
 
     // --- Helpers ---
-    const showLoader = (show) => {
-        if (show) loader.classList.remove('hidden');
-        else loader.classList.add('hidden');
-    };
-
     const formatIDR = (num) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
     };
 
-    // --- Initial Data Fetch ---
+    const updatePlDisplay = (p1, l1, currentPrice) => {
+        if (!p1 || !l1 || !currentPrice) return;
+
+        const modalAwal = Number(p1) * Number(l1) * 100;
+        const nilaiSekarang = Number(currentPrice) * Number(l1) * 100;
+        const plIdr = nilaiSekarang - modalAwal;
+        const plPercent = ((Number(currentPrice) - Number(p1)) / Number(p1)) * 100;
+
+        const isPositive = plIdr >= 0;
+        const sign = isPositive ? '+' : '';
+
+        currentPlEl.innerText = `${sign}${formatIDR(plIdr)} (${plPercent.toFixed(2)}%)`;
+        currentPlEl.className = `stat-value ${isPositive ? 'positive' : 'negative'}`;
+
+        marketPriceEl.innerText = Number(currentPrice).toLocaleString('id-ID');
+        marketPriceEl.className = 'stat-value';
+    };
+
+    // --- Initial Entry Setup ---
+    btnContinue.addEventListener('click', async () => {
+        const p1 = initP1.value;
+        const l1 = initL1.value;
+
+        if (!p1 || !l1) {
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+            return alert('Harap isi Harga Beli dan Lot Lama.');
+        }
+
+        // Sync to main form
+        inpP1.value = p1;
+        inpL1.value = l1;
+
+        // Hide modal and start fetching
+        initialModal.style.display = 'none';
+
+        if (symbol) {
+            await fetchMarketData();
+            updatePlDisplay(p1, l1, currentMarketPrice);
+        }
+    });
+
+    // --- Data Fetching ---
     const fetchMarketData = async () => {
         if (!symbol) return;
-        showLoader(true);
         try {
-            const response = await fetch('/api/web', {
+            // Use chart action as it's more reliable for numerical price
+            const priceRes = await fetch('/api/web', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${sessionToken}`
                 },
-                body: JSON.stringify({ action: 'profile', symbol })
+                body: JSON.stringify({ action: 'chart', symbol, interval: '1d' })
             });
-            const data = await response.json();
+            const pData = await priceRes.json();
 
             // Sync theme if available
-            if (data.active_theme && window.themeEngine) {
-                window.themeEngine.applyTheme(data.active_theme);
+            if (pData.active_theme && window.themeEngine) {
+                window.themeEngine.applyTheme(pData.active_theme);
             }
 
-            if (data.success) {
-                // Profile returns HTML, we need to extract price or use separate action.
-                // For simplicity, we'll try a small historical fetch to get last close
-                const priceRes = await fetch('/api/web', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${sessionToken}`
-                    },
-                    body: JSON.stringify({ action: 'chart', symbol, interval: '1d' })
-                });
-                const pData = await priceRes.json();
-                if (pData.success && pData.data.candles.length > 0) {
-                    const lastPrice = pData.data.candles[pData.data.candles.length - 1].close;
-                    marketPriceEl.innerText = lastPrice.toLocaleString('id-ID');
-                    if (!inpP2.value) inpP2.value = lastPrice;
-
-                    // Initial P/L if user already has data in localStorage or inputs?
-                    // For now, it stays -- until simulation run.
-                }
+            if (pData.success && pData.data.candles.length > 0) {
+                currentMarketPrice = pData.data.candles[pData.data.candles.length - 1].close;
+                if (!inpP2.value) inpP2.value = currentMarketPrice;
             }
         } catch (err) {
-            console.error('Failed to fetch initial data:', err);
-        } finally {
-            showLoader(false);
+            console.error('Failed to fetch price:', err);
         }
     };
 
-    if (symbol) fetchMarketData();
-
-    // --- Simulation Trigger ---
+    // --- Simulation Logic ---
     btnCalculate.addEventListener('click', async () => {
-        const p1 = document.getElementById('inp-p1').value;
-        const l1 = document.getElementById('inp-l1').value;
-        const p2 = document.getElementById('inp-p2').value;
+        const p1 = inpP1.value;
+        const l1 = inpL1.value;
+        const p2 = inpP2.value;
         const target = document.getElementById('inp-target').value;
         const l2 = document.getElementById('inp-l2').value;
         const sl = document.getElementById('inp-sl').value;
@@ -97,11 +120,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!p1 || !l1 || !p2) {
             if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
-            return alert('Mohon isi Harga Beli Lama, Lot Lama, dan Harga Baru.');
+            return alert('Mohon isi data Harga dan Lot yang diperlukan.');
         }
 
-        outputArea.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        outputArea.innerHTML = '<div class="spinner" style="margin: 60px auto;"></div>';
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
         try {
             const response = await fetch('/api/web', {
@@ -118,28 +141,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                     l2Input: l2,
                     slPercent: sl,
                     tpPercent: tp,
-                    feeBuy: feeB,
-                    feeSell: feeS
+                    feeBuy: Number(feeB) / 100, // API expects fraction
+                    feeSell: Number(feeS) / 100
                 })
             });
 
             const data = await response.json();
 
-            // Sync theme
             if (data.active_theme && window.themeEngine) {
                 window.themeEngine.applyTheme(data.active_theme);
             }
 
             if (data.success) {
-                // Convert simulation MD to HTML if needed or just display
-                outputArea.innerHTML = data.data; // API now returns HTML formatted data
+                outputArea.innerHTML = `<div class="fade-in">${data.data}</div>`;
+                // Update live P/L display as well
+                updatePlDisplay(p1, l1, currentMarketPrice);
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             } else {
-                outputArea.innerHTML = `<span style="color: #ef4444;">⚠ ${data.error}</span>`;
+                outputArea.innerHTML = `<div style="color: #f87171; padding: 20px;">⚠ ${data.error}</div>`;
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
         } catch (error) {
-            outputArea.innerHTML = '<span style="color: #ef4444;">⚠ Koneksi terputus.</span>';
+            outputArea.innerHTML = '<div style="color: #f87171; padding: 20px;">⚠ Terjadi kesalahan koneksi.</div>';
         }
+    });
+
+    // Auto-update P/L display when P1 or L1 changes in the main form
+    [inpP1, inpL1].forEach(input => {
+        input.addEventListener('input', () => {
+            updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
+        });
     });
 });
