@@ -100,37 +100,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 0;
     };
 
-    const fetchCandles = async (sym) => {
+    const fetchCandles = async (sym, interval = '1h') => {
         if (!sym) return false;
         const loader = document.getElementById('chart-loading');
         if (loader) {
             loader.style.display = 'flex';
-            loader.innerText = `Loading ${sym}...`;
+            loader.innerText = `Loading ${sym} (${interval})...`;
             loader.style.color = '#fbbf24';
         }
 
-        console.log(`[CHART] Fetching data for ${sym}...`);
+        console.log(`[CHART] Fetching data for ${sym} [${interval}]...`);
 
         try {
             const response = await fetch('/api/web', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
-                body: JSON.stringify({ action: 'chart', symbol: sym, interval: '1h', limit: 100 })
+                body: JSON.stringify({ action: 'chart', symbol: sym, interval: interval, limit: interval === '1h' ? 100 : 300 })
             });
+
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`API Error ${response.status}: ${text.slice(0, 50)}`);
+            }
+
             const data = await response.json();
 
             if (data.success && data.data && data.data.candles && data.data.candles.length > 0) {
-                console.log(`[CHART] Data received: ${data.data.candles.length} candles`);
-
-                // 1. Prepare and deduplicate candles (Lightweight Charts requirement)
                 const uniqueCandles = [];
                 const times = new Set();
-
-                const sorted = data.data.candles.sort((a, b) => {
-                    const tA = toTimestamp(a.time);
-                    const tB = toTimestamp(b.time);
-                    return tA - tB;
-                });
+                const sorted = data.data.candles.sort((a, b) => toTimestamp(a.time) - toTimestamp(b.time));
 
                 sorted.forEach(c => {
                     const ts = toTimestamp(c.time);
@@ -146,43 +144,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
 
-                console.log(`[CHART] Formatted & unique candles: ${uniqueCandles.length}`);
-
                 if (candleSeries) {
-                    try {
-                        candleSeries.setData(uniqueCandles);
-                    } catch (chartErr) {
-                        console.error('[CHART] setData Error:', chartErr);
-                        if (loader) loader.innerText = "Error rendering chart";
-                        return false;
-                    }
-                } else {
-                    console.warn('[CHART] candleSeries not initialized!');
+                    candleSeries.setData(uniqueCandles);
+                    if (chart) chart.timeScale().fitContent();
                 }
 
                 currentMarketPrice = uniqueCandles[uniqueCandles.length - 1].close;
                 marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
-                marketInfo.innerText = "Realtime H1 (7 Days)";
+                marketInfo.innerText = `Realtime ${interval.toUpperCase()} (Success)`;
 
                 if (!inpP2.value) inpP2.value = currentMarketPrice;
-
-                // Crucial: Update P/L display once market price is received
                 updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
-
-                if (chart) chart.timeScale().fitContent();
 
                 if (loader) loader.style.display = 'none';
                 return true;
+            } else if (interval === '1h') {
+                console.warn('[CHART] H1 data empty, trying D1 fallback...');
+                return await fetchCandles(sym, '1d');
             } else {
-                console.warn('[CHART] Empty or unsuccessful data:', data);
+                throw new Error('No historical data available for this ticker.');
             }
         } catch (err) {
-            console.error('[CHART] Fetch/Process Error:', err);
-        }
-
-        if (loader) {
-            loader.innerText = "Failed to load data";
-            loader.style.color = "#f87171";
+            console.error('[CHART] Error:', err);
+            if (loader) {
+                loader.innerText = err.message.includes('API Error') ? err.message : "Connection Refused / CORS Issue";
+                loader.style.color = "#f87171";
+            }
         }
         return false;
     };
