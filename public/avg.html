@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Avg Calculator - Astonmology</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -43,7 +44,6 @@
             padding: 8px 16px;
             border-radius: 12px;
             cursor: pointer;
-            margin-bottom: 20px;
             transition: all 0.3s ease;
             text-decoration: none;
             width: fit-content;
@@ -53,6 +53,28 @@
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.1);
             transform: translateX(-5px);
+        }
+
+        /* Quick Ticker Switch Styles */
+        .ticker-switch-input {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            width: 80px;
+            text-align: center;
+            font-weight: 700;
+            text-transform: uppercase;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .ticker-switch-input:focus {
+            border-color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            width: 100px;
         }
 
         .avg-grid {
@@ -120,10 +142,6 @@
             color: #34d399;
         }
 
-        .form-section {
-            margin-bottom: 20px;
-        }
-
         .section-title {
             font-size: 0.8rem;
             color: #fbbf24;
@@ -143,11 +161,11 @@
             background: rgba(251, 191, 36, 0.15);
         }
 
-        /* Enhanced Input Styles */
         .input-wrapper label {
             font-size: 0.7rem;
             margin-bottom: 6px;
             opacity: 0.7;
+            display: block;
         }
 
         .input-wrapper input {
@@ -183,11 +201,21 @@
             background: rgba(15, 23, 42, 0.3);
             border-radius: 16px;
             padding: 18px;
-            min-height: 250px;
             border: 1px solid rgba(255, 255, 255, 0.05);
             font-family: 'Inter', sans-serif;
             line-height: 1.6;
             font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        #chart-container {
+            width: 100%;
+            height: 350px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.4);
+            position: relative;
         }
 
         /* Initial Setup Modal */
@@ -223,6 +251,22 @@
                 transform: scale(1);
             }
         }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -238,16 +282,15 @@
                 <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 5px;">Input data posisi awal Anda</p>
             </div>
             <div class="modal-body" style="padding-top: 10px;">
-                <div class="input-wrapper">
+                <div class="input-wrapper" style="margin-bottom: 15px;">
                     <label>HARGA BELI LAMA</label>
                     <input type="number" id="init-p1" placeholder="Harga rata-rata awal">
                 </div>
-                <div class="input-wrapper">
+                <div class="input-wrapper" style="margin-bottom: 20px;">
                     <label>JUMLAH LOT LAMA</label>
                     <input type="number" id="init-l1" placeholder="Jumlah lot awal">
                 </div>
-                <button class="glass-btn primary-btn" id="btn-continue"
-                    style="width: 100%; margin-top: 15px; font-weight: 600;">
+                <button class="glass-btn primary-btn" id="btn-continue" style="width: 100%; font-weight: 600;">
                     Lanjutkan & Analisa P/L 🚀
                 </button>
             </div>
@@ -255,30 +298,27 @@
     </div>
 
     <div class="container">
-        <header class="app-header">
+        <header class="app-header" style="justify-content: space-between; align-items: center; margin-bottom: 25px;">
             <a href="index.html" class="back-btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                 </svg>
-                Kembali
+                Back
             </a>
-            <div class="brand">
-                <div class="logo-icon">📊</div>
-                <h1 style="font-size: 1.1rem;">Avg Calculator</h1>
-            </div>
-            <div id="symbol-display"
-                style="font-size: 0.8rem; color: #fbbf24; font-weight: 700; background: rgba(251,191,36,0.1); padding: 4px 10px; border-radius: 8px;">
-                TICKER: --
+
+            <div class="ticker-switch" style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.7rem; opacity: 0.5; font-weight: 600;">SWITCH:</span>
+                <input type="text" id="ticker-switch" class="ticker-switch-input" placeholder="TICKER" maxlength="4">
             </div>
         </header>
 
         <main class="avg-grid">
-            <div class="glass-card input-card" style="position: relative;">
+            <div class="glass-card input-card">
                 <div class="stats-row">
                     <div class="stat-card">
                         <div class="stat-label">Market Price</div>
                         <div class="stat-value" id="market-price">--</div>
-                        <div class="stat-sub" id="market-info">Realtime</div>
+                        <div class="stat-sub" id="market-info" style="opacity: 0.4;">Loading...</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Floating P/L</div>
@@ -305,7 +345,7 @@
                     <div class="section-title">Opsi Rencana Baru</div>
                     <div class="input-wrapper">
                         <label>HARGA EKSEKUSI BARU (P2)</label>
-                        <input type="number" id="inp-p2" placeholder="Harga beli baru">
+                        <input type="number" id="inp-p2">
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
                         <div class="input-wrapper">
@@ -322,19 +362,19 @@
                 <div class="form-section">
                     <div class="section-title">Risk & Fees</div>
                     <div class="advanced-options">
-                        <div class="input-wrapper" style="margin:0;">
+                        <div class="input-wrapper">
                             <label>SL (%)</label>
                             <input type="number" id="inp-sl" value="3">
                         </div>
-                        <div class="input-wrapper" style="margin:0;">
+                        <div class="input-wrapper">
                             <label>TP (%)</label>
                             <input type="number" id="inp-tp" value="5">
                         </div>
-                        <div class="input-wrapper" style="margin:0;">
+                        <div class="input-wrapper">
                             <label>FEE BUY (%)</label>
                             <input type="number" id="inp-feebuy" value="0.19">
                         </div>
-                        <div class="input-wrapper" style="margin:0;">
+                        <div class="input-wrapper">
                             <label>FEE SELL (%)</label>
                             <input type="number" id="inp-feesell" value="0.29">
                         </div>
@@ -349,12 +389,19 @@
 
             <div class="glass-card output-card">
                 <div class="card-header">
-                    <h3>📊 Report Analisa</h3>
+                    <h3>📊 Result & Chart</h3>
                 </div>
                 <div class="analysis-output" id="output-area">
-                    <div style="text-align: center; opacity: 0.4; margin-top: 60px;">
-                        <div style="font-size: 3rem; margin-bottom: 20px;">📉</div>
-                        Input data di samping untuk melihat simulasi.
+                    <div style="text-align: center; opacity: 0.4; padding: 40px 0;">
+                        Input data untuk melihat analisa & visualisasi.
+                    </div>
+                </div>
+
+                <div id="chart-container">
+                    <!-- Lightweight Charts will render here -->
+                    <div id="chart-loading"
+                        style="position: absolute; top:0; left:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background: rgba(15,23,42,0.8); z-index:10; color: #fbbf24; font-size: 0.8rem; font-weight: 600;">
+                        Menunggu Ticker...
                     </div>
                 </div>
             </div>

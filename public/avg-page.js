@@ -8,19 +8,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- State & Elements ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const symbol = urlParams.get('symbol')?.toUpperCase() || '';
+    let urlParams = new URLSearchParams(window.location.search);
+    let symbol = urlParams.get('symbol')?.toUpperCase() || '';
     let sessionToken = localStorage.getItem('aston_session_token');
 
     const initialModal = document.getElementById('initial-modal');
     const initP1 = document.getElementById('init-p1');
     const initL1 = document.getElementById('init-l1');
     const btnContinue = document.getElementById('btn-continue');
+    const tickerSwitch = document.getElementById('ticker-switch');
 
     const outputArea = document.getElementById('output-area');
-    const symbolDisplay = document.getElementById('symbol-display');
     const marketPriceEl = document.getElementById('market-price');
     const currentPlEl = document.getElementById('current-pl');
+    const currentPlPercentEl = document.getElementById('current-pl-percent');
+    const marketInfo = document.getElementById('market-info');
 
     const inpP1 = document.getElementById('inp-p1');
     const inpL1 = document.getElementById('inp-l1');
@@ -28,14 +30,141 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCalculate = document.getElementById('btn-calculate');
 
     let currentMarketPrice = 0;
+    let chart, candleSeries;
+    let priceLines = { p1: null, p2: null, avg: null };
 
-    if (symbolDisplay) symbolDisplay.innerText = `TICKER: ${symbol || '--'}`;
-
-    // --- Helpers ---
-    const currentPlPercentEl = document.getElementById('current-pl-percent');
+    if (tickerSwitch) tickerSwitch.value = symbol;
 
     const formatIDR = (num) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    };
+
+    // --- Chart Initialization ---
+    const initChart = () => {
+        const container = document.getElementById('chart-container');
+        if (!container || chart) return;
+
+        chart = LightweightCharts.createChart(container, {
+            layout: {
+                background: { color: 'transparent' },
+                textColor: 'rgba(255, 255, 255, 0.7)',
+                fontSize: 10,
+            },
+            grid: {
+                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+            },
+            timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                timeVisible: true,
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+                vertLine: { color: '#fbbf24', labelBackgroundColor: '#fbbf24' },
+                horzLine: { color: '#fbbf24', labelBackgroundColor: '#fbbf24' },
+            }
+        });
+
+        candleSeries = chart.addCandlestickSeries({
+            upColor: '#34d399',
+            downColor: '#f87171',
+            borderVisible: false,
+            wickUpColor: '#34d399',
+            wickDownColor: '#f87171',
+        });
+
+        window.addEventListener('resize', () => {
+            chart.applyOptions({ width: container.clientWidth });
+        });
+    };
+
+    const fetchCandles = async (sym) => {
+        const loader = document.getElementById('chart-loading');
+        if (loader) loader.style.display = 'flex';
+
+        try {
+            const response = await fetch('/api/web', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
+                body: JSON.stringify({ action: 'chart', symbol: sym, interval: '1h' })
+            });
+            const data = await response.json();
+
+            if (data.success && data.data.candles.length > 0) {
+                const formatted = data.data.candles.map(c => ({
+                    time: c.time / 1000,
+                    open: c.open,
+                    high: c.high,
+                    low: c.low,
+                    close: c.close
+                }));
+                candleSeries.setData(formatted);
+                currentMarketPrice = data.data.candles[data.data.candles.length - 1].close;
+                marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
+                marketInfo.innerText = "Realtime H1";
+                if (!inpP2.value) inpP2.value = currentMarketPrice;
+
+                chart.timeScale().fitContent();
+                if (loader) loader.style.display = 'none';
+                return true;
+            }
+        } catch (err) {
+            console.error('Fetch error:', err);
+        }
+        if (loader) {
+            loader.innerText = "Failed to load data";
+            loader.style.color = "#f87171";
+        }
+        return false;
+    };
+
+    const clearPriceLines = () => {
+        Object.keys(priceLines).forEach(key => {
+            if (priceLines[key]) {
+                candleSeries.removePriceLine(priceLines[key]);
+                priceLines[key] = null;
+            }
+        });
+    };
+
+    const updatePriceLines = (p1, l1, p2, l2, avg) => {
+        clearPriceLines();
+
+        if (p1) {
+            priceLines.p1 = candleSeries.createPriceLine({
+                price: Number(p1),
+                color: '#3b82f6',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: `P1: ${p1} (${l1} Lot)`,
+            });
+        }
+
+        if (p2 && l2 > 0) {
+            priceLines.p2 = candleSeries.createPriceLine({
+                price: Number(p2),
+                color: '#fbbf24',
+                lineWidth: 2,
+                lineStyle: LightweightCharts.LineStyle.Dashed,
+                axisLabelVisible: true,
+                title: `P2: ${p2} (${l2} Lot)`,
+            });
+        }
+
+        if (avg) {
+            priceLines.avg = candleSeries.createPriceLine({
+                price: Number(avg),
+                color: '#fff',
+                lineWidth: 3,
+                lineStyle: LightweightCharts.LineStyle.Solid,
+                axisLabelVisible: true,
+                title: `AVG: ${avg}`,
+            });
+        }
     };
 
     const updatePlDisplay = (p1, l1, currentPrice) => {
@@ -56,12 +185,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentPlPercentEl.innerText = `${sign}${plPercent.toFixed(2)}%`;
             currentPlPercentEl.className = `stat-sub ${isPositive ? 'positive' : 'negative'}`;
         }
-
-        marketPriceEl.innerText = Number(currentPrice).toLocaleString('id-ID');
-        marketPriceEl.className = 'stat-value';
     };
 
-    // --- Initial Entry Setup ---
+    // --- Ticker Switch Logic ---
+    const switchSymbol = async (newSym) => {
+        if (!newSym || newSym === symbol) return;
+        symbol = newSym.toUpperCase();
+
+        // Update URL
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('symbol', symbol);
+        window.history.pushState({}, '', newUrl);
+
+        // Reset UI
+        tickerSwitch.value = symbol;
+        outputArea.innerHTML = '<div style="text-align: center; opacity: 0.4; padding: 40px 0;">Menunggu data...</div>';
+        initialModal.style.display = 'flex';
+        clearPriceLines();
+
+        if (chart) {
+            await fetchCandles(symbol);
+        }
+    };
+
+    tickerSwitch.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            switchSymbol(tickerSwitch.value.trim());
+        }
+    });
+
+    // --- Initial Setup Modal ---
     btnContinue.addEventListener('click', async () => {
         const p1 = initP1.value;
         const l1 = initL1.value;
@@ -71,49 +224,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             return alert('Harap isi Harga Beli dan Lot Lama.');
         }
 
-        // Sync to main form
         inpP1.value = p1;
         inpL1.value = l1;
-
-        // Hide modal and start fetching
         initialModal.style.display = 'none';
 
         if (symbol) {
-            await fetchMarketData();
+            await fetchCandles(symbol);
             updatePlDisplay(p1, l1, currentMarketPrice);
+            updatePriceLines(p1, l1, 0, 0, 0); // Show only P1 initially
         }
     });
 
-    // --- Data Fetching ---
-    const fetchMarketData = async () => {
-        if (!symbol) return;
-        try {
-            // Use chart action as it's more reliable for numerical price
-            const priceRes = await fetch('/api/web', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionToken}`
-                },
-                body: JSON.stringify({ action: 'chart', symbol, interval: '1d' })
-            });
-            const pData = await priceRes.json();
-
-            // Sync theme if available
-            if (pData.active_theme && window.themeEngine) {
-                window.themeEngine.applyTheme(pData.active_theme);
-            }
-
-            if (pData.success && pData.data.candles.length > 0) {
-                currentMarketPrice = pData.data.candles[pData.data.candles.length - 1].close;
-                if (!inpP2.value) inpP2.value = currentMarketPrice;
-            }
-        } catch (err) {
-            console.error('Failed to fetch price:', err);
-        }
-    };
-
-    // --- Simulation Logic ---
+    // --- Simulation Trigger ---
     btnCalculate.addEventListener('click', async () => {
         const p1 = inpP1.value;
         const l1 = inpL1.value;
@@ -130,16 +252,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return alert('Mohon isi data Harga dan Lot yang diperlukan.');
         }
 
-        outputArea.innerHTML = '<div class="spinner" style="margin: 60px auto;"></div>';
+        outputArea.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div>';
         if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
 
         try {
             const response = await fetch('/api/web', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionToken}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sessionToken}` },
                 body: JSON.stringify({
                     action: 'avg',
                     symbol,
@@ -148,35 +267,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                     l2Input: l2,
                     slPercent: sl,
                     tpPercent: tp,
-                    feeBuy: Number(feeB) / 100, // API expects fraction
+                    feeBuy: Number(feeB) / 100,
                     feeSell: Number(feeS) / 100
                 })
             });
 
             const data = await response.json();
 
-            if (data.active_theme && window.themeEngine) {
-                window.themeEngine.applyTheme(data.active_theme);
-            }
-
             if (data.success) {
                 outputArea.innerHTML = `<div class="fade-in">${data.data}</div>`;
-                // Update live P/L display as well
-                updatePlDisplay(p1, l1, currentMarketPrice);
+
+                // Use the raw data from API for accurate chart lines
+                if (data.raw) {
+                    const r = data.raw;
+                    updatePriceLines(r.p1, r.l1, r.p2, r.l2, r.avgBaru);
+                }
+
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
             } else {
                 outputArea.innerHTML = `<div style="color: #f87171; padding: 20px;">⚠ ${data.error}</div>`;
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
             }
         } catch (error) {
-            outputArea.innerHTML = '<div style="color: #f87171; padding: 20px;">⚠ Terjadi kesalahan koneksi.</div>';
+            outputArea.innerHTML = '<div style="color: #f87171; padding: 20px;">⚠ Koneksi terputus.</div>';
         }
     });
 
-    // Auto-update P/L display when P1 or L1 changes in the main form
-    [inpP1, inpL1].forEach(input => {
-        input.addEventListener('input', () => {
-            updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
-        });
-    });
+    // Init components
+    initChart();
+    if (symbol) {
+        // We wait for the modal to be submitted before full fetch to avoid redundant calls
+    } else {
+        initialModal.style.display = 'flex';
+    }
 });

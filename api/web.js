@@ -335,7 +335,7 @@ module.exports = async (req, res) => {
                     }
 
                     if (!finalP2) {
-                        result = "❌ Harga beli baru (P2) tidak ditemukan dan tidak diisi secara manual.";
+                        return res.json({ success: false, error: 'Harga beli baru (P2) tidak ditemukan dan tidak diisi secara manual.' });
                     } else {
                         const avgData = calculateAvg({
                             symbol,
@@ -350,7 +350,13 @@ module.exports = async (req, res) => {
                             feeBuy,
                             feeSell
                         });
-                        result = await markdownToTelegramHTML(formatAvgReport(avgData));
+                        const reportHtml = await markdownToTelegramHTML(formatAvgReport(avgData));
+                        return res.json({
+                            success: true,
+                            data: reportHtml,
+                            raw: avgData, // Send raw data for chart visualization
+                            active_theme: (await supabase.from('user_themes').select('active_theme').eq('session_token', sessionToken).maybeSingle()).data?.active_theme
+                        });
                     }
                 }
                 break;
