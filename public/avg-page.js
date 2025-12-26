@@ -122,6 +122,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fetchCandles = async (sym, interval = '1h') => {
         if (!sym || isFetchingCandles) return false;
         isFetchingCandles = true;
+
+        const loaderMarket = document.getElementById('loader-market');
+        const loaderPl = document.getElementById('loader-pl');
+        if (loaderMarket) loaderMarket.classList.add('active');
+        if (loaderPl) loaderPl.classList.add('active');
+
         const loader = document.getElementById('chart-loading');
         if (loader) {
             loader.style.display = 'flex';
@@ -192,6 +198,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } finally {
             isFetchingCandles = false;
+            const loaderMarket = document.getElementById('loader-market');
+            const loaderPl = document.getElementById('loader-pl');
+            if (loaderMarket) loaderMarket.classList.remove('active');
+            if (loaderPl) loaderPl.classList.remove('active');
         }
         return false;
     };

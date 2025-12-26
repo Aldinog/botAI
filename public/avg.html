@@ -102,6 +102,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            position: relative;
         }
 
         .stat-label {
@@ -289,6 +290,25 @@
             vertical-align: middle;
         }
 
+        .card-loader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            transition: all 0.3s ease;
+        }
+
+        .card-loader.active {
+            display: flex;
+        }
+
         @keyframes spin {
             to {
                 transform: rotate(360deg);
@@ -342,15 +362,21 @@
         <main class="avg-grid">
             <div class="glass-card input-card">
                 <div class="stats-row">
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-market">
                         <div class="stat-label">Market Price</div>
                         <div class="stat-value" id="market-price">--</div>
-                        <div class="stat-sub" id="market-info" style="opacity: 0.4;">Loading...</div>
+                        <div class="stat-sub" id="market-info">--</div>
+                        <div class="card-loader" id="loader-market">
+                            <div class="spinner-sm"></div>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" id="card-pl">
                         <div class="stat-label">Floating P/L</div>
                         <div class="stat-value" id="current-pl">--</div>
                         <div class="stat-sub" id="current-pl-percent">--</div>
+                        <div class="card-loader" id="loader-pl">
+                            <div class="spinner-sm"></div>
+                        </div>
                     </div>
                 </div>
 
