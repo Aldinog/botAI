@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnCalculate = document.getElementById('btn-calculate');
 
     let currentMarketPrice = 0;
-    let chart, candleSeries;
+    let mainChart, mainCandleSeries;
     let priceLines = { p1: null, p2: null, avg: null };
 
     if (tickerSwitch) tickerSwitch.value = symbol;
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Chart Initialization ---
     const initChart = () => {
         const container = document.getElementById('chart-container');
-        if (!container || chart) return;
+        if (!container || mainChart) return;
 
         if (typeof LightweightCharts === 'undefined') {
             const loader = document.getElementById('chart-loading');
@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         try {
-            chart = LightweightCharts.createChart(container, {
+            console.log('[CHART] Initializing with container size:', container.clientWidth, 'x', 350);
+
+            mainChart = LightweightCharts.createChart(container, {
                 layout: {
                     background: { type: 'solid', color: 'transparent' },
                     textColor: '#94a3b8',
@@ -60,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
                     horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
                 },
-                width: container.clientWidth,
+                width: container.clientWidth || 300,
                 height: 350,
                 crosshair: {
                     mode: LightweightCharts.CrosshairMode.Normal,
@@ -71,21 +73,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
             });
 
-            candleSeries = chart.addCandlestickSeries({
-                upColor: '#22c55e',
-                downColor: '#ef4444',
-                borderVisible: false,
-                wickUpColor: '#22c55e',
-                wickDownColor: '#ef4444',
-            });
+            console.log('[CHART] Instance created:', mainChart);
+
+            if (mainChart && typeof mainChart.addCandlestickSeries === 'function') {
+                mainCandleSeries = mainChart.addCandlestickSeries({
+                    upColor: '#22c55e',
+                    downColor: '#ef4444',
+                    borderVisible: false,
+                    wickUpColor: '#22c55e',
+                    wickDownColor: '#ef4444',
+                });
+                console.log('[CHART] Candle series added successfully');
+            } else {
+                console.error('[CHART] addCandlestickSeries missing on chart object!', mainChart);
+                throw new Error('API Method Missing');
+            }
 
             // Resize Handler
             const resizeObserver = new ResizeObserver(entries => {
                 for (const entry of entries) {
                     if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
-                        if (chart) {
-                            chart.resize(entry.contentRect.width, 350);
-                            chart.timeScale().fitContent();
+                        if (mainChart) {
+                            mainChart.resize(entry.contentRect.width, 350);
+                            mainChart.timeScale().fitContent();
                         }
                     }
                 }
@@ -93,6 +103,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             resizeObserver.observe(container);
         } catch (e) {
             console.error('[CHART] Initialization failed:', e);
+            const loader = document.getElementById('chart-loading');
+            if (loader) loader.innerText = "Error Init: " + e.message;
         }
     };
 
@@ -150,9 +162,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 });
 
-                if (candleSeries) {
-                    candleSeries.setData(uniqueCandles);
-                    if (chart) chart.timeScale().fitContent();
+                if (mainCandleSeries) {
+                    mainCandleSeries.setData(uniqueCandles);
+                    if (mainChart) mainChart.timeScale().fitContent();
                 }
 
                 currentMarketPrice = uniqueCandles[uniqueCandles.length - 1].close;
@@ -181,11 +193,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const clearPriceLines = () => {
-        if (!candleSeries) return;
+        if (!mainCandleSeries) return;
         Object.keys(priceLines).forEach(key => {
             if (priceLines[key]) {
                 try {
-                    candleSeries.removePriceLine(priceLines[key]);
+                    mainCandleSeries.removePriceLine(priceLines[key]);
                 } catch (e) { }
                 priceLines[key] = null;
             }
@@ -193,14 +205,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const updatePriceLines = (p1, l1, p2, l2, avg) => {
-        if (!candleSeries) {
-            console.warn('[CHART] Cannot update lines: candleSeries not initialized.');
+        if (!mainCandleSeries) {
+            console.warn('[CHART] Cannot update lines: mainCandleSeries not initialized.');
             return;
         }
         clearPriceLines();
 
         if (p1) {
-            priceLines.p1 = candleSeries.createPriceLine({
+            priceLines.p1 = mainCandleSeries.createPriceLine({
                 price: Number(p1),
                 color: '#3b82f6',
                 lineWidth: 2,
@@ -211,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (p2 && l2 > 0) {
-            priceLines.p2 = candleSeries.createPriceLine({
+            priceLines.p2 = mainCandleSeries.createPriceLine({
                 price: Number(p2),
                 color: '#fbbf24',
                 lineWidth: 2,
@@ -222,7 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (avg) {
-            priceLines.avg = candleSeries.createPriceLine({
+            priceLines.avg = mainCandleSeries.createPriceLine({
                 price: Number(avg),
                 color: '#fff',
                 lineWidth: 3,
@@ -269,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initialModal.style.display = 'flex';
         clearPriceLines();
 
-        if (chart) {
+        if (mainChart) {
             await fetchCandles(symbol);
         }
     };
