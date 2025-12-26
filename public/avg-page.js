@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lineWidth: 3,
                 lineStyle: LightweightCharts.LineStyle.Solid,
                 axisLabelVisible: true,
-                title: `AVG Baru: ${avg}`,
+                title: `AVG Baru:`,
             });
         }
     };
