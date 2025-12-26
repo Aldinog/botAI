@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (data.success && data.data.candles.length > 0) {
                 const formatted = data.data.candles.map(c => ({
-                    time: c.time / 1000,
+                    time: c.time, // Use secondary resolution (seconds) directly as backend already format it
                     open: c.open,
                     high: c.high,
                     low: c.low,
