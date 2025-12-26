@@ -10,7 +10,8 @@ let crosshairPosition = null;
 // Get URL Params
 const urlParams = new URLSearchParams(window.location.search);
 let currentSymbol = urlParams.get('symbol') || 'BBCA';
-document.getElementById('chart-title').innerText = currentSymbol;
+const tickerInput = document.getElementById('ticker-switch');
+if (tickerInput) tickerInput.value = currentSymbol;
 
 // Initialization
 try {
@@ -94,7 +95,6 @@ try {
     loadData('1d');
 
     // Ticker Switch Logic
-    const tickerInput = document.getElementById('ticker-switch');
     if (tickerInput) {
         tickerInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -103,7 +103,11 @@ try {
             }
         });
 
-        // Optional: Sync input with current symbol
+        // Auto-select text on click for faster typing
+        tickerInput.addEventListener('click', () => {
+            tickerInput.select();
+        });
+
         tickerInput.value = currentSymbol;
     }
 
@@ -132,7 +136,8 @@ async function switchSymbol(newSymbol) {
 
     console.log(`[SWITCH] Switching from ${currentSymbol} to ${cleanSymbol}`);
     currentSymbol = cleanSymbol;
-    document.getElementById('chart-title').innerText = currentSymbol;
+    const tickerInput = document.getElementById('ticker-switch');
+    if (tickerInput) tickerInput.value = currentSymbol;
 
     // Clear existing data and features immediately for better UX
     if (candlestickSeries) candlestickSeries.setData([]);
@@ -186,7 +191,8 @@ async function loadData(interval) {
             if (spinnerText) spinnerText.innerText = 'Generating Signals...';
             const { candles, markers, levels, trendlines } = res.data;
 
-            document.getElementById('chart-title').innerText = `${currentSymbol}`;
+            const tickerInput = document.getElementById('ticker-switch');
+            if (tickerInput) tickerInput.value = currentSymbol;
 
             if (candles.length === 0) {
                 if (spinnerText) spinnerText.innerText = 'No Data Found';

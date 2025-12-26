@@ -250,33 +250,34 @@
             cursor: pointer;
         }
 
-        /* Ticker Switch Styling */
         .header-left {
-            gap: 15px !important;
+            gap: 12px !important;
         }
 
         .ticker-switch-container {
             display: flex;
             align-items: center;
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 2px 8px;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 4px 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .ticker-switch-container:focus-within {
             border-color: #6366f1;
-            background: rgba(99, 102, 241, 0.1);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
+            background: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            transform: translateY(-1px);
         }
 
         .ticker-switch-container label {
-            font-size: 0.65rem;
-            color: #94a3b8;
-            font-weight: 700;
-            margin-right: 6px;
-            letter-spacing: 0.5px;
+            font-size: 0.6rem;
+            color: #6366f1;
+            font-weight: 800;
+            margin-right: 8px;
+            letter-spacing: 1px;
+            opacity: 0.8;
         }
 
         .ticker-switch-input {
@@ -284,11 +285,13 @@
             border: none;
             color: #fff;
             font-family: 'Outfit', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            width: 70px;
+            font-size: 1.1rem;
+            /* Title size */
+            font-weight: 700;
+            width: 85px;
             outline: none;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .ticker-switch-input::placeholder {
@@ -303,10 +306,10 @@
     <header>
         <div class="header-left">
             <button class="back-btn" onclick="history.back()">←</button>
-            <h1 id="chart-title">Loading...</h1>
             <div class="ticker-switch-container">
-                <label>SWITCH</label>
-                <input type="text" id="ticker-switch" class="ticker-switch-input" placeholder="TICKER" maxlength="5">
+                <label>STICKER</label>
+                <input type="text" id="ticker-switch" class="ticker-switch-input" placeholder="TICKER" maxlength="5"
+                    autocomplete="off">
             </div>
         </div>
         <div class="controls">
