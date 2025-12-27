@@ -108,8 +108,9 @@ function renderData(data) {
     // Header
 
     // Header
-    displaySymbol.innerText = data.symbol.replace('.JK', '');
-    displayName.innerText = data.name;
+    const sym = data.symbol || '';
+    displaySymbol.innerText = sym.replace('.JK', '');
+    displayName.innerText = data.name || 'Unknown Ticker';
     displayPrice.innerText = fmtNum(data.price);
     displayCurrency.innerText = data.currency || 'IDR';
 
