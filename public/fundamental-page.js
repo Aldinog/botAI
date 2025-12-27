@@ -13,7 +13,7 @@ const displayPrice = document.getElementById('display-price');
 const displayCurrency = document.getElementById('display-currency');
 
 // Tab Logic
-const tabBtns = document.querySelectorAll('.tab-btn, .nav-btn');
+const tabBtns = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
 tabBtns.forEach(btn => {
@@ -183,7 +183,7 @@ function renderQuarterly(data) {
                 <td class="label-col">
                     <div style="color: var(--accent-primary); font-weight: 700;">${q.date || q.fiscalQuarter}</div>
                     <div class="bar-container" style="height: 6px; margin-top: 4px; background: rgba(255,255,255,0.05);">
-                        <div class="bar-fill" style="width: ${revPct}%; background: var(--accent-primary);"></div>
+                        <div class="bar-fill" style="width: ${revPct}%;"></div>
                     </div>
                 </td>
                 <td class="value-col">${fmtCap(q.revenue)}</td>
