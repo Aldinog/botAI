@@ -145,6 +145,16 @@ async function switchSymbol(newSymbol) {
     const companyTitle = document.getElementById('company-title');
     if (companyTitle) companyTitle.innerText = 'Loading...';
 
+    // Sync Timeframe Buttons (Switching symbol always defaults to 1d)
+    const timeBtns = document.querySelectorAll('.time-btn');
+    timeBtns.forEach(btn => {
+        if (btn.dataset.interval === '1d') {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
     // Clear existing data and features immediately for better UX
     if (candlestickSeries) candlestickSeries.setData([]);
     clearAutoFeatures();
