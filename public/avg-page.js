@@ -314,6 +314,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    const btnGo = document.getElementById('btn-switch-go');
+    if (btnGo) {
+        btnGo.addEventListener('click', () => {
+            switchSymbol(tickerSwitch.value.trim());
+            tickerSwitch.blur();
+        });
+    }
+
     // --- Initial Setup Modal ---
     btnContinue.addEventListener('click', async () => {
         const p1 = initP1.value;

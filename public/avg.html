@@ -77,6 +77,29 @@
             width: 100px;
         }
 
+        .btn-go {
+            background: #fbbf24;
+            border: none;
+            color: #0f172a;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+        }
+
+        .btn-go:hover {
+            background: #f59e0b;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(251, 191, 36, 0.3);
+        }
+
+        .btn-go:active {
+            transform: scale(0.95);
+        }
+
         .avg-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -356,6 +379,7 @@
             <div class="ticker-switch" style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 0.7rem; opacity: 0.5; font-weight: 600;">SWITCH:</span>
                 <input type="text" id="ticker-switch" class="ticker-switch-input" placeholder="TICKER" maxlength="5">
+                <button id="btn-switch-go" class="btn-go">GO</button>
             </div>
         </header>
 
