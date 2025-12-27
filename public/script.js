@@ -481,6 +481,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
+            // Special Handler: Fundamental Page
+            if (action === 'fundamental') {
+                if (!symbol) {
+                    tickerInput.style.borderColor = '#ef4444';
+                    tickerInput.focus();
+                    setTimeout(() => tickerInput.style.borderColor = 'rgba(255, 255, 255, 0.1)', 1000);
+                    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+                    return;
+                }
+                if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+                window.location.href = `fundamental.html?symbol=${symbol}`;
+                return;
+            }
+
             // Standard Actions
             if (!symbol) {
                 tickerInput.style.borderColor = '#ef4444';
