@@ -351,6 +351,100 @@
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
 
+        /* --- Analyst Premium UI --- */
+        .rec-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .rec-strong_buy {
+            background: linear-gradient(135deg, #15803d, #22c55e);
+            color: white;
+        }
+
+        .rec-buy {
+            background: linear-gradient(135deg, #16a34a, #4ade80);
+            color: white;
+        }
+
+        .rec-hold {
+            background: linear-gradient(135deg, #a16207, #eab308);
+            color: white;
+        }
+
+        .rec-sell {
+            background: linear-gradient(135deg, #b91c1c, #ef4444);
+            color: white;
+        }
+
+        .rec-strong_sell {
+            background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+            color: white;
+        }
+
+        .consensus-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .consensus-bar-group {
+            display: flex;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .c-bar {
+            height: 100%;
+            transition: width 0.8s ease-out;
+        }
+
+        .c-buy {
+            background: #22c55e;
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .c-hold {
+            background: #eab308;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
+        }
+
+        .c-sell {
+            background: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .consensus-legend {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .c-leg-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .c-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
         /* --- News List --- */
         .news-list {
             display: flex;
@@ -765,18 +859,39 @@
                     <!-- Badges will be injected here -->
                 </div>
                 <div class="data-table-container">
-                    <table>
+                    <table class="analyst-table">
                         <tr>
                             <td class="label-col">Recommendation</td>
-                            <td id="ins-rec" class="value-col highlight-text">-</td>
+                            <td class="value-col">
+                                <div id="ins-rec-badge" class="rec-badge" style="display:none;">-</div>
+                            </td>
                         </tr>
                         <tr>
                             <td class="label-col">Target Price (Mean)</td>
-                            <td id="ins-target" class="value-col">-</td>
+                            <td id="ins-target" class="value-col highlight-text">-</td>
                         </tr>
                         <tr>
-                            <td class="label-col">Consensus Trend</td>
-                            <td id="ins-consensus" class="value-col">-</td>
+                            <td class="label-col">Consensus Sentiment</td>
+                            <td class="value-col">
+                                <div id="ins-consensus-container" class="consensus-container">
+                                    <div class="consensus-bar-group">
+                                        <div id="c-bar-buy" class="c-bar c-buy" style="width: 0%"></div>
+                                        <div id="c-bar-hold" class="c-bar c-hold" style="width: 0%"></div>
+                                        <div id="c-bar-sell" class="c-bar c-sell" style="width: 0%"></div>
+                                    </div>
+                                    <div class="consensus-legend">
+                                        <div class="c-leg-item">
+                                            <div class="c-dot c-buy"></div> Buy: <span id="c-count-buy">0</span>
+                                        </div>
+                                        <div class="c-leg-item">
+                                            <div class="c-dot c-hold"></div> Hold: <span id="c-count-hold">0</span>
+                                        </div>
+                                        <div class="c-leg-item">
+                                            <div class="c-dot c-sell"></div> Sell: <span id="c-count-sell">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                     </table>
                 </div>

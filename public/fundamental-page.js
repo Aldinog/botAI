@@ -233,13 +233,37 @@ function renderInsights(data) {
         if (badges.length === 0) radar.innerHTML = '<span style="opacity: 0.5; font-size: 0.8rem;">No significant health signals.</span>';
     }
 
-    // Analyst Data
-    document.getElementById('ins-rec').innerText = (data.target.rec || '-').toUpperCase();
-    document.getElementById('ins-target').innerText = data.target.mean ? data.currency + ' ' + data.target.mean.toLocaleString('id-ID') : '-';
+    // Analyst Data - Recommendation Badge
+    const recBadge = document.getElementById('ins-rec-badge');
+    if (recBadge) {
+        const rawRec = (data.target.rec || 'buy').toLowerCase();
+        recBadge.innerText = rawRec.replace('_', ' ');
+        recBadge.className = `rec-badge rec-${rawRec}`;
+        recBadge.style.display = 'inline-block';
+    }
 
+    // Target Price (Rounded)
+    const targetPrice = data.target.mean;
+    document.getElementById('ins-target').innerText = targetPrice ?
+        data.currency + ' ' + Math.floor(targetPrice).toLocaleString('id-ID') : '-';
+
+    // Consensus Sentiment Bar
     const consensus = data.target.consensus;
-    document.getElementById('ins-consensus').innerText = consensus ?
-        `Buy: ${consensus.buy}, Hold: ${consensus.hold}, Sell: ${consensus.sell}` : '-';
+    const cBarBuy = document.getElementById('c-bar-buy');
+    const cBarHold = document.getElementById('c-bar-hold');
+    const cBarSell = document.getElementById('c-bar-sell');
+
+    if (consensus && cBarBuy) {
+        const total = (consensus.buy || 0) + (consensus.hold || 0) + (consensus.sell || 0);
+        if (total > 0) {
+            cBarBuy.style.width = ((consensus.buy || 0) / total * 100) + '%';
+            cBarHold.style.width = ((consensus.hold || 0) / total * 100) + '%';
+            cBarSell.style.width = ((consensus.sell || 0) / total * 100) + '%';
+        }
+        document.getElementById('c-count-buy').innerText = consensus.buy || 0;
+        document.getElementById('c-count-hold').innerText = consensus.hold || 0;
+        document.getElementById('c-count-sell').innerText = consensus.sell || 0;
+    }
 
     // News
     const newsCont = document.getElementById('news-container');
