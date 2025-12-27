@@ -307,9 +307,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    tickerSwitch.addEventListener('keydown', (e) => {
+    tickerSwitch.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             switchSymbol(tickerSwitch.value.trim());
+            tickerSwitch.blur();
         }
     });
 
