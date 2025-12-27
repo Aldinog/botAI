@@ -410,6 +410,7 @@
             <button class="tab-btn" data-tab="growth">PERTUMBUHAN</button>
             <button class="tab-btn" data-tab="cashflow">CASH FLOW</button>
             <button class="tab-btn" data-tab="ownership">HOLDERS</button>
+            <button class="tab-btn" data-tab="quarterly">QUARTERLY</button>
         </nav>
 
         <!-- --- Tab: Profile --- -->
@@ -581,6 +582,27 @@
                             <td class="label-col">Institution Owned %</td>
                             <td id="own-inst" class="value-col">-</td>
                         </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- Tab: Quarterly --- -->
+        <div id="quarterly" class="tab-content">
+            <div class="glass-card">
+                <h3 class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Kinerja Kuartalan (4 Terakhir)</h3>
+                <div class="data-table-container">
+                    <table id="quarterly-table">
+                        <thead>
+                            <tr>
+                                <th>Kuartal</th>
+                                <th>Revenue</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quarterly-body">
+                            <!-- Dynamic Content -->
+                        </tbody>
                     </table>
                 </div>
             </div>

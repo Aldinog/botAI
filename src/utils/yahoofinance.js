@@ -276,7 +276,8 @@ async function fetchFundamentals(symbol) {
             "financialData",
             "majorHoldersBreakdown",
             "insiderHolders",
-            "earningsHistory"
+            "earningsHistory",
+            "earnings"
         ];
 
         const result = await yahooFinance.quoteSummary(query, { modules });
@@ -336,6 +337,7 @@ async function fetchFundamentals(symbol) {
             },
             holders: result.majorHoldersBreakdown || {},
             earnings: result.earningsHistory || {},
+            quarterly: result.earnings && result.earnings.financialsChart ? result.earnings.financialsChart.quarterly : [],
             target: {
                 mean: fin.targetMeanPrice,
                 median: fin.targetMedianPrice,

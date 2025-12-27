@@ -133,6 +133,25 @@ function renderData(data) {
     // Ownership
     document.getElementById('own-insider').innerText = fmtPct(data.holders.insiderHoldersPercent);
     document.getElementById('own-inst').innerText = fmtPct(data.holders.institutionsHoldersPercent);
+
+    // Quarterly Rendering
+    const qBody = document.getElementById('quarterly-body');
+    if (qBody) {
+        qBody.innerHTML = ''; // Clear previous
+        if (data.quarterly && data.quarterly.length > 0) {
+            data.quarterly.forEach(q => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="label-col" style="color: var(--accent-primary); font-weight: 700;">${q.date || q.fiscalQuarter}</td>
+                    <td class="value-col">${fmtCap(q.revenue)}</td>
+                    <td class="value-col" style="color: ${q.earnings >= 0 ? 'var(--positive)' : 'var(--negative)'}">${fmtCap(q.earnings)}</td>
+                `;
+                qBody.appendChild(tr);
+            });
+        } else {
+            qBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px; opacity: 0.5;">Data kuartalan tidak tersedia untuk emiten ini.</td></tr>';
+        }
+    }
 }
 
 function colorizeGrowth(val) {
