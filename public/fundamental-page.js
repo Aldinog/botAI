@@ -34,6 +34,29 @@ tabBtns.forEach(btn => {
     });
 });
 
+// Utilities
+const fmtNum = (num) => num != null ? num.toLocaleString('id-ID') : '-';
+const fmtPct = (num) => num != null ? (num * 100).toFixed(2) + '%' : '-';
+const fmtCap = (val) => {
+    if (val == null) return '-';
+    if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
+    if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
+    return val.toLocaleString();
+};
+const fmtDate = (val) => {
+    if (!val) return '-';
+    let d = new Date(val);
+    if (typeof val === 'number' && d.getFullYear() < 2000) {
+        d = new Date(val * 1000);
+    }
+    if (isNaN(d.getTime())) return '-';
+    return d.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+
 /**
  * Fetch Fundamental Data
  */
@@ -82,30 +105,7 @@ async function loadFundamentalData(symbol) {
  * Format & Render Data to UI
  */
 function renderData(data) {
-    const fmtNum = (num) => num != null ? num.toLocaleString('id-ID') : '-';
-    const fmtPct = (num) => num != null ? (num * 100).toFixed(2) + '%' : '-';
-    const fmtCap = (val) => {
-        if (val == null) return '-';
-        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
-        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
-        return val.toLocaleString();
-    };
-
-    const fmtDate = (val) => {
-        if (!val) return '-';
-        let d = new Date(val);
-        // If the value is a number and the resulting date is very old (e.g., 1970), 
-        // it's likely a seconds timestamp.
-        if (typeof val === 'number' && d.getFullYear() < 2000) {
-            d = new Date(val * 1000);
-        }
-        if (isNaN(d.getTime())) return '-';
-        return d.toLocaleDateString('id-ID', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
+    // Header
 
     // Header
     displaySymbol.innerText = data.symbol.replace('.JK', '');
@@ -176,13 +176,6 @@ function renderData(data) {
  * Render Quarterly Table & Mini Charts
  */
 function renderQuarterly(data) {
-    const fmtCap = (val) => {
-        if (val == null) return '-';
-        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
-        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
-        return val.toLocaleString();
-    };
-
     const qBody = document.getElementById('quarterly-body');
     if (!qBody) return;
 
@@ -216,13 +209,6 @@ function renderQuarterly(data) {
  * Render INSIGHTS Tab
  */
 function renderInsights(data) {
-    const fmtCap = (val) => {
-        if (val == null) return '-';
-        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
-        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
-        return val.toLocaleString();
-    };
-
     // Health Radar Badges
     const radar = document.getElementById('health-radar');
     if (radar) {
