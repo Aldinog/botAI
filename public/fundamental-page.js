@@ -259,6 +259,17 @@ function renderInsights(data) {
             cBarBuy.style.width = ((consensus.buy || 0) / total * 100) + '%';
             cBarHold.style.width = ((consensus.hold || 0) / total * 100) + '%';
             cBarSell.style.width = ((consensus.sell || 0) / total * 100) + '%';
+            cBarBuy.style.opacity = '1';
+            cBarHold.style.opacity = '1';
+            cBarSell.style.opacity = '1';
+        } else {
+            // Fallback: Split colors equally with low opacity
+            cBarBuy.style.width = '33.33%';
+            cBarHold.style.width = '33.33%';
+            cBarSell.style.width = '33.33%';
+            cBarBuy.style.opacity = '0.2';
+            cBarHold.style.opacity = '0.2';
+            cBarSell.style.opacity = '0.2';
         }
         document.getElementById('c-count-buy').innerText = consensus.buy || 0;
         document.getElementById('c-count-hold').innerText = consensus.hold || 0;
