@@ -238,6 +238,11 @@ async function loadData(interval) {
             if (candlestickSeries) {
                 candlestickSeries.setData(uniqueCandles);
 
+                // Force price scale to auto-scale to new data
+                candlestickSeries.priceScale().applyOptions({
+                    autoScale: true,
+                });
+
                 const validMarkers = (markers || []).filter(m => times.has(m.time)).sort((a, b) => {
                     const tA = toTimestamp(a.time);
                     const tB = toTimestamp(b.time);
