@@ -25,6 +25,34 @@ async function test(symbol) {
         console.log(`Gross Profits: ${fin.grossProfits}`);
 
         console.log("\n--- Testing Quarterly Modules ---");
+        console.log("\n--- Testing Ownership Modules ---");
+        const oResult = await yahooFinance.quoteSummary(query, {
+            modules: [
+                "majorHoldersBreakdown",
+                "insiderHolders"
+            ]
+        });
+
+        console.log("Major Holders Breakdown:", oResult.majorHoldersBreakdown ? "Found" : "Not Found");
+        if (oResult.majorHoldersBreakdown) {
+            console.log(JSON.stringify(oResult.majorHoldersBreakdown, null, 2));
+        }
+
+        console.log("Insider Holders:", oResult.insiderHolders ? "Found" : "Not Found");
+        if (oResult.insiderHolders) {
+            console.log(JSON.stringify(oResult.insiderHolders, null, 2));
+        }
+
+        console.log("\n--- Testing Institutional Holders Module ---");
+        const iResult = await yahooFinance.quoteSummary(query, {
+            modules: ["institutionHolders"]
+        });
+
+        console.log("Institution Holders:", iResult.institutionHolders ? "Found" : "Not Found");
+        if (iResult.institutionHolders) {
+            console.log(JSON.stringify(iResult.institutionHolders, null, 2));
+        }
+
         const qResult = await yahooFinance.quoteSummary(query, {
             modules: [
                 "incomeStatementHistoryQuarterly",

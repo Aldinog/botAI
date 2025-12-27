@@ -277,7 +277,9 @@ async function fetchFundamentals(symbol) {
             "majorHoldersBreakdown",
             "insiderHolders",
             "earningsHistory",
-            "earnings"
+            "earnings",
+            "institutionOwnership",
+            "fundOwnership"
         ];
 
         const result = await yahooFinance.quoteSummary(query, { modules });
@@ -335,7 +337,13 @@ async function fetchFundamentals(symbol) {
                 quickRatio: fin.quickRatio,
                 currentRatio: fin.currentRatio
             },
-            holders: result.majorHoldersBreakdown || {},
+            holders: {
+                insiderHoldersPercent: result.majorHoldersBreakdown ? result.majorHoldersBreakdown.insidersPercentHeld : null,
+                institutionsHoldersPercent: result.majorHoldersBreakdown ? result.majorHoldersBreakdown.institutionsPercentHeld : null,
+                institutionsCount: result.majorHoldersBreakdown ? result.majorHoldersBreakdown.institutionsCount : null,
+                institutionOwnership: result.institutionOwnership || null,
+                fundOwnership: result.fundOwnership || null
+            },
             earnings: result.earningsHistory || {},
             quarterly: result.earnings && result.earnings.financialsChart ? result.earnings.financialsChart.quarterly : [],
             target: {

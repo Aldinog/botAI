@@ -133,6 +133,7 @@ function renderData(data) {
     // Ownership
     document.getElementById('own-insider').innerText = fmtPct(data.holders.insiderHoldersPercent);
     document.getElementById('own-inst').innerText = fmtPct(data.holders.institutionsHoldersPercent);
+    document.getElementById('own-count').innerText = fmtNum(data.holders.institutionsCount);
 
     // Quarterly Rendering
     const qBody = document.getElementById('quarterly-body');
