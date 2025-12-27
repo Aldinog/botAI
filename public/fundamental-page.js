@@ -102,7 +102,20 @@ function renderData(data) {
     document.getElementById('info-industry').innerText = data.profile.industry || '-';
     document.getElementById('info-employees').innerText = data.profile.employees ? data.profile.employees.toLocaleString() : '-';
     document.getElementById('info-website').innerText = data.profile.website || '-';
-    document.getElementById('info-summary').innerText = data.profile.summary || 'N/A';
+
+    // Format Summary: Split into paragraphs for better readability
+    const summary = data.profile.summary || 'N/A';
+    const formattedSummary = summary.split('. ').map(s => s.trim()).reduce((acc, sent, idx) => {
+        const lastPara = acc[acc.length - 1];
+        if (!lastPara || lastPara.length > 300) {
+            acc.push(sent + '.');
+        } else {
+            acc[acc.length - 1] += ' ' + sent + '.';
+        }
+        return acc;
+    }, []).join('\n\n');
+
+    document.getElementById('info-summary').innerText = formattedSummary;
 
     // Valuation Tab
     document.getElementById('val-mkt-cap').innerText = fmtCap(data.valuation.marketCap);
