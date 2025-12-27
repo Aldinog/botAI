@@ -13,7 +13,7 @@ const displayPrice = document.getElementById('display-price');
 const displayCurrency = document.getElementById('display-currency');
 
 // Tab Logic
-const tabBtns = document.querySelectorAll('.tab-btn');
+const tabBtns = document.querySelectorAll('.tab-btn, .nav-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
 tabBtns.forEach(btn => {
@@ -149,21 +149,139 @@ function renderData(data) {
     document.getElementById('own-count').innerText = fmtNum(data.holders.institutionsCount);
 
     // Quarterly Rendering
+    renderQuarterly(data);
+
+    // Advanced Data
+    renderInsights(data);
+    renderDividends(data);
+}
+
+/**
+ * Render Quarterly Table & Mini Charts
+ */
+function renderQuarterly(data) {
+    const fmtCap = (val) => {
+        if (val == null) return '-';
+        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
+        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
+        return val.toLocaleString();
+    };
+
     const qBody = document.getElementById('quarterly-body');
-    if (qBody) {
-        qBody.innerHTML = ''; // Clear previous
-        if (data.quarterly && data.quarterly.length > 0) {
-            data.quarterly.forEach(q => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="label-col" style="color: var(--accent-primary); font-weight: 700;">${q.date || q.fiscalQuarter}</td>
-                    <td class="value-col">${fmtCap(q.revenue)}</td>
-                    <td class="value-col" style="color: ${q.earnings >= 0 ? 'var(--positive)' : 'var(--negative)'}">${fmtCap(q.earnings)}</td>
+    if (!qBody) return;
+
+    qBody.innerHTML = '';
+    if (data.quarterly && data.quarterly.length > 0) {
+        // Find max revenue for scaling bars
+        const maxRev = Math.max(...data.quarterly.map(q => q.revenue || 0));
+
+        data.quarterly.forEach(q => {
+            const tr = document.createElement('tr');
+            const revPct = maxRev > 0 ? (q.revenue / maxRev * 100) : 0;
+
+            tr.innerHTML = `
+                <td class="label-col">
+                    <div style="color: var(--accent-primary); font-weight: 700;">${q.date || q.fiscalQuarter}</div>
+                    <div class="bar-container" style="height: 6px; margin-top: 4px; background: rgba(255,255,255,0.05);">
+                        <div class="bar-fill" style="width: ${revPct}%; background: var(--accent-primary);"></div>
+                    </div>
+                </td>
+                <td class="value-col">${fmtCap(q.revenue)}</td>
+                <td class="value-col" style="color: ${q.earnings >= 0 ? 'var(--positive)' : 'var(--negative)'}">${fmtCap(q.earnings)}</td>
+            `;
+            qBody.appendChild(tr);
+        });
+    } else {
+        qBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px; opacity: 0.5;">Data kuartalan tidak tersedia.</td></tr>';
+    }
+}
+
+/**
+ * Render INSIGHTS Tab
+ */
+function renderInsights(data) {
+    const fmtCap = (val) => {
+        if (val == null) return '-';
+        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
+        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
+        return val.toLocaleString();
+    };
+
+    // Health Radar Badges
+    const radar = document.getElementById('health-radar');
+    if (radar) {
+        radar.innerHTML = '';
+        const badges = [];
+
+        // Logic for badges
+        if (data.valuation.pbRatio < 1) badges.push({ text: 'Undervalued', icon: 'fa-gem', type: 'positive' });
+        if (data.growth.earningsGrowth > 0.15) badges.push({ text: 'High Growth', icon: 'fa-rocket', type: 'positive' });
+        if (data.profitability.roe > 0.15) badges.push({ text: 'Efficient', icon: 'fa-bolt', type: 'positive' });
+        if (data.cashflow.totalCash > data.cashflow.totalDebt) badges.push({ text: 'Cash Rich', icon: 'fa-piggy-bank', type: 'positive' });
+        if (data.valuation.peRatio > 25) badges.push({ text: 'Expensive', icon: 'fa-tag', type: 'warning' });
+        if (data.cashflow.currentRatio < 1) badges.push({ text: 'Low Liquidity', icon: 'fa-droplet-slash', type: 'danger' });
+
+        badges.forEach(b => {
+            const el = document.createElement('div');
+            el.className = `badge badge-${b.type}`;
+            el.innerHTML = `<i class="fa-solid ${b.icon}"></i> ${b.text}`;
+            radar.appendChild(el);
+        });
+
+        if (badges.length === 0) radar.innerHTML = '<span style="opacity: 0.5; font-size: 0.8rem;">No significant health signals.</span>';
+    }
+
+    // Analyst Data
+    document.getElementById('ins-rec').innerText = (data.target.rec || '-').toUpperCase();
+    document.getElementById('ins-target').innerText = data.target.mean ? data.currency + ' ' + data.target.mean.toLocaleString('id-ID') : '-';
+
+    const consensus = data.target.consensus;
+    document.getElementById('ins-consensus').innerText = consensus ?
+        `Buy: ${consensus.buy}, Hold: ${consensus.hold}, Sell: ${consensus.sell}` : '-';
+
+    // News
+    const newsCont = document.getElementById('news-container');
+    if (newsCont) {
+        newsCont.innerHTML = '';
+        if (data.news && data.news.length > 0) {
+            data.news.forEach(n => {
+                const item = document.createElement('a');
+                item.href = n.link;
+                item.target = '_blank';
+                item.className = 'news-item';
+                const date = new Date(n.providerPublishTime * 1000).toLocaleDateString('id-ID');
+
+                item.innerHTML = `
+                    <div class="news-title">${n.title}</div>
+                    <div class="news-meta">
+                        <span><i class="fa-solid fa-building"></i> ${n.publisher}</span>
+                        <span><i class="fa-solid fa-calendar"></i> ${date}</span>
+                    </div>
                 `;
-                qBody.appendChild(tr);
+                newsCont.appendChild(item);
             });
         } else {
-            qBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 20px; opacity: 0.5;">Data kuartalan tidak tersedia untuk emiten ini.</td></tr>';
+            newsCont.innerHTML = '<div style="opacity: 0.5; font-size: 0.8rem;">Tidak ada berita terbaru ditemukan.</div>';
+        }
+    }
+}
+
+/**
+ * Render Dividends
+ */
+function renderDividends(data) {
+    const fmtPct = (num) => num != null ? (num * 100).toFixed(2) + '%' : '-';
+
+    if (data.dividends) {
+        document.getElementById('div-yield').innerText = fmtPct(data.dividends.yield);
+        document.getElementById('div-rate').innerText = data.dividends.rate ? data.currency + ' ' + data.dividends.rate : '-';
+        document.getElementById('div-payout').innerText = fmtPct(data.dividends.payoutRatio);
+
+        if (data.dividends.exDate) {
+            const date = new Date(data.dividends.exDate * 1000).toLocaleDateString('id-ID');
+            document.getElementById('div-exdate').innerText = date;
+        } else {
+            document.getElementById('div-exdate').innerText = '-';
         }
     }
 }

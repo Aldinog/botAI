@@ -29,28 +29,45 @@ async function test(symbol) {
         const oResult = await yahooFinance.quoteSummary(query, {
             modules: [
                 "majorHoldersBreakdown",
-                "insiderHolders"
+                "insiderHolders",
+                "institutionOwnership",
+                "fundOwnership"
             ]
         });
 
         console.log("Major Holders Breakdown:", oResult.majorHoldersBreakdown ? "Found" : "Not Found");
-        if (oResult.majorHoldersBreakdown) {
-            console.log(JSON.stringify(oResult.majorHoldersBreakdown, null, 2));
-        }
-
         console.log("Insider Holders:", oResult.insiderHolders ? "Found" : "Not Found");
-        if (oResult.insiderHolders) {
-            console.log(JSON.stringify(oResult.insiderHolders, null, 2));
-        }
+        console.log("Institution Ownership:", oResult.institutionOwnership ? "Found" : "Not Found");
+        console.log("Fund Ownership:", oResult.fundOwnership ? "Found" : "Not Found");
 
-        console.log("\n--- Testing Institutional Holders Module ---");
-        const iResult = await yahooFinance.quoteSummary(query, {
-            modules: ["institutionHolders"]
+        console.log("\n--- Testing Advanced Modules ---");
+        const aResult = await yahooFinance.quoteSummary(query, {
+            modules: [
+                "recommendationTrend",
+                "earningsTrend",
+                "calendarEvents",
+                "summaryDetail",
+                "defaultKeyStatistics"
+            ]
         });
 
-        console.log("Institution Holders:", iResult.institutionHolders ? "Found" : "Not Found");
-        if (iResult.institutionHolders) {
-            console.log(JSON.stringify(iResult.institutionHolders, null, 2));
+        console.log("Recommendation Trend:", aResult.recommendationTrend ? "Found" : "Not Found");
+        console.log("Earnings Trend:", aResult.earningsTrend ? "Found" : "Not Found");
+        console.log("Calendar Events:", aResult.calendarEvents ? "Found" : "Not Found");
+        if (aResult.summaryDetail) {
+            console.log(`Dividend Yield: ${aResult.summaryDetail.dividendYield}`);
+            console.log(`Ex-Dividend Date: ${aResult.summaryDetail.exDividendDate}`);
+        }
+
+        console.log("\n--- Testing News Search ---");
+        try {
+            const searchResult = await yahooFinance.search(query);
+            console.log("News count:", searchResult.news ? searchResult.news.length : 0);
+            if (searchResult.news && searchResult.news.length > 0) {
+                console.log("Latest Headline:", searchResult.news[0].title);
+            }
+        } catch (searchErr) {
+            console.log("Search API error:", searchErr.message);
         }
 
         const qResult = await yahooFinance.quoteSummary(query, {

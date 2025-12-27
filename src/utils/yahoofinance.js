@@ -279,11 +279,29 @@ async function fetchFundamentals(symbol) {
             "earningsHistory",
             "earnings",
             "institutionOwnership",
-            "fundOwnership"
+            "fundOwnership",
+            "recommendationTrend",
+            "earningsTrend",
+            "calendarEvents"
         ];
 
         const result = await yahooFinance.quoteSummary(query, { modules });
         if (!result) return null;
+
+        // Fetch News (Search API)
+        let news = [];
+        try {
+            const searchResult = await yahooFinance.search(query);
+            news = (searchResult.news || []).slice(0, 5).map(n => ({
+                title: n.title,
+                publisher: n.publisher,
+                link: n.link,
+                providerPublishTime: n.providerPublishTime,
+                type: n.type
+            }));
+        } catch (newsErr) {
+            console.warn(`[NEWS FETCH FAILED] ${newsErr.message}`);
+        }
 
         // Structured extraction for easier handling
         const summary = result.summaryDetail || {};
@@ -349,8 +367,16 @@ async function fetchFundamentals(symbol) {
             target: {
                 mean: fin.targetMeanPrice,
                 median: fin.targetMedianPrice,
-                rec: fin.recommendationKey
-            }
+                rec: fin.recommendationKey,
+                consensus: result.recommendationTrend ? result.recommendationTrend.trend[0] : null
+            },
+            dividends: {
+                yield: summary.dividendYield,
+                rate: summary.dividendRate,
+                exDate: summary.exDividendDate,
+                payoutRatio: stats.payoutRatio
+            },
+            news: news
         };
 
         // 3. Update Cache in Supabase
