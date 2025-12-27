@@ -244,34 +244,117 @@ async function fetchFundamentals(symbol) {
     }
 
     try {
-        // Fetch valid modules for fundamentals
-        const result = await yahooFinance.quoteSummary(query, {
-            modules: ["summaryDetail", "defaultKeyStatistics", "financialData", "price"]
-        });
+        // 1. Check Cache in Supabase
+        const { supabase } = require('./supabase');
+        const { data: cache } = await supabase
+            .from('stock_fundamentals')
+            .select('*')
+            .eq('symbol', query)
+            .single();
 
+        const CACHE_HOURS = 24;
+        if (cache && cache.last_updated) {
+            const lastUpdate = new Date(cache.last_updated);
+            const now = new Date();
+            const ageHours = (now - lastUpdate) / (1000 * 60 * 60);
+
+            if (ageHours < CACHE_HOURS && cache.full_data) {
+                console.log(`[CACHE HIT] Fundamental data for ${query} is ${Math.round(ageHours)}h old.`);
+                return cache.full_data;
+            }
+        }
+
+        console.log(`[CACHE MISS/EXPIRED] Fetching new fundamental data for ${query} from Yahoo Finance...`);
+
+        // 2. Fetch from Yahoo Finance (Comprehensive Modules)
+        const modules = [
+            "assetProfile",
+            "summaryProfile",
+            "summaryDetail",
+            "price",
+            "defaultKeyStatistics",
+            "financialData",
+            "majorHoldersBreakdown",
+            "insiderHolders",
+            "earningsHistory"
+        ];
+
+        const result = await yahooFinance.quoteSummary(query, { modules });
         if (!result) return null;
 
+        // Structured extraction for easier handling
         const summary = result.summaryDetail || {};
         const stats = result.defaultKeyStatistics || {};
         const fin = result.financialData || {};
         const price = result.price || {};
+        const profile = result.assetProfile || result.summaryProfile || {};
 
-        return {
+        const fullData = {
             symbol: query,
             name: price.longName || price.shortName,
             price: price.regularMarketPrice,
-            marketCap: summary.marketCap,
-            peRatio: summary.trailingPE,
-            forwardPE: summary.forwardPE,
-            pegRatio: stats.pegRatio,
-            pbRatio: stats.priceToBook,
-            roe: fin.returnOnEquity,
-            divYield: summary.dividendYield,
-            profitMargin: fin.profitMargins,
-            revenue: fin.totalRevenue,
-            beta: summary.beta,
-            targetPrice: fin.targetMeanPrice
+            currency: price.currency,
+            profile: {
+                sector: profile.sector,
+                industry: profile.industry,
+                summary: profile.longBusinessSummary || profile.description || "N/A",
+                website: profile.website,
+                city: profile.city,
+                country: profile.country,
+                employees: profile.fullTimeEmployees
+            },
+            valuation: {
+                marketCap: summary.marketCap,
+                peRatio: summary.trailingPE,
+                forwardPE: summary.forwardPE,
+                pegRatio: stats.pegRatio,
+                pbRatio: stats.priceToBook,
+                enterpriceValue: stats.enterpriseValue,
+                evToRevenue: stats.enterpriseToRevenue,
+                evToEbitda: stats.enterpriseToEbitda
+            },
+            growth: {
+                revenueGrowth: fin.revenueGrowth,
+                earningsGrowth: fin.earningsGrowth,
+                revenueGrowthQuarterly: fin.revenueGrowth, // Note: Often same in this module, but we mark it
+                earningsGrowthQuarterly: fin.earningsGrowth
+            },
+            profitability: {
+                roe: fin.returnOnEquity,
+                roa: fin.returnOnAssets,
+                grossMargin: fin.grossMargins,
+                operatingMargin: fin.operatingMargins,
+                profitMargin: fin.profitMargins
+            },
+            cashflow: {
+                totalCash: fin.totalCash,
+                totalDebt: fin.totalDebt,
+                operatingCashflow: fin.operatingCashflow,
+                freeCashflow: fin.freeCashflow,
+                quickRatio: fin.quickRatio,
+                currentRatio: fin.currentRatio
+            },
+            holders: result.majorHoldersBreakdown || {},
+            earnings: result.earningsHistory || {},
+            target: {
+                mean: fin.targetMeanPrice,
+                median: fin.targetMedianPrice,
+                rec: fin.recommendationKey
+            }
         };
+
+        // 3. Update Cache in Supabase
+        await supabase.from('stock_fundamentals').upsert({
+            symbol: query,
+            name: fullData.name,
+            sector: fullData.profile.sector,
+            industry: fullData.profile.industry,
+            summary: fullData.profile.summary,
+            full_data: fullData,
+            last_updated: new Date().toISOString()
+        });
+
+        return fullData;
     } catch (err) {
         console.error(`YF Fundamental Error for ${query}:`, err.message);
         return null;
@@ -281,29 +364,35 @@ async function fetchFundamentals(symbol) {
 function formatFundamentals(data) {
     if (!data) return "❌ Data fundamental tidak ditemukan.";
 
-    const fmtNum = (num) => num ? num.toLocaleString('id-ID') : '-';
-    const fmtPct = (num) => num ? (num * 100).toFixed(2) + '%' : '-';
-    // Helper for Trillion/Billion formatting (IDR usually)
-    const fmtCap = (val) => {
-        if (!val) return '-';
-        if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
-        if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
-        return val.toLocaleString();
-    };
+    // Check if it's returning the full object (new version) or old version
+    // If it has 'valuation' key, it's the new full data
+    if (data.valuation) {
+        // For the bot response, we'll keep it concise but improved.
+        // Detailed data will be on the NEW PAGE.
 
-    return `🏛 <b>Fundamental: ${data.name} (${data.symbol.replace('.JK', '')})</b>\n` +
-        `Harga: ${fmtNum(data.price)}\n\n` +
-        `<b>Valuation:</b>\n` +
-        `• Market Cap: ${fmtCap(data.marketCap)}\n` +
-        `• P/E Ratio: ${data.peRatio ? data.peRatio.toFixed(2) + 'x' : '-'}\n` +
-        `• PBV Ratio: ${data.pbRatio ? data.pbRatio.toFixed(2) + 'x' : '-'}\n` +
-        `• PEG Ratio: ${data.pegRatio ? data.pegRatio.toFixed(2) : '-'}\n\n` +
-        `<b>Profitability:</b>\n` +
-        `• ROE: ${fmtPct(data.roe)}\n` +
-        `• Net Margin: ${fmtPct(data.profitMargin)}\n` +
-        `• Dividend Yield: ${fmtPct(data.divYield)}\n\n` +
-        `<b>Other:</b>\n` +
-        `• Beta: ${data.beta ? data.beta.toFixed(2) : '-'}\n` +
-        `• Target Price: ${fmtNum(data.targetPrice)}\n\n` +
-        `<i>Data by Yahoo Finance</i>`;
+        const fmtNum = (num) => num != null ? num.toLocaleString('id-ID') : '-';
+        const fmtPct = (num) => num != null ? (num * 100).toFixed(2) + '%' : '-';
+        const fmtCap = (val) => {
+            if (val == null) return '-';
+            if (val >= 1e12) return (val / 1e12).toFixed(2) + ' T';
+            if (val >= 1e9) return (val / 1e9).toFixed(2) + ' M';
+            return val.toLocaleString();
+        };
+
+        return `🏛 <b>Fundamental: ${data.name} (${data.symbol.replace('.JK', '')})</b>\n` +
+            `Harga: ${fmtNum(data.price)} ${data.currency || ''}\n\n` +
+            `<b>Valuation:</b>\n` +
+            `• Market Cap: ${fmtCap(data.valuation.marketCap)}\n` +
+            `• P/E Ratio: ${data.valuation.peRatio ? data.valuation.peRatio.toFixed(2) + 'x' : '-'}\n` +
+            `• PBV Ratio: ${data.valuation.pbRatio ? data.valuation.pbRatio.toFixed(2) + 'x' : '-'}\n\n` +
+            `<b>Profitability:</b>\n` +
+            `• ROE: ${fmtPct(data.profitability.roe)}\n` +
+            `• Net Margin: ${fmtPct(data.profitability.profitMargin)}\n\n` +
+            `<b>Cash Flow:</b>\n` +
+            `• Operating CF: ${fmtCap(data.cashflow.operatingCashflow)}\n\n` +
+            `<i>Data lebih lengkap tersedia di halaman Fundamental.</i>`;
+    }
+
+    // Fallback for old data structure if any
+    return "❌ Format data tidak valid.";
 }

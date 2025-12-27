@@ -290,7 +290,18 @@ module.exports = async (req, res) => {
 
             case 'fundamental':
                 const fundData = await fetchFundamentals(symbol);
-                result = formatFundamentals(fundData);
+                if (!fundData) {
+                    result = "❌ Data fundamental tidak ditemukan.";
+                } else {
+                    // For the dedicated page, we want the JSON.
+                    // For the legacy bot view, we still need the formatted text.
+                    return res.status(200).json({
+                        success: true,
+                        data: fundData, // Sending raw object
+                        formatted: formatFundamentals(fundData),
+                        active_theme: activeTheme
+                    });
+                }
                 break;
 
             case 'indicators':
