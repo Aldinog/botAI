@@ -172,6 +172,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 if (mainCandleSeries) {
                     mainCandleSeries.setData(uniqueCandles);
+
+                    // Force price scale to auto-scale to new data
+                    mainCandleSeries.priceScale().applyOptions({
+                        autoScale: true,
+                    });
+
                     if (mainChart) mainChart.timeScale().fitContent();
                 }
 
