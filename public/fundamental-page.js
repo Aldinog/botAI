@@ -91,6 +91,22 @@ function renderData(data) {
         return val.toLocaleString();
     };
 
+    const fmtDate = (val) => {
+        if (!val) return '-';
+        let d = new Date(val);
+        // If the value is a number and the resulting date is very old (e.g., 1970), 
+        // it's likely a seconds timestamp.
+        if (typeof val === 'number' && d.getFullYear() < 2000) {
+            d = new Date(val * 1000);
+        }
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('id-ID', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
     // Header
     displaySymbol.innerText = data.symbol.replace('.JK', '');
     displayName.innerText = data.name;
@@ -249,7 +265,7 @@ function renderInsights(data) {
                 item.href = n.link;
                 item.target = '_blank';
                 item.className = 'news-item';
-                const date = new Date(n.providerPublishTime * 1000).toLocaleDateString('id-ID');
+                const date = fmtDate(n.providerPublishTime);
 
                 item.innerHTML = `
                     <div class="news-title">${n.title}</div>
@@ -278,8 +294,7 @@ function renderDividends(data) {
         document.getElementById('div-payout').innerText = fmtPct(data.dividends.payoutRatio);
 
         if (data.dividends.exDate) {
-            const date = new Date(data.dividends.exDate * 1000).toLocaleDateString('id-ID');
-            document.getElementById('div-exdate').innerText = date;
+            document.getElementById('div-exdate').innerText = fmtDate(data.dividends.exDate);
         } else {
             document.getElementById('div-exdate').innerText = '-';
         }
