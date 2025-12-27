@@ -179,7 +179,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 marketPriceEl.innerText = currentMarketPrice.toLocaleString('id-ID');
                 marketInfo.innerText = `Realtime ${interval.toUpperCase()}`;
 
-                if (!inpP2.value) inpP2.value = currentMarketPrice;
+                // Always update the New Entry Price field with the latest market price
+                inpP2.value = currentMarketPrice;
+
                 updatePlDisplay(inpP1.value, inpL1.value, currentMarketPrice);
 
                 if (loader) loader.style.display = 'none';
@@ -292,11 +294,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Reset UI
         tickerSwitch.value = symbol;
         outputArea.innerHTML = '<div style="text-align: center; opacity: 0.4; padding: 40px 0;">Menunggu data...</div>';
-        initialModal.style.display = 'flex';
         clearPriceLines();
 
         if (mainChart) {
             await fetchCandles(symbol);
+            // After fetching new symbol, also update the initial modal fields just in case
+            if (currentMarketPrice) {
+                // We keep the modal visible if the user wants to re-input their base position
+                // but we ensure the underlying data is ready.
+                initialModal.style.display = 'flex';
+            }
         }
     };
 
